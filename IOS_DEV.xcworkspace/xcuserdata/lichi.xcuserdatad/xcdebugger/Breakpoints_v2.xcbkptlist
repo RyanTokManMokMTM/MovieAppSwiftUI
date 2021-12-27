@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bucket
+   uuid = "A438E52F-CC83-445E-89BA-FA39EB4CDCA3"
+   type = "0"
+   version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "07AC1014-AEA6-4FF3-A955-206DF609B377"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "IOS_DEV/Views/MainPage/AutoScroll_V.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "169"
+            endingLineNumber = "169"
+            landmarkName = "PreviewModle"
+            landmarkType = "3">
+            <Locations>
+               <Location
+                  uuid = "07AC1014-AEA6-4FF3-A955-206DF609B377 - 32530cf175fb7db7"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "IOS_DEV.PreviewModle.deinit"
+                  moduleName = "IOS_DEV"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/lichi/Desktop/project/IOS_APP_PROJECT/IOS_DEV/IOS_DEV/Views/MainPage/AutoScroll_V.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "0"
+                  endingLineNumber = "0"
+                  offsetFromSymbolStart = "22">
+               </Location>
+               <Location
+                  uuid = "07AC1014-AEA6-4FF3-A955-206DF609B377 - 6c3d58e6b74a6f44"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "IOS_DEV.PreviewModle.__deallocating_deinit"
+                  moduleName = "IOS_DEV"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/lichi/Desktop/project/IOS_APP_PROJECT/IOS_DEV/IOS_DEV/Views/MainPage/AutoScroll_V.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "0"
+                  endingLineNumber = "0"
+                  offsetFromSymbolStart = "16">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
+</Bucket>
