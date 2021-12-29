@@ -16,64 +16,10 @@ struct IOS_DEVApp: App {
     
     var body: some Scene {
         WindowGroup {
-//            NavBar(isLogOut: .constant(false), index: 0)
-//            ContentViewAB()
-//            ScrollView{
-//                VStack{
-//                    TrailerPlayer(player: VideoList[0].videoPlayer)
-//                        .edgesIgnoringSafeArea(.all)
-//                    TrailerPlayer(player: VideoList[1].videoPlayer)
-//                        .edgesIgnoringSafeArea(.all)
-//
-//                }
-//                .background(Color.red.edgesIgnoringSafeArea(.all))
-//            }
-//
-//            .onAppear(){
-//                DispatchQueue.main.async {
-//                    Appdelegate.orientationLock = UIInterfaceOrientationMask.landscape
-//
-//                    UIDevice.current.setValue(UIInterfaceOrientation.landscapeLeft.rawValue, forKey: "orientation")
-//
-//                    UINavigationController.attemptRotationToDeviceOrientation()
-//
-//                }
-//            }
-//            STD(player: VideoList[0].videoPlayer)
-//            FullScreenPlayer(player:.constant(VideoList[0].videoPlayer))
-//            TestPlayer(trailerInfo: .constant(VideoList[0]))
-//            TestNAV()
             WelcomePage()
-//            MainHomeView(showHomePage: <#T##Bool#>, isLogOut: <#T##Bool#>, body: <#T##View#>)
         }
     }
 }
-
-
-
-
-//
-//struct PlayerContentView: View {
-//    
-//    @State private var player = AVPlayer(url: URL(string: "https://media.w3.org/2010/05/sintel/trailer.mp4")!)
-//    
-//    var body: some View {
-//        PlayerView(player: $player)
-//            .onTapGesture {
-//                player.pause()
-//                player.seek(to: .zero)
-//                
-//                player = AVPlayer(url: Bundle.main.url(forResource: "test", withExtension: "mp4")!) // or AVPlayer(url: URL(string: "https://media.w3.org/2010/05/sintel/trailer.mp4")!)
-//                player.play()
-//                
-//            }
-//            .onAppear {
-//                player.play()
-//            }
-//        .edgesIgnoringSafeArea(.all)
-//    }
-//}
-
 
 extension Double {
   func asString(style: DateComponentsFormatter.UnitsStyle) -> String {

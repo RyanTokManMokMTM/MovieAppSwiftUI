@@ -313,7 +313,6 @@ struct MovieInfoDetail: View {
                     //------------------------  Like ? -------------------------//
                     
                     
-                    Spacer()
 //
                     SmallVerticalButton(IsOnImage: "heart.fill", IsOffImage: "heart", text: "Like", IsOn: $isMyFavorite){
                         isMyFavorite.toggle()
@@ -325,6 +324,8 @@ struct MovieInfoDetail: View {
                         }
                     }
                     .padding(.trailing)
+                    
+                    Spacer()
 
                 }
                 .padding(.horizontal,10)

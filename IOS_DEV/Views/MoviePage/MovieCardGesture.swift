@@ -11,12 +11,14 @@ import SwiftUI
 
 struct MovieCardGesture :View{
     let imageLoader = ImageLoader()
-
+    @StateObject var favourController = FavoriteService()
+    
     @EnvironmentObject var movieListMV : GenreTypeState
     @State var movies : [MovieCardInfo]  //allow as to remove
     @State var currentMovie:MovieCardInfo?
     @State var gestureState = CardGesture.CardGestureState.inactive
     @Binding var backHomePage:Bool
+    
 
     
     @State private var isMovieDetail : Bool = false
@@ -265,7 +267,7 @@ struct MovieCardGesture :View{
                 }
                 
                 if direction == .left{
-                    print("Like!!!")
+                    postLikeData(movie: currentMovie!)
                 }
                 currentMovie = self.movies.last
                 
@@ -286,6 +288,20 @@ struct MovieCardGesture :View{
     func calculateScale()->CGFloat{
         //when dragging it will affect other card behind
         return CGFloat(abs(self.gestureState.translation.width / 6000))
+    }
+    
+    func postLikeData( movie:MovieCardInfo){
+        let data = NewLikeMovie(userID: NowUserID!, movie: movie.id, title: movie.title, posterPath: movie.poster!)
+        
+        favourController.POST_likeMovie(endpoint: "/likeMovie/new", RegisterObject: data){ (result) in
+            switch result {
+                case 200 :
+                    print("post LikeMovie success")
+                default:
+                    print("post LikeMovie failed")
+            }
+            
+        }
     }
 }
 
