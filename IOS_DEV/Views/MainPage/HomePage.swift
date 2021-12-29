@@ -24,7 +24,7 @@ class TrailerVideoVM : ObservableObject {
     
 
     private var apiService : APIService
-    private let resoucesHOST = "http://127.0.0.1:8080/trailer"
+    private let resoucesHOST = "http://120.126.16.229:8080/trailer"
     init(apiService : APIService = APIService.shared){
         self.apiService = apiService
         getTrailer()

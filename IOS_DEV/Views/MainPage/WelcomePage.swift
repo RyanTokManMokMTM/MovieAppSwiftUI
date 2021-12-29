@@ -90,16 +90,17 @@ struct WelcomePage: View {
                     print(response)
                     autoLogin()
                 case .failure(let error):
-                    print(error.localizedDescription)
                     DispatchQueue.main.async{
                         self.ServerInternalError.toggle()
                     }
-                    self.isLoading = false
+                   
                 }
+                self.isLoading = false
+                
                 
             }
-//
             animateImagge = true
+          
         }
         .fullScreenCover(isPresented: self.$isLoggedIn, content: {
             NavBar(isLogOut: self.$isLoggedIn,index: 0)
