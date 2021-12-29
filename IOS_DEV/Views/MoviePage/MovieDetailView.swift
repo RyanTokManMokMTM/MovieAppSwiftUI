@@ -315,16 +315,16 @@ struct MovieInfoDetail: View {
                     
                     Spacer()
 //
-//                    SmallVerticalButton(IsOnImage: "heart.fill", IsOffImage: "heart", text: "Like", IsOn: $isMyFavorite){
-//                        isMyFavorite.toggle()
-//
-//                        if isMyFavorite == true {
-//                            favoriteController.PostLikeMovie(movie: movie.id, title: movie.title, posterPath: movie.posterPath!)
-//                        } else{
-//                            self.favoriteController.deleteLikeMovie(movieID: movie.id)
-//                        }
-//                    }
-//                    .padding(.trailing)
+                    SmallVerticalButton(IsOnImage: "heart.fill", IsOffImage: "heart", text: "Like", IsOn: $isMyFavorite){
+                        isMyFavorite.toggle()
+
+                        if isMyFavorite == true {
+                            favoriteController.PostLikeMovie(movie: movie.id, title: movie.title, posterPath: movie.posterPath!)
+                        } else{
+                            self.favoriteController.deleteLikeMovie(movieID: movie.id)
+                        }
+                    }
+                    .padding(.trailing)
 
                 }
                 .padding(.horizontal,10)

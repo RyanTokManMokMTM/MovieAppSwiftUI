@@ -124,6 +124,7 @@ struct WelcomePage: View {
     func autoLogin(){
         
         if !userToken.isEmpty{
+            print("???")
             networkingService.AuthUser(token: self.userToken){ result in
                 switch result{
                 case.success(let data):
@@ -131,7 +132,7 @@ struct WelcomePage: View {
                     NowUserID = data.id
                     self.isLoggedIn.toggle()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.8){
-                        self.isLoading.toggle()
+                        self.isLoading = false
                     }
                     
                 case .failure(let err):
@@ -139,7 +140,7 @@ struct WelcomePage: View {
 //                        if err.localizedDescription == NetworkingError.badUrl.localizedDescription{
 //                            self.ServerInternalError.toggle()
 //                        }else{
-                            self.isLoading.toggle()
+                            self.isLoading = false
 //                        }
                     }
                     print("Error is : \(err.localizedDescription)")
