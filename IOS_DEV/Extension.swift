@@ -67,6 +67,15 @@ extension Font{
     static func KleeOneSemiBold(size : CGFloat)->Font{
         .custom("KleeOne-SemiBold", size: size)
     }
+    
+    //Oswald-SemiBold
+    static func setPadaukRegular(size : CGFloat) -> Font{
+        Font.custom("Roboto-Regular", size: size)
+    }
+    
+    static func setOswaldSemiBold(size : CGFloat) -> Font{
+        Font.custom("Oswald-SemiBold", size: size)
+    }
 }
 //
 struct setCourgetteRegularFont : ViewModifier{
@@ -82,6 +91,8 @@ struct setTekoBoldFont : ViewModifier{
         content.font(Font.TekoBoldFont(size: size))
     }
 }
+
+
 
 struct setZCOOLKuaiLeRegular : ViewModifier{
     var size : CGFloat
@@ -104,12 +115,29 @@ struct setKleeOneSemiBold : ViewModifier{
     }
 }
 
+
+struct setPadaukRegularFont : ViewModifier{
+    var size : CGFloat
+    func body(content: Content) -> some View {
+        return content.font(.setPadaukRegular(size: size))
+    }
+}
+
+struct setsetOswaldSemiBoldFont : ViewModifier{
+    var size : CGFloat
+    func body(content: Content) -> some View {
+        return content.font(.setOswaldSemiBold(size: size))
+    }
+}
+
+
+
 extension View{
     func CourgetteRegularFont(size:CGFloat = 18)-> some View{
         ModifiedContent(content: self, modifier:setCourgetteRegularFont(size: size) )
     }
     
-    func TekoBoldFontFont(size:CGFloat = 18)-> some View{
+    func TekoBold(size:CGFloat = 18)-> some View{
         ModifiedContent(content: self, modifier:setTekoBoldFont(size: size) )
     }
     
@@ -123,6 +151,15 @@ extension View{
 
     func KleeOneSemiBold(size:CGFloat = 18) -> some View{
         ModifiedContent(content: self, modifier: setKleeOneSemiBold(size: size))
+    }
+    
+    
+    func PadaukRegular(size : CGFloat = 18) -> some View{
+        ModifiedContent(content: self, modifier: setPadaukRegularFont(size: size))
+    }
+    
+    func OswaldSemiBold(size : CGFloat = 18) -> some View{
+        ModifiedContent(content: self, modifier: setsetOswaldSemiBoldFont(size: size))
     }
 }
 

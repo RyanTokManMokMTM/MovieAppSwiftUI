@@ -10,8 +10,8 @@
 import Foundation
 import SwiftUI
 
-let baseUrl="http://120.126.16.229:8080"
-//let baseUrl="http://127.0.0.1:8080"
+//let baseUrl="http://120.126.16.229:8080"
+let baseUrl="http://127.0.0.1:8080"
 
 class NetworkingService: ObservableObject {
     private var token = ""
@@ -22,9 +22,6 @@ class NetworkingService: ObservableObject {
         
     }
     //login
-    
-
-
     func requestLogin(endpoint: String,
                  loginObject: UserLogin,
                  completion: @escaping (Result<Me, Error>) -> Void) {

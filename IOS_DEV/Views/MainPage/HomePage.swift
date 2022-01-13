@@ -145,7 +145,7 @@ struct MovieTrailerDiscoryView : View{
                         VStack{
                             Text("RELATED TRAILER")
                                 .foregroundColor(.white)
-                                .TekoBoldFontFont(size: 15)
+                                .TekoBold(size: 15)
                         }
                         .padding()
                         .background(BlurView().clipShape(CustomeConer(coners: .allCorners)))
@@ -480,7 +480,7 @@ struct TrailerCell : View{
                     ForEach(0..<self.TrailerModel.TrailerList[TrailerModel.currentTrailer].info.video_paths.count){ i in
                         HStack{
                             Text(self.TrailerModel.TrailerList[TrailerModel.currentTrailer].info.video_titles[i])
-                                .TekoBoldFontFont(size:self.trailerEpisode == i ? 20 : 16)
+                                .TekoBold(size:self.trailerEpisode == i ? 20 : 16)
                                 .multilineTextAlignment(.center)
                                 .foregroundColor(self.trailerEpisode == i ? .white : .gray)
 //                                .scaleEffect(self.trailerEpisode == i ? 1.1 : 1.0)
@@ -610,7 +610,7 @@ struct MovieIntrol: View {
                     
                     HStack{
                         Text(trailer.info.title)
-                            .TekoBoldFontFont(size: 25)
+                            .TekoBold(size: 25)
                         
                     }
                     

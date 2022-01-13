@@ -10,6 +10,139 @@ import SwiftUI
 let registerService = RegisterService()
 
 
+struct SignUp2: View {
+    @Binding var backToSignIn : Bool
+    
+    @State private var email : String = ""
+    @State private var name : String = ""
+    @State private var password : String = ""
+    @State private var confirmPassword : String = ""
+    
+    @State var ErrorResponse:String = ""
+    @State var ErrorAlert = false
+    @State private var isLoading : Bool = false
+    
+    var body: some View {
+        ZStack{
+            VStack(alignment:.leading){
+                VStack{
+                    Button(action:{
+                        withAnimation(){
+                            self.backToSignIn.toggle()
+                        }
+                    }){
+                        Image(systemName: "chevron.left")
+                            .imageScale(.large)
+                            .foregroundColor(.white)
+                    }
+                }
+                .padding(.vertical)
+                .padding(.top,UIApplication.shared.windows.first?.safeAreaInsets.top)
+                
+                HStack{
+                    Text("Sign Up")
+                        .TekoBold(size: 40)
+                        .foregroundColor(.white)
+                    
+                    
+                }
+                
+                signUpInfo(FieldText: "Email", bindText: $email, placeHolder: "Enter your email", keyType: .emailAddress, returnType: .default)
+                signUpInfo(FieldText: "Name", bindText: $name, placeHolder: "Enter your email", keyType: .default, returnType: .default)
+                signUpInfo(FieldText: "Password", bindText: $password, placeHolder: "Enter your password", keyType: .default, returnType: .default,isSecureText: true)
+                signUpInfo(FieldText: "Confirm Password", bindText: $confirmPassword, placeHolder: "Confirm Your password", keyType: .default, returnType: .default,isSecureText: true)
+                
+                
+                VStack{
+                    Button(action:{
+                        withAnimation(){
+                            self.isLoading.toggle()
+                        }
+                        self.Register()
+                    }){
+                        Text("Sign Up")
+                            .bold()
+                            .OswaldSemiBold()
+                            .foregroundColor(.white)
+                            .frame(maxWidth:.infinity,maxHeight: 50)
+                            .background(Color.pink.cornerRadius(8))
+                    }
+                    .padding(.top)
+
+                    
+                }
+                
+                Spacer()
+                
+            }
+            .alert(isPresented: $ErrorAlert, content: {
+                Alert(title: Text(self.ErrorResponse),
+                      dismissButton: .cancel())
+                
+            })
+            .padding(.horizontal,20)
+            .edgesIgnoringSafeArea(.all)
+            .background(Color.black.overlay(Color.black.opacity(0.45)))
+            .ignoresSafeArea(.keyboard)
+            .zIndex(0)
+            
+            if isLoading{
+                VStack{
+                    BasicLoadingView()
+                        .padding()
+                        .background(BlurView().cornerRadius(15))
+                }
+                .zIndex(1.0)
+                .frame(maxWidth:.infinity, maxHeight:.infinity)
+                .background(Color.black.opacity(0.75).edgesIgnoringSafeArea(.all))
+            }
+        }
+    }
+    
+    @ViewBuilder
+    func signUpInfo(FieldText : String,bindText: Binding<String>,placeHolder : String,keyType : UIKeyboardType,returnType:UIReturnKeyType,isSecureText : Bool = false) -> some View{
+        VStack(alignment:.leading){
+            Text(FieldText)
+                .OswaldSemiBold()
+                .foregroundColor(.white)
+            CustonUITextView(text: bindText, placeholder: placeHolder, keybooardType: keyType, returnKeytype: returnType, tag: 0,isSecureText:isSecureText)
+                .frame(height:23)
+            Divider()
+                .background(Color.white)
+        }
+        .padding(.vertical,10)
+    }
+    
+    func Register(){
+        let auth = UserRegister(user_name: self.name, email: self.email, password: self.password, confirm_password: self.confirmPassword)
+        registerService.requestRegister(endpoint: "/users/register", RegisterObject: auth) { (result) in
+            print(result)
+            
+            switch result {
+            case .success:
+                print("register success")
+                ErrorAlert = false
+                withAnimation(){
+                    self.isLoading.toggle()
+                    self.backToSignIn.toggle()
+                }
+                
+            case .failure(let error):
+                print("register failed")
+                ErrorAlert = true
+                ErrorResponse = error.localizedDescription
+                withAnimation(){
+                    self.isLoading.toggle()
+                }
+
+            }
+        }
+    }
+    
+    
+}
+
+
 struct SignUp: View {
     @State var ErrorResponse:String = ""
     @State var ErrorAlert = false
@@ -86,7 +219,7 @@ struct SignUp: View {
                     Text("Sign Up")
                         .bold()
                         .foregroundColor(.orange)
-                        .TekoBoldFontFont(size: 45)
+                        .TekoBold(size: 45)
                     
                     Spacer()
                 }
@@ -305,14 +438,8 @@ struct FirstMovieSettingView: View {
                 }
             }
             .padding(.horizontal,50)
-
-        
-            
             Spacer()
-
-            
         }
         .navigationTitle("電影喜好設定")
-        
     }
 }

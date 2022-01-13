@@ -14,6 +14,189 @@ var NowUserName:String = "" // user who login
 var NowUserID:UUID? // user who login
 var NowUserPhoto:Image? // user who login
 
+struct SignIn2: View {
+    @State private var username : String = ""
+    @State private var password : String = ""
+    
+    @State private var isSignUp : Bool = false
+    @State private var isLoading : Bool = false
+    @State var ErrorAlert = false
+    @State private var remember = false
+    
+    @Binding  var backToHome : Bool
+    @Binding var isLoggedIn : Bool
+    @AppStorage("userName") private var userName : String = ""
+    @AppStorage("userPassword") private var userPassword : String = ""
+    @AppStorage("rememberUser") private var rememberUser : Bool = false
+    @ObservedObject private var networkingService = NetworkingService.shared
+    
+    var body: some View {
+        ZStack{
+            VStack(alignment:.leading){
+                VStack{
+                    Button(action:{
+                        withAnimation(){
+                            self.backToHome.toggle()
+                        }
+                    }){
+                        Image(systemName: "chevron.left")
+                            .imageScale(.large)
+                            .foregroundColor(.white)
+                    }
+                }
+                .padding(.vertical)
+                .padding(.top,UIApplication.shared.windows.first?.safeAreaInsets.top)
+                .padding(.bottom,50)
+                VStack(alignment:.leading,spacing:0){
+                    HStack{
+                        Text("Sign In")
+                            .TekoBold(size: 40)
+                            .foregroundColor(.white)
+                        
+                    }
+                    
+                    signUpInfo(FieldText: "UserName", bindText: $username, placeHolder: "Enter your email", keyType: .default, returnType: .default)
+                    signUpInfo(FieldText: "Password", bindText: $password, placeHolder: "Enter your password", keyType: .default, returnType: .default,isSecureText: true)
+                    
+                    HStack{
+                        Group{
+                            Image(systemName: self.remember ? "checkmark.square.fill" : "square.fill")
+                                .font(.body)
+                                .foregroundColor(.white)
+                                .onTapGesture(){
+                                    withAnimation(){
+                                        self.remember.toggle()
+                                        UserDefaults.standard.set( self.remember, forKey: "rememberUser")
+                                    }
+                                }
+                            Text("Remember me")
+                                .font(.footnote)
+                                .foregroundColor(.white)
+                                .OswaldSemiBold()
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(.vertical,8)
+                    
+                    VStack{
+                        Button(action:{
+                            //Check and
+                            withAnimation(){
+                                self.isLoading.toggle()
+                            }
+                            self.Login(UserName: self.username, Password: self.password)
+                        }){
+                            Text("Sign In")
+                                .bold()
+                                .OswaldSemiBold()
+                                .foregroundColor(.white)
+                                .frame(maxWidth:.infinity,maxHeight: 50)
+                                .background(Color.pink.cornerRadius(8))
+                        }
+                        .padding(.top)
+                        
+                        HStack{
+                            Text("Do not have an account?")
+                                .foregroundColor(.gray)
+                            
+                            Button(action:{
+                                //TODO
+                                withAnimation(){
+                                    self.isSignUp.toggle()
+                                }
+                            }){
+                                Text("SignUp")
+                                    .foregroundColor(.white)
+                            }
+                        }
+                        .OswaldSemiBold(size: 15)
+                    }
+                }
+                Spacer()
+            }
+            .padding(.horizontal,20)
+            .edgesIgnoringSafeArea(.all)
+            .background(Color.black.overlay(Color.black.opacity(0.45)).edgesIgnoringSafeArea(.all))
+            .zIndex(0)
+            
+            if isSignUp{
+                SignUp2(backToSignIn: $isSignUp)
+                    .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .trailing)))
+                    .zIndex(1)
+            }
+            
+            if isLoading{
+                VStack{
+                    BasicLoadingView()
+                        .padding()
+                        .background(BlurView().cornerRadius(15))
+                }
+                .zIndex(1.0)
+                .frame(maxWidth:.infinity, maxHeight:.infinity)
+                .background(Color.black.opacity(0.75).edgesIgnoringSafeArea(.all))
+            }
+        }
+        .ignoresSafeArea(.keyboard)
+        .alert(isPresented: $ErrorAlert, content: {
+            Alert(title: Text("帳號密碼錯誤"),
+                  dismissButton: .default(Text("Enter")))
+        })
+        .onAppear(perform: {
+            self.remember = rememberUser
+            self.username = userName
+            self.password = userPassword
+        })
+
+    }
+    
+    @ViewBuilder
+    func signUpInfo(FieldText : String,bindText: Binding<String>,placeHolder : String,keyType : UIKeyboardType,returnType:UIReturnKeyType,isSecureText : Bool = false) -> some View{
+        VStack(alignment:.leading){
+            Text(FieldText)
+                .OswaldSemiBold()
+                .foregroundColor(.white)
+            CustonUITextView(text: bindText, placeholder: placeHolder, keybooardType: keyType, returnKeytype: returnType, tag: 0,isSecureText:isSecureText)
+                .frame(height:23)
+            Divider()
+                .background(Color.white)
+        }
+        .padding(.vertical,10)
+    }
+    
+    func Login(UserName:String, Password:String){
+        let login = UserLogin(UserName: username, Password: Password)
+        
+        //If token is not nil check then token first else login with request
+        networkingService.requestLogin(endpoint: "/users/login", loginObject: login) { (result) in
+            print(result)
+            switch result {
+            case .success(let user):
+                print("login success")
+//                self.isPresented.toggle()
+
+                ErrorAlert = false
+                NowUserName = user.UserName
+                NowUserID = user.id
+                UserDefaults.standard.set(self.remember ? username : "", forKey: "userName")
+                UserDefaults.standard.set(self.remember ? password : "", forKey: "userPassword")
+                
+                withAnimation(){
+                    self.isLoggedIn.toggle()
+                    self.backToHome.toggle()
+                    self.isLoading.toggle()
+                }
+
+            case .failure:
+                //need to fixed here
+                print("login failed")
+                ErrorAlert = true
+                self.isLoading.toggle()
+            }
+        }
+    }
+}
+
 
 struct SignIn: View {
     @State private var failed = false
@@ -129,7 +312,7 @@ struct SignInCell : View{
             Text("Sign In")
                 .bold()
                 .foregroundColor(.orange)
-                .TekoBoldFontFont(size: 45)
+                .TekoBold(size: 45)
             
             VStack(){
                 VStack {
@@ -244,203 +427,3 @@ struct SignInCell : View{
 
 
 
-struct Logo: View {
-    var body: some View {
-        VStack {
-            HStack {
-                Image(systemName: "circle.fill")
-                    .font(.caption2)
-                Image(systemName: "circle.fill")
-                    .font(.caption2)
-            }
-            Image(systemName: "mustache")
-        }
-        .font(.system(size:150))
-        .padding(.bottom)
-        .padding(.top)
-        .foregroundColor(.blue)
-    }
-}
-
-//struct SocialLogo: View {
-//
-//    @State private var currentNonce: String?
-//    // Adapted from https://auth0.com/docs/api-auth/tutorials/nonce#generate-a-cryptographically-random-nonce
-//
-//    //random string for apple request
-//    private func randomNonceString(length: Int = 32) -> String {
-//      precondition(length > 0)
-//      let charset: Array<Character> =
-//          Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
-//      var result = ""
-//      var remainingLength = length
-//
-//      while remainingLength > 0 {
-//        let randoms: [UInt8] = (0 ..< 16).map { _ in
-//          var random: UInt8 = 0
-//          let errorCode = SecRandomCopyBytes(kSecRandomDefault, 1, &random)
-//          if errorCode != errSecSuccess {
-//            fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)")
-//          }
-//          return random
-//        }
-//
-//        randoms.forEach { random in
-//          if remainingLength == 0 {
-//            return
-//          }
-//
-//          if random < charset.count {
-//            result.append(charset[Int(random)])
-//            remainingLength -= 1
-//          }
-//        }
-//      }
-//
-//      return result
-//    }
-//
-//    //shash a string
-//    @available(iOS 13, *)
-//    private func sha256(_ input: String) -> String {
-//      let inputData = Data(input.utf8)
-//      let hashedData = SHA256.hash(data: inputData)
-//      let hashString = hashedData.compactMap {
-//        return String(format: "%02x", $0)
-//      }.joined()
-//
-//      return hashString
-//    }
-//
-//    var body: some View {
-//        HStack {
-//            VStack{
-//                SocialLoginButton(text: "Sign in with Google", textColor: .black, button: .white,image: "google"){
-//                    GIDSignIn.sharedInstance()?.presentingViewController = UIApplication.shared.windows.first?.rootViewController
-//
-//                    GIDSignIn.sharedInstance()?.signIn()
-//                }
-//
-//
-//                //SignIn with google
-//                SignInWithAppleButton(
-//                    onRequest: { request in
-//                        let Nonce = randomNonceString()
-//                        currentNonce = Nonce
-//
-//                        //what i want to get
-//                        request.requestedScopes = [.fullName,.email]
-//                        //request full Name and  Email
-//
-//                        request.nonce = sha256(Nonce)
-//                    },
-//                    onCompletion: { result in
-//                        switch result {
-//                        case .success(let authResults):
-//                            switch authResults.credential {
-//                            case let appleIDCredential as ASAuthorizationAppleIDCredential:
-//
-//                                guard let nonce = currentNonce else {
-//                                    fatalError("Invalid state: A login callback was received, but no login request was sent.")
-//                                }
-//                                guard let appleIDToken = appleIDCredential.identityToken else {
-//                                    fatalError("Invalid state: A login callback was received, but no login request was sent.")
-//                                }
-//                                guard let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
-//                                    print("Unable to serialize token string from data: \(appleIDToken.debugDescription)")
-//                                    return
-//                                }
-//
-//                                //Creating a request for firebase
-//                                let credential = OAuthProvider.credential(withProviderID: "apple.com",idToken: idTokenString,rawNonce: nonce)
-//
-//                                ///Step
-//                                //Same as goole ,need a credential first, getting form apple request
-//                                //after request back ,if request include nonce id token apple token send the request to firebase and get the credential from firebase
-//                                //after auth that credintial
-//                                //Sending Request to Firebase
-//                                Auth.auth().signIn(with: credential) { (authResult, error) in
-//                                    if (error != nil) {
-//                                        // Error. If error.code == .MissingOrInvalidNonce, make sure
-//                                        // you're sending the SHA256-hashed nonce as a hex string with
-//                                        // your request to Apple.
-//                                        print(error?.localizedDescription as Any)
-//                                        return
-//                                    }
-//                                    // User is signed in to Firebase with Apple.
-//                                    print("you're in")
-//                                }
-//
-//                                //Prints the current userID for firebase
-//                                print("\(String(describing: Auth.auth().currentUser?.uid))")
-//
-//                            default:
-//                                break
-//                            }
-//                        case .failure(let error):
-//                            print(error)
-//                        }
-//                    }
-//
-//                )
-//                .signInWithAppleButtonStyle(.white)
-//                .cornerRadius(25)
-//                .frame(height:50)
-//                .padding(.horizontal,50)
-//
-//            }
-
-//
-//            Spacer()
-//            CircleButton(IconName: "applelogo") {
-//                // TODO:
-//                // SIGN IN WITH APPLE ID
-//
-//
-//            }
-//            Spacer()
-//
-//            CircleButton(IconName: "GoogleIcon",isSystemName: false) {
-//                // TODO:
-//                // SIGN IN WITH APPLE ID
-//                GIDSignIn.sharedInstance()?.presentingViewController = UIApplication.shared.windows.first?.rootViewController
-//
-//                GIDSignIn.sharedInstance()?.signIn()
-//            }
-//
-//            Spacer()
-//
-//            CircleButton(IconName: "facebook",isSystemName: false) {
-//                // TODO:
-//                // SIGN IN WITH APPLE ID
-//
-//                //NOT WORKING YET
-////                let manger = LoginManager()
-////                manger.logIn(permissions: ["public_profile","emiil"]){ result  in
-////
-////                    if case LoginResult.success(granted: _, declined: _, token: _) = result{
-////                        print("OK")
-////                    }
-////                    else{
-////                        print("fail")
-////                    }
-////
-////                }
-//            }
-//
-//
-//            Spacer()
-//
-//            CircleButton(IconName: "twitter",isSystemName: false) {
-//                // TODO:
-//                // SIGN IN WITH APPLE ID
-//            }
-//
-//            Spacer()
-//
-//        }
-//
-//    }
-//}
-//
-//

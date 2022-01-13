@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Adam's Apple</string>
+	<string>Adam&apos;s Apple</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -47,6 +47,8 @@
 		<string>ZCOOLKuaiLe-Regular.ttf</string>
 		<string>Courgette-Regular.ttf</string>
 		<string>Teko-Bold.ttf</string>
+		<string>Oswald-SemiBold.ttf</string>
+		<string>Padauk-Regular.ttf</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
