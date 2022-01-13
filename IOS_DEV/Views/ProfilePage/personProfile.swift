@@ -7,39 +7,77 @@
 
 import SwiftUI
 
-struct personProfile: View {
-    var body: some View {
-        VStack{
-            
-            VStack{
-                HStack{
-                    Image(systemName: "line.3.horizontal")
-                        .imageScale(.large)
-                    Spacer()
-                }
-                .padding(.top,UIApplication.shared.windows.first?.safeAreaInsets.top)
-                .padding(.bottom)
-                profile()
-
-            }
-            .padding(.horizontal)
-            .background(Image("bg").blur(radius: 2).overlay(LinearGradient(colors: [
-                Color.black.opacity(0.2),
-                Color.black.opacity(0.6),
-                Color.black,
-                
-            ], startPoint: .top, endPoint: .bottom)))
-            Spacer()
-            
-            personCell()
-                
+struct mainPersonView : View{
+    var body: some View{
+        GeometryReader{proxy in
+            let topEdge = proxy.safeAreaInsets.top
+            personProfile(topEdge: topEdge)
+                .ignoresSafeArea(.all, edges: .top)
         }
-        .edgesIgnoringSafeArea(.all)
     }
+}
+
+struct personProfile: View {
+    private let max = UIScreen.main.bounds.height / 2.7
+    var topEdge : CGFloat
+    @State private var offset:CGFloat = 0.0
+    var body: some View {
+//
+        ScrollView(.vertical, showsIndicators: false){
+              VStack{
+                  GeometryReader{ proxy in
+                      profile()
+                          .frame(maxWidth:.infinity)
+                          .frame(height: getHeaderHigth(), alignment: .bottom)
+                          .background(
+                            Image("bg").overlay(LinearGradient(colors: [
+                              Color.black.opacity(0.2),
+                              Color.black.opacity(0.6),
+                              Color.black,
+
+                          ], startPoint: .top, endPoint: .bottom))
+                                .frame(height: getHeaderHigth(), alignment: .bottom)
+                          )
+                          .overlay(
+                            HStack{
+                                Button(action:{}){
+                                    Image(systemName: "line.3.horizontal")
+                                        .foregroundColor(.white)
+                                        .font(.title2)
+                                }
+                                
+                                Spacer()
+                            }
+                                .padding(.horizontal)
+                                .frame(height: 50)
+                                .padding(.top,topEdge)
+                                .background(Color.red.opacity(getOpacity()))
+                            ,alignment: .top
+                          )
+                  }
+                  .frame(height:max)
+                  .offset(y:-offset)
+                  .zIndex(1)
+                  
+                  
+                  personCell()
+                      .zIndex(0)
+//                      .frame(height: UIScreen.main.bounds.height - max - 80)
+                  
+                  
+              }
+             
+              .modifier(PersonPageOffsetModifier(offset: $offset))
+        }
+        .coordinateSpace(name: "SCROLL") //cotroll relate coordinateSpace
+
+    }
+    
     
     @ViewBuilder
     func profile() -> some View{
         VStack(alignment:.leading){
+            Spacer()
             HStack(alignment:.center){
                 Image("image")
                     .resizable()
@@ -63,7 +101,8 @@ struct personProfile: View {
                 
                 Spacer()
             }
-        
+                .padding(.bottom)
+            
             HStack(){
                 Text("歡迎來到我的個人頁面.")
                     .font(.footnote)
@@ -124,13 +163,13 @@ struct personProfile: View {
             .padding(.vertical)
         
         }
-
+        .padding(.horizontal)
     }
     
     @ViewBuilder
     func personCell() -> some View{
         VStack(){
-            HStack(spacing:15){
+            HStack(spacing:20){
                 
                 Text("Posts")
                 
@@ -140,29 +179,56 @@ struct personProfile: View {
                 Text("Like")
                     .foregroundColor(Color("subTextGray"))
             }
-            .font(.body)
+            .font(.system(size: 15))
 //            .foregroundColor(.red)
-            .frame(width:UIScreen.main.bounds.width,height:UIScreen.main.bounds.height / 22)
+            .frame(width:UIScreen.main.bounds.width,height:UIScreen.main.bounds.height / 18)
             .background(Color("PersonCellColor").clipShape(CustomeConer(coners: [.topLeft,.topRight])))
             .padding(.bottom,5)
+            
             Spacer()
             
-            HStack{
-                Text("You have't post any post yet")
-                    .font(.footnote)
-                    .foregroundColor(Color("subTextGray"))
+            VStack{
+                ForEach(0..<50){i in
+                    Text("\(i)")
+                }
+//                Spacer()
+//                Text("You have't post any post yet")
+//                    .font(.footnote)
+//                    .foregroundColor(Color("subTextGray"))
+//                Spacer()
             }
-        
-            Spacer()
+            .frame(maxHeight:.infinity)
+            
         }
-        .frame(maxWidth:.infinity,maxHeight: .infinity)
+        
         .background(Color.black.clipShape(CustomeConer(coners: [.topLeft,.topRight])))
+        
 
+    }
+    
+    
+    private func getHeaderHigth() -> CGFloat{
+        //setting the height of the header
+        
+        let top = max + offset
+        //constrain is set to 80 now
+        // < 80 + topEdge not at the top yet
+        return top > (20 + topEdge) ? top : 20 + topEdge
+    }
+    
+    private func getOpacity() -> CGFloat{
+        let progress = -offset / 70
+        let opcity = 1 - progress
+        
+        return offset  < 0 ? 1 : opcity
     }
 }
 
 struct personProfile_Previews: PreviewProvider {
     static var previews: some View {
-        personProfile()
+        mainPersonView()
     }
 }
+
+
+
