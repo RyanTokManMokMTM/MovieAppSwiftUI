@@ -102,6 +102,11 @@
 			<key>orderHint</key>
 			<integer>14</integer>
 		</dict>
+		<key>SDWebImageSwiftUI.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>16</integer>
+		</dict>
 		<key>nanopb.xcscheme</key>
 		<dict>
 			<key>isShown</key>
