@@ -39,6 +39,25 @@ struct PersonPageOffsetModifier : ViewModifier{
     }
 }
 
+struct GenralOffsetModifier : ViewModifier{
+    @Binding var offset : CGFloat
+    func body(content: Content) -> some View {
+        content
+            .overlay(
+                GeometryReader{proxy -> Color in
+                    let minY = proxy.frame(in: .named("Genral")).minY
+                    DispatchQueue.main.async {
+                        self.offset = minY
+                        print(minY)
+                    }
+                    return Color.clear
+                    
+                }
+                ,alignment: .top
+            )
+    }
+}
+
 struct OffsetModifier: ViewModifier {
     @Binding var offset : CGFloat
     @State private var startValue : CGFloat = 0

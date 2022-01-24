@@ -29,6 +29,7 @@ struct SignIn2: View {
     @AppStorage("userPassword") private var userPassword : String = ""
     @AppStorage("rememberUser") private var rememberUser : Bool = false
     @ObservedObject private var networkingService = NetworkingService.shared
+    @State private var isFocuse : [Bool] = [false,true]
     
     var body: some View {
         ZStack{
@@ -156,7 +157,7 @@ struct SignIn2: View {
             Text(FieldText)
                 .OswaldSemiBold()
                 .foregroundColor(.white)
-            CustonUITextView(text: bindText, placeholder: placeHolder, keybooardType: keyType, returnKeytype: returnType, tag: 0,isSecureText:isSecureText)
+            CustomUITextView(focuse:$isFocuse,text: bindText, placeholder: placeHolder, keybooardType: keyType, returnKeytype: returnType, tag: 0,isSecureText:isSecureText)
                 .frame(height:23)
             Divider()
                 .background(Color.white)

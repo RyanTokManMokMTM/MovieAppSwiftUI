@@ -149,6 +149,7 @@
 		7A0EE932261041690056BC8C /* IOS_DEVApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0EE931261041690056BC8C /* IOS_DEVApp.swift */; };
 		7A0EE934261041690056BC8C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0EE933261041690056BC8C /* ContentView.swift */; };
 		7A0EE9392610416A0056BC8C /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A0EE9382610416A0056BC8C /* Preview Assets.xcassets */; };
+		7A15788F279E94B0001BBD62 /* ScrollableTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A15788E279E94B0001BBD62 /* ScrollableTabBar.swift */; };
 		7A2F7307261E099200C0A2FF /* MovieTrailerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F7306261E099200C0A2FF /* MovieTrailerModel.swift */; };
 		7A2F7310261E124E00C0A2FF /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F730F261E124E00C0A2FF /* Player.swift */; };
 		7A645450262F120A006ACA4F /* Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A64544F262F120A006ACA4F /* Extension.swift */; };
@@ -323,6 +324,7 @@
 		7A0EE9352610416A0056BC8C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = IOS_DEV/Assets.xcassets; sourceTree = SOURCE_ROOT; };
 		7A0EE9382610416A0056BC8C /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		7A0EE93A2610416A0056BC8C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7A15788E279E94B0001BBD62 /* ScrollableTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollableTabBar.swift; sourceTree = "<group>"; };
 		7A2F7306261E099200C0A2FF /* MovieTrailerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieTrailerModel.swift; sourceTree = "<group>"; };
 		7A2F730F261E124E00C0A2FF /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		7A31487B2610942100B6E5FB /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../../../../GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -605,6 +607,7 @@
 				0113FBF9270362A500BECECF /* BlurView.swift */,
 				0113FBFB270362BB00BECECF /* CameraImagePickerView.swift */,
 				6F0D0529278EBA9B00356C2B /* CustomeUITextView.swift */,
+				7A15788E279E94B0001BBD62 /* ScrollableTabBar.swift */,
 			);
 			path = UKIitViews;
 			sourceTree = "<group>";
@@ -1066,6 +1069,7 @@
 				0194A5E52695AB9700E24598 /* MovieDetailState.swift in Sources */,
 				018DD31B26B675A8001A1345 /* ListService.swift in Sources */,
 				0194A5F12695E04000E24598 /* MovieSearchState.swift in Sources */,
+				7A15788F279E94B0001BBD62 /* ScrollableTabBar.swift in Sources */,
 				019017D626F63DF6007F1FE8 /* UpdateButton.swift in Sources */,
 				0194A5E32695A8FE00E24598 /* ImageLoader.swift in Sources */,
 				01CE9F4326E50B6900A307E3 /* HalfModalView.swift in Sources */,

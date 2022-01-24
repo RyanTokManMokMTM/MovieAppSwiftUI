@@ -21,7 +21,7 @@ struct SignUp2: View {
     @State var ErrorResponse:String = ""
     @State var ErrorAlert = false
     @State private var isLoading : Bool = false
-    
+    @State private var isFocuse : [Bool] = [false,true]
     var body: some View {
         ZStack{
             VStack(alignment:.leading){
@@ -105,7 +105,7 @@ struct SignUp2: View {
             Text(FieldText)
                 .OswaldSemiBold()
                 .foregroundColor(.white)
-            CustonUITextView(text: bindText, placeholder: placeHolder, keybooardType: keyType, returnKeytype: returnType, tag: 0,isSecureText:isSecureText)
+            CustomUITextView(focuse:$isFocuse,text: bindText, placeholder: placeHolder, keybooardType: keyType, returnKeytype: returnType, tag: 0,isSecureText:isSecureText)
                 .frame(height:23)
             Divider()
                 .background(Color.white)

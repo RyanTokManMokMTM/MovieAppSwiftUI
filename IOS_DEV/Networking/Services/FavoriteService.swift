@@ -53,7 +53,6 @@ class FavoriteService: ObservableObject {
                         completion: @escaping(Int)->()) {
         
         let url = URL(string: baseUrl + endpoint)
-        print(url?.relativePath)
         let token =  networkingService.getToken()
         var request = URLRequest(url: url!)
         do {
