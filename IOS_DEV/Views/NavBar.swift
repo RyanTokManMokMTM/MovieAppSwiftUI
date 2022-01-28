@@ -314,8 +314,10 @@ struct NavBar: View {
                             .opacity(self.index == 2 ? 1 : 0)
                         
                         
-                        ProfileView(MovieData:favoriteController.MovieData, ArticleData: favoriteController.ArticleData)
+                        mainPersonView()
                             .opacity(self.index == 3 ? 1 : 0)
+//                        ProfileView(MovieData:favoriteController.MovieData, ArticleData: favoriteController.ArticleData)
+//                            .opacity(self.index == 3 ? 1 : 0)
                         //
                     }.onAppear(){
                         self.mainPageHeight = geo.frame(in: .global).height

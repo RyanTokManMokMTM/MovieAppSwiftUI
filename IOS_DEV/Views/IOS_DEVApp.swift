@@ -16,12 +16,73 @@ struct IOS_DEVApp: App {
     
     var body: some Scene {
         WindowGroup {
-            mainPersonView()
+//            NavBar(isLogOut: .constant(false), index: 0)
+//                .ignoresSafeArea()
 //            WelcomePage2()
+            ChattingView()
         }
     }
 }
 
+
+struct imagePickerTestView : View{
+    @State private var isShowPicker : Bool = false
+    @State private var image : UIImage = UIImage(named: "image")!
+    var body : some View{
+        VStack{
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 150, height: 150, alignment: .center)
+                .clipShape(Circle())
+                .padding()
+                .onTapGesture {
+                    withAnimation(){
+                        self.isShowPicker.toggle()
+                    }
+                }
+        }.fullScreenCover(isPresented: $isShowPicker){
+            EditableImagePickerView(sourceType: .photoLibrary, selectedImage: $image)
+        }
+    }
+}
+
+//struct TestContent: View {
+//    var originalImage = UIImage(named: "image")
+//    @State var croppedImage:UIImage?
+//    @State var cropperShown = false
+//
+//    var body: some View {
+//        VStack{
+//            Spacer()
+//            Text("Original")
+//            Image(uiImage: originalImage!)
+//                .resizable()
+//                .scaledToFit()
+//                .frame(width: 200, height: 200)
+//            Spacer()
+//            if croppedImage != nil {
+//                Text("Cropped")
+//                Image(uiImage: croppedImage!)
+//                    .resizable()
+//                    .scaledToFit()
+//                    .frame(width: 200, height: 200)
+//                Spacer()
+//            }
+//
+//            Button(action: {cropperShown = true}){
+//                Text("Go to cropper")
+//            }
+//
+//            Spacer()
+//        }
+//        .fullScreenCover(isPresented: $cropperShown){
+//            ImageCropVIew(isCropping: $cropperShown, image: originalImage!, croppedImage: $croppedImage)
+//        }
+//
+//    }
+//
+//}
 
 
 extension Double {

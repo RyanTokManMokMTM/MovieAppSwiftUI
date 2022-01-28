@@ -11,6 +11,36 @@ import CoreAudio
 import Kingfisher
 import Combine //used to add a pulisher to a state variable
 
+class UserInfoVM : ObservableObject{
+    @Published var user : UserProfileInfo
+    init(){
+        self.user = UserProfileInfo(UID: 1, MID: "JacksonTMM", UserName: "Jackson.tmm", UserAvatar: UIImage(named: "image")!,UserBackGround: UIImage(named: "bg")!,  Following: 10, Followers: 10, Likes: 3,UserCollection: postCardTemp,UserLikedMovies: likedTemp,UserGenrePrerences: [])
+    }
+    
+    
+    
+}
+
+struct UserProfileInfo {
+    let UID : Int
+    var MID : String
+    var UserName : String
+    var UserAvatar : UIImage
+    var UserBackGround : UIImage
+
+    var Following : Int
+    var Followers : Int
+    var Likes : Int
+    var UserCollection : [PostCard]
+    var UserLikedMovies : [LikedMovieCard] //might change to movie struct for instead
+    var UserGenrePrerences :[MovieGenreTab]
+    
+    //it may have the token of the user
+    //setting of the user etc... .ops~ our system may have not any system setting feature
+    
+
+}
+
 struct mainPersonView : View{
     var body: some View{
         NavigationView{
@@ -81,7 +111,10 @@ class MoviePrerefencesSettingModel : ObservableObject {
         
         if self.prerefencesType[index].isSelected{
             self.prerefencesType[index].isSelected.toggle()
-            self.removeSelected(i: index)
+            
+            //find the index of the items
+            let selectedInd = self.isSelectedType.firstIndex(){$0.id == preferencesID}
+            self.removeSelected(i: selectedInd!)
             return
         }
         
@@ -105,6 +138,8 @@ class MoviePrerefencesSettingModel : ObservableObject {
     private func checkIsMaxSelected() -> Bool{
         return isSelectedType.count < 5 ? false : true
     }
+    
+    
 }
 
 let tempGenreTab : [MovieGenreTab] = [
@@ -243,95 +278,96 @@ struct UserSetting : View {
     }
 }
 
-struct EditTextAreaView : View {
-    var settingHeader : String = "設定"
-    @Binding var editText : String
-    @Binding var isCancel : Bool
-    @State private var isSave : Bool = false
-    var body : some View{
-        
-        GeometryReader{proxy in
-            VStack(alignment:.leading){
-                VStack{
-                    HStack(){
-                        Button(action:{
-                            withAnimation(){
-                                self.isCancel.toggle()
-                            }
-                        }){
-                            Text("取消")
-                                .foregroundColor(.white)
-                                .font(.system(size: 14))
-                        }
-                        Spacer()
-                        Text(settingHeader)
-                            .font(.system(size: 14))
-                        Spacer()
-                        
-                        Button(action:{
-                            withAnimation(){
-                                self.isSave.toggle()
-                            }
-                        }){
-                            Text("完成")
-                                .foregroundColor(.white)
-                                .font(.system(size: 14))
-                        }
-                    }
-                    .font(.system(size: 15))
-                    .padding(.horizontal,5)
-                    .padding(.bottom,10)
-                }
-                .frame(width: UIScreen.main.bounds.width, height: proxy.safeAreaInsets.top + 30,alignment: .bottom)
-                Divider()
-                    .background(Color.white.opacity(0.25))
-                
-                HStack{
-                    TextEditor(text: $editText)
-                        .font(.system(size: 13))
-                        .frame(height: 100, alignment: .center)
-                        .background(Color("appleDark"))
-                        .onReceive(Just(editText)){_ in limitText(50)}
-                        
-                    
-                }
-                .padding(5)
-                .background(Color("appleDark"))
-                .cornerRadius(10)
-                .overlay(
-                    VStack{
-                        Spacer()
-                        HStack{
-                            Spacer()
-                            Text("\(editText.count)/50")
-                                .foregroundColor(.gray)
-                                .font(.footnote)
-                                .font(.system(size: 13))
-                        }
-                    }
-                    .padding()
-                )
-                .padding(.horizontal)
-                
-                
-                
-            }
-            .onAppear {
-                UITextView.appearance().backgroundColor = .clear
-                UITextView.appearance().tintColor = .gray
-            }
-            .edgesIgnoringSafeArea(.all)
-            
-        }
-        
-    }
-    
-    func limitText(_ upper: Int) {
-        if editText.count > upper {
-            editText = String(editText.prefix(upper))
-        }
-    }
-}
+//struct EditTextAreaView : View {
+//    var settingHeader : String = "設定"
+//    @Binding var editText : String
+//    @Binding var isCancel : Bool
+//    @State private var isSave : Bool = false
+//    var body : some View{
+//
+//        GeometryReader{proxy in
+//            VStack(alignment:.leading){
+//                VStack{
+//                    HStack(){
+//                        Button(action:{
+//                            withAnimation(){
+//                                self.isCancel.toggle()
+//                            }
+//                        }){
+//                            Text("取消")
+//                                .foregroundColor(.white)
+//                                .font(.system(size: 14))
+//                        }
+//                        Spacer()
+//                        Text(settingHeader)
+//                            .font(.system(size: 14))
+//                        Spacer()
+//
+//                        Button(action:{
+//                            withAnimation(){
+//                                self.isSave.toggle()
+//                                self.isCancel.toggle()
+//                            }
+//                        }){
+//                            Text("完成")
+//                                .foregroundColor(.white)
+//                                .font(.system(size: 14))
+//                        }
+//                    }
+//                    .font(.system(size: 15))
+//                    .padding(.horizontal,5)
+//                    .padding(.bottom,10)
+//                }
+//                .frame(width: UIScreen.main.bounds.width, height: proxy.safeAreaInsets.top + 30,alignment: .bottom)
+//                Divider()
+//                    .background(Color.white.opacity(0.25))
+//
+//                HStack{
+//                    TextEditor(text: $editText)
+//                        .font(.system(size: 13))
+//                        .frame(height: 100, alignment: .center)
+//                        .background(Color("appleDark"))
+//                        .onReceive(Just(editText)){_ in limitText(50)}
+//
+//
+//                }
+//                .padding(5)
+//                .background(Color("appleDark"))
+//                .cornerRadius(10)
+//                .overlay(
+//                    VStack{
+//                        Spacer()
+//                        HStack{
+//                            Spacer()
+//                            Text("\(editText.count)/50")
+//                                .foregroundColor(.gray)
+//                                .font(.footnote)
+//                                .font(.system(size: 13))
+//                        }
+//                    }
+//                    .padding()
+//                )
+//                .padding(.horizontal)
+//
+//
+//
+//            }
+//            .onAppear {
+//                UITextView.appearance().backgroundColor = .clear
+//                UITextView.appearance().tintColor = .gray
+//            }
+//            .edgesIgnoringSafeArea(.all)
+//
+//        }
+//
+//    }
+//
+//    func limitText(_ upper: Int) {
+//        if editText.count > upper {
+//            editText = String(editText.prefix(upper))
+//        }
+//    }
+//}
 
 struct EditTextView : View {
     var settingHeader : String = "設定"
@@ -432,7 +468,8 @@ struct MoviePreferenceSetting : View {
     @State private var offset : CGFloat = 0.0
     @StateObject var preferencesMv : MoviePrerefencesSettingModel = MoviePrerefencesSettingModel()
     @Binding var isPreferences : Bool
-    @State private var isDone : Bool = false
+    @Binding var userInfo : UserProfileInfo
+
     var body : some View{
         GeometryReader{proxy in
             VStack(spacing:0){
@@ -443,7 +480,7 @@ struct MoviePreferenceSetting : View {
                                 self.isPreferences.toggle()
                             }
                         }){
-                            Image(systemName: "arrow.left")
+                            Image(systemName: "chevron.left")
                                 .foregroundColor(.white)
                                 .imageScale(.medium)
                         }
@@ -453,12 +490,15 @@ struct MoviePreferenceSetting : View {
                         
                         Button(action:{
                             withAnimation(){
-                                self.isDone.toggle()
+                                self.userInfo.UserGenrePrerences.append(contentsOf: self.preferencesMv.isSelectedType.map{$0})
+          
+                                self.isPreferences.toggle()
                             }
                         }){
                             Text("完成")
                                 .foregroundColor(.white)
                                 .imageScale(.medium)
+                            
                         }
                     }
                     .font(.system(size:15))
@@ -473,7 +513,7 @@ struct MoviePreferenceSetting : View {
                 
                 ScrollView(.vertical, showsIndicators: false){
                     VStack(alignment:.leading){
-                        Text("嗨,Jackson.tmm")
+                        Text("嗨,\(userInfo.UserName)")
                             .bold()
                             .foregroundColor(.white)
                             .font(.system(size:15))
@@ -566,7 +606,7 @@ struct userMoviePreferenceTab : View {
 
 struct profileCardCell : View {
     var post : PostCard
-
+    @EnvironmentObject var userVM : UserInfoVM
     var body: some View{
         VStack(alignment:.center){
             WebImage(url:  URL(string: post.imgURL)!)
@@ -595,14 +635,14 @@ struct profileCardCell : View {
                 
                 HStack{
                     HStack(spacing:5){
-                        Image("image")
+                        Image(uiImage: userVM.user.UserAvatar)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                             .frame(width: 25, height: 25, alignment: .center)
                             .clipShape(Circle())
                             
                         VStack(alignment:.leading){
-                            Text("Jackson.tmm").bold()
+                            Text(userVM.user.UserName).bold()
                                 .font(.caption)
                                 .foregroundColor(Color("subTextGray"))
                             
@@ -632,9 +672,9 @@ struct profileCardCell : View {
 
 struct PersonPostCardGridView : View{
     let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
-    @Binding var postCards : [PostCard]
+    @EnvironmentObject var userVM : UserInfoVM
     var body: some View{
-        if postCards.isEmpty{
+        if userVM.user.UserCollection.isEmpty{
             VStack{
                 Spacer()
                 Text("Not Post yet")
@@ -646,21 +686,129 @@ struct PersonPostCardGridView : View{
             
         }else{
             LazyVGrid(columns: gridItem){
-                ForEach(postCards,id:\.id){post in
+                ForEach(userVM.user.UserCollection,id:\.id){post in
                     profileCardCell(post: post)
                 }
             }
         }
-        
-        
     }
 }
 
+//is liked by user
+struct LikedMovieCard : Identifiable {
+    let id : Int
+    let movieName : String
+    let genres : [MovieGenre]
+    let moviePoster : String
+}
+
+let likedTemp = [
+    LikedMovieCard(id: 84958, movieName: "洛基", genres: [MovieGenre(id: 28, name: "動作"),MovieGenre(id: 12, name: "冒險"),MovieGenre(id: 18, name: "劇情")], moviePoster: "https://www.themoviedb.org/t/p/original/yM58i3DhSJDkYSB3LwtJ75pFBap.jpg"),
+    
+    LikedMovieCard(id: 633802, movieName: "Dark Spell", genres: [MovieGenre(id: 28, name: "動作"),MovieGenre(id: 27, name: "恐怖")], moviePoster: "https://www.themoviedb.org/t/p/original/dxUrivbsYBJKgi6vhPF8fexihqJ.jpg"),
+
+    LikedMovieCard(id: 739413, movieName: "逃出異境", genres:[MovieGenre(id: 14, name: "奇幻")], moviePoster: "https://www.themoviedb.org/t/p/original/uD0evJ6OWbEQHZtYdzkp5U29KgQ.jpg"),
+    
+    LikedMovieCard(id: 315635, movieName: "蜘蛛人：返校日", genres: [MovieGenre(id: 28, name: "動作"),MovieGenre(id: 12, name: "冒險"),MovieGenre(id: 878, name: "科幻"),MovieGenre(id: 18, name: "劇情")], moviePoster: "https://www.themoviedb.org/t/p/original/4p3vfEM17VTweLOKRGBV0XdBHMN.jpg"),
+
+    LikedMovieCard(id: 284052, movieName: "奇異博士", genres: [MovieGenre(id: 28, name: "動作"),MovieGenre(id: 12, name: "冒險"),MovieGenre(id: 14, name: "奇幻"),MovieGenre(id: 878, name: "科幻")], moviePoster: "https://www.themoviedb.org/t/p/original/xfd5L2jFF6hsUcbBGymMTutL0f2.jpg"),
+
+]
+
+struct LikedPostCardGridView : View{
+    let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
+    @Binding var likedMovies : [LikedMovieCard]
+    var body: some View{
+        if likedMovies.isEmpty{
+            VStack{
+                Spacer()
+                Text("Not Post yet")
+                    .font(.system(size:15))
+                    .foregroundColor(.gray)
+                Spacer()
+            }
+            .frame(height:UIScreen.main.bounds.height / 2)
+
+        }else{
+            LazyVGrid(columns: gridItem){
+                ForEach(likedMovies,id:\.id){info in
+                    LikedCardCell(movieInfo: info)
+                }
+            }
+        }
+    }
+}
+
+struct LikedCardCell : View {
+    var movieInfo : LikedMovieCard
+
+    var body: some View{
+        VStack(alignment:.center){
+            ZStack(alignment:.top){
+                WebImage(url:  URL(string: movieInfo.moviePoster)!)
+                    .placeholder(Image(systemName: "photo")) //
+                    .resizable()
+                    .indicator(.activity)
+                    .transition(.fade(duration: 0.5))
+                    .aspectRatio(contentMode: .fill)
+                    .frame(height:230)
+                    .clipShape(CustomeConer(width: 5, height: 5, coners: [.allCorners]))
+                    .overlay(Color.black.opacity(0.5))
+                    .zIndex(0)
+                
+                VStack(alignment:.leading){
+                    HStack(spacing:5){
+                        
+                        ForEach(0..<movieInfo.genres.count ){i in
+                            
+                            Text(movieInfo.genres[i].name)
+                                .foregroundColor(Color.white)
+                                .font(.footnote)
+                                .padding(5)
+                                .background(Color("appleDark").opacity(0.7).cornerRadius(8))
+                            
+                        }
+
+                        Spacer()
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment:.leading){
+                        //Movie Full Name
+                        Text(movieInfo.movieName)
+                            .foregroundColor(.white)
+                            .font(.system(size:18))
+                            .bold()
+                            .padding(.bottom,5)
+                        
+                        HStack(spacing:5){
+                            ForEach(0..<5){i in
+                                Image(systemName:"star.fill" )
+                                    .imageScale(.small)
+                                    .foregroundColor(i < 3 ? Color.yellow : Color.gray)
+                                    .font(.system(size:12))
+                            }
+                        }
+                    }
+
+                }
+                .padding(8)
+            }
+            
+        }
+        .background(Color("MoviePostColor").cornerRadius(5))
+
+    }
+}
+
+
 struct EditProfile : View{
+    @Binding var userInfo : UserProfileInfo
     @Binding var isEditProfile : Bool
     @State private var sourceType: UIImagePickerController.SourceType = .photoLibrary
-    @State private var userIcon : UIImage?
-    @State private var BackGoundImg : UIImage?
+    @State private var userIcon : UIImage = UIImage(named: "image")!
+    @State private var BackGoundImg : UIImage = UIImage(named: "bg")!
     
     @State private var userIconPicker : Bool = false
     @State private var BackGoundImgPicker : Bool = false
@@ -668,11 +816,8 @@ struct EditProfile : View{
     @State private var isPreference : Bool = false
     @State private var isEditName : Bool = false
     @State private var isEditeID : Bool = false
-    @State private var isEditeBIO : Bool = false
+//    @State private var isEditeBIO : Bool = false
     
-    @State private var userName : String = "Jackson.tmm"
-    @State private var uID : String = "000000001"
-    @State private var userBio : String = "歡迎來到我的個人頁面"
 
     var body : some View{
         GeometryReader{proxy in
@@ -708,7 +853,7 @@ struct EditProfile : View{
                     
                     HStack{
                         Spacer()
-                        Image(uiImage: userIcon ?? UIImage(named: "image")!)
+                        Image(uiImage: userInfo.UserAvatar )
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                             .frame(width: 80, height: 80, alignment: .center)
@@ -740,24 +885,24 @@ struct EditProfile : View{
                     }
                     .padding(.vertical)
 
-                    fieldCellButton(fieldName: "名字", fieldData: userName,action: {
+                    fieldCellButton(fieldName: "名字", fieldData: userInfo.UserName,action: {
                         withAnimation(){
                             self.isEditName.toggle()
                         }
                     })
-                    fieldCellButton(fieldName: "ID", fieldData: "000000001",action:{
+                    fieldCellButton(fieldName: "MID", fieldData: userInfo.MID,action:{
                         withAnimation(){
                             self.isEditeID.toggle()
                         }
                     })
                     
-                    fieldCellButton(fieldName: "Bio", fieldData: "歡迎來到我的個人頁面",action:{
-                        withAnimation(){
-                            self.isEditeBIO.toggle()
-                        }
-                    })
+//                    fieldCellButton(fieldName: "Bio", fieldData: userInfo.Bio,action:{
+//                        withAnimation(){
+//                            self.isEditeBIO.toggle()
+//                        }
+//                    })
                     
-                    fieldCellButton(fieldName: "背景圖片",  fieldData: "bg",isImageType: true,action:{
+                    fieldCellButton(fieldName: "背景圖片",  fieldData: userInfo.UserBackGround,isImageType: true,action:{
                         withAnimation(){
                             self.BackGoundImgPicker.toggle()
                         }
@@ -782,33 +927,33 @@ struct EditProfile : View{
         .onAppear { UITableView.appearance().isScrollEnabled = false }
         .onDisappear{ UITableView.appearance().isScrollEnabled = true }
         .fullScreenCover(isPresented: $isEditName){
-            EditTextView(settingHeader:"設置名字",placeHolder: "Enter your name", maxSize: 20,warningMessage: "設置長度為2-24個字符，不包含非法字符",editText: self.$userName, isCancel: $isEditName)
+            EditTextView(settingHeader:"設置名字",placeHolder: "Enter your name", maxSize: 20,warningMessage: "設置長度為2-24個字符，不包含非法字符",editText: $userInfo.UserName, isCancel: $isEditName)
         }
         .fullScreenCover(isPresented: $isEditeID){
-            EditTextView(settingHeader:"設置ID",placeHolder: "Enter your id", maxSize: 10,warningMessage: "設置長度為5-10個字符，不包含非法字符(只能修改一次)",editText: self.$uID, isCancel: $isEditeID)
+            EditTextView(settingHeader:"設置ID",placeHolder: "Enter your id", maxSize: 10,warningMessage: "設置長度為5-10個字符，不包含非法字符(只能修改一次)",editText: $userInfo.MID, isCancel: $isEditeID)
         }
-        .fullScreenCover(isPresented: $isEditeBIO){
-            EditTextAreaView(settingHeader:"設置BIO",editText: $userBio,isCancel: $isEditeBIO)
-        }
+//        .fullScreenCover(isPresented: $isEditeBIO){
+//            EditTextAreaView(settingHeader:"設置BIO",editText: $userInfo.Bio,isCancel: $isEditeBIO)
+//        }
         .fullScreenCover(isPresented: $userIconPicker){
-            CameraImagePickerView(selectedImage: self.$userIcon, sourceType: self.sourceType,selected:self.$userIconPicker)
+//            CameraImagePickerView(selectedImage: self.$userIcon, sourceType: self.sourceType,selected:self.$userIconPicker)
+//
+            EditableImagePickerView(sourceType: .photoLibrary, selectedImage: $userInfo.UserAvatar)
                 .edgesIgnoringSafeArea(.all)
         }
         .fullScreenCover(isPresented: $BackGoundImgPicker){
-            CameraImagePickerView(selectedImage: self.$BackGoundImg, sourceType: self.sourceType,selected:self.$BackGoundImgPicker)
-                .edgesIgnoringSafeArea(.all)
-        }
-        .fullScreenCover(isPresented: $BackGoundImgPicker){
-            CameraImagePickerView(selectedImage: self.$BackGoundImg, sourceType: self.sourceType,selected:self.$BackGoundImgPicker)
+//            CameraImagePickerView(selectedImage: self.$BackGoundImg, sourceType: self.sourceType,selected:self.$BackGoundImgPicker)
+//                .edgesIgnoringSafeArea(.all)
+            EditableImagePickerView(sourceType: .photoLibrary, selectedImage: $userInfo.UserBackGround)
                 .edgesIgnoringSafeArea(.all)
         }
         .fullScreenCover(isPresented: $isPreference){
-            MoviePreferenceSetting(isPreferences: $isPreference)
+            MoviePreferenceSetting(isPreferences: $isPreference, userInfo: $userInfo)
         }
     }
     
     @ViewBuilder
-    private func fieldCellButton(fieldName : String,fieldData : String,dataFieldColor : Color = .white,isImageType:Bool = false,action : @escaping ()->()) -> some View{
+    private func fieldCellButton(fieldName : String,fieldData : Any,dataFieldColor : Color = .white,isImageType:Bool = false,action : @escaping ()->()) -> some View{
         Group{
             Button(action:action){
                 HStack(alignment:.center,spacing:0){
@@ -819,14 +964,14 @@ struct EditProfile : View{
                     Spacer()
                     
                     if isImageType{
-                        Image(uiImage: BackGoundImg ?? UIImage(named: fieldData)!)
+                        Image(uiImage: fieldData as! UIImage )
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                             .frame(width: 45, height: 45, alignment: .center)
                             .cornerRadius(10)
                             .clipped()
                     }else{
-                        Text(fieldData)
+                        Text(fieldData as! String)
                             .font(.footnote)
                             .lineLimit(1)
                             .foregroundColor(dataFieldColor)
@@ -850,50 +995,51 @@ struct EditProfile : View{
     }
 }
 
-var personViewTab = ["Collects","Posts","Like"]
+var personViewTab = ["Collects","Like"]
 
-//struct HomeTest: View {
-//    @State private var offset : CGFloat = 0.0
-//    var body : some View{
-//        PersonPostTabBar(offset: $offset)
-//    }
-//}
 
 struct PersonPostTabBar : View{
     @State private var offset : CGFloat = 0
     @Binding var index : Int
     var body : some View{
         GeometryReader{proxy in
-            let width = proxy.frame(in: .global).width / 1.5 / CGFloat(personViewTab.count)
+            let width = proxy.frame(in: .global).width  / CGFloat(personViewTab.count)
             
             ZStack(alignment:.bottom){
                 VStack{
                     Capsule()
                         .fill(.orange)
-                        .frame(width: width / 4, height: 3)
+                        .frame(width: width / 5, height: 3)
                 }
                 .frame(width: width )
                 .offset(x:self.offset,y:-10)
                 
                 HStack(spacing:0){
                     ForEach(personViewTab.indices,id: \.self){i in
-                        Text(personViewTab[i])
-                            .bold()
-                            .font(.system(size:15))
-                            .frame(width: width,height: 50)
-                            .foregroundColor(i == index ? Color.white : Color.gray)
-                            .onTapGesture {
-                                withAnimation(){
-                                    print(index)
-                                    self.index = i
-                                    self.offset = width * CGFloat(index - 1)
-                                }
+                        HStack(spacing:3){
+                            Image(systemName: i == 0 ? "square.filled.on.square" : "heart.circle.fill")
+                                .imageScale(.small)
+                            
+                            Text(personViewTab[i])
+                                .bold()
+                                .font(.system(size:15))
+                              
+
+                        }
+                        .frame(width: width,height: 50)
+                        .foregroundColor(i == index ? Color.white : Color.gray)
+                        .onTapGesture {
+                            withAnimation(){
+                                self.index = i
+                                self.offset = self.index == 0 ? -(width / 2) : (width / 2)
+                                
                             }
+                        }
                     }
                 }
             }
             .onAppear(){
-                self.offset = -width
+                self.offset =  self.index == 0 ? -(width / 2) : (width / 2)
             }
             .frame(maxWidth:.infinity,maxHeight: 50)
         }
@@ -904,32 +1050,10 @@ struct PersonPostTabBar : View{
     }
 }
 
-struct PersonPostTabCells : View{
-    @State private var offset : CGFloat = 0.0
-    var body: some View{
-        GeometryReader{proxy in
-            let rect = proxy.frame(in: .global)
-            ScrollableTabBar(tabs: personViewTab, rect: rect, offset: $offset){
-                HStack(spacing:0){
-                    PersonPostCardGridView(postCards: .constant(postCardTemp ))
-                        .frame(width: rect.width)
-                    
-                    PersonPostCardGridView(postCards: .constant(postCardTemp2 ))
-                        .frame(width: rect.width)
-                    
-                    PersonPostCardGridView(postCards: .constant(postCardTemp3 ))
-                        .frame(width: rect.width)
-                }
-
-            }
-            .frame(maxHeight:.infinity)
-        }
-        .ignoresSafeArea()
-    }
-}
 
 
 struct personProfile: View {
+    @StateObject var userVM : UserInfoVM = UserInfoVM()
     @State private var isEditProfile : Bool = false
     @State private var isSetting : Bool = false
     private let max = UIScreen.main.bounds.height / 2.5
@@ -937,36 +1061,58 @@ struct personProfile: View {
     @State private var offset:CGFloat = 0.0
     @State private var menuOffset:CGFloat = 0.0
     @State private var isShowIcon : Bool = false
+    @State private var tabBarOffset = UIScreen.main.bounds.width
     
     @State private var tabOffset : CGFloat = 0.0
     @State private var tabIndex = 0
     var body: some View {
         ZStack(alignment:.top){
-            VStack(alignment:.center){
-                Spacer()
-                HStack{
-                    Image("image")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 30, height: 30, alignment: .center)
-                        .clipShape(Circle())
+            ZStack{
+//                it may add in the Future
+//                HStack{
+//                    Button(action:{}){
+//                        Image(systemName: "line.3.horizontal")
+//                            .foregroundColor(.white)
+//                            .font(.title2)
+//                    }
+//                    Spacer()
+//                }
+//                .padding(.horizontal)
+//                .frame(height: topEdge)
+//                .padding(.top,30)
+//                .zIndex(1)
+                
+                VStack(alignment:.center){
+                    Spacer()
+                    HStack{
+                        Image(uiImage: userVM.user.UserAvatar)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 30, height: 30, alignment: .center)
+                            .clipShape(Circle())
+                        
+                        Text(userVM.user.UserName)
+                            .font(.footnote)
+                            .foregroundColor(.white)
+                    }
+                    Spacer()
                 }
-                Spacer()
+                .transition(.move(edge: .bottom))
+                .offset(y:self.isShowIcon ? 0 : 40)
+                .padding(.trailing,20)
+                .frame(width:UIScreen.main.bounds.width ,height: topEdge)
+                .padding(.top,30)
+                .zIndex(10)
+                .clipped()
             }
-            .transition(.move(edge: .bottom))
-            .offset(y:self.isShowIcon ? 0 : 40)
-            .padding(.trailing,20)
-            .frame(width:UIScreen.main.bounds.width ,height: topEdge)
-            .padding(.top,30)
-            .zIndex(10)
-            .clipped()
-            
+            .background(Color("ResultCardBlack").opacity(getOpacity()))
+            .zIndex(1)
             
             ScrollView(.vertical, showsIndicators: false){
                 VStack(spacing:0){
                         GeometryReader{ proxy  in
                             ZStack(alignment:.top){
-                                Image("bg")
+                                Image(uiImage: userVM.user.UserBackGround)
                                     .resizable()
                                     .aspectRatio( contentMode: .fill)
                                     .frame(width: UIScreen.main.bounds.width, height: offset > 0 ? offset + max + 20 : getHeaderHigth() + 20, alignment: .bottom)
@@ -985,27 +1131,8 @@ struct personProfile: View {
                                 profile()
                                     .frame(maxWidth:.infinity)
                                     .frame(height:  getHeaderHigth() ,alignment: .bottom)
-                                    .overlay(
-                                        ZStack{
-                                            HStack{
-                                                Button(action:{}){
-                                                    Image(systemName: "line.3.horizontal")
-                                                        .foregroundColor(.white)
-                                                        .font(.title2)
-                                                }
-                                                Spacer()
-                                            }
-                                                .padding(.horizontal)
-                                                .frame(height: topEdge)
-                                                .padding(.top,30)
-                                                .zIndex(1)
-                                            
-
-                                        }
-                                        .background(Color("ResultCardBlack").opacity(getOpacity()))
-                                        ,alignment: .top
-                                    )
                                     .zIndex(1)
+          
                             }
                         }
                         .frame(height:max)
@@ -1013,37 +1140,7 @@ struct personProfile: View {
                         
                     
                     VStack(spacing:0){
-//                        HStack(spacing:20){
-//                            VStack(spacing:3){
-//                                Text("Collects")
-//                                RoundedRectangle(cornerRadius: 25, style: .circular)
-//                                    .fill(.orange)
-//                                    .frame(width: 25, height: 3)
-//                            }
 //
-//                            VStack(spacing:3){
-//                                Text("Posts")
-//                                    .foregroundColor(Color("subTextGray"))
-//                                RoundedRectangle(cornerRadius: 25, style: .circular)
-//                                    .fill(.orange)
-//                                    .frame(width: 25, height: 3)
-//                                    .opacity(0)
-//                            }
-//
-//                            VStack(spacing:3){
-//                                Text("Like")
-//                                    .foregroundColor(Color("subTextGray"))
-//                                RoundedRectangle(cornerRadius: 25, style: .circular)
-//                                    .fill(.orange)
-//                                    .frame(width: 25, height: 3)
-//                                    .opacity(0)
-//                            }
-//
-//                        }
-//                        .frame(width:UIScreen.main.bounds.width,height:80)
-//                        .font(.system(size: 15))
-//                        .frame(height:UIScreen.main.bounds.height / 18)
-//                        .background(Color("PersonCellColor").clipShape(CustomeConer(width:15,coners: [.topLeft,.topRight])))
                         PersonPostTabBar(index:$tabIndex)
                         
                         Divider()
@@ -1060,36 +1157,30 @@ struct personProfile: View {
                         }
                     )
                     
+
+                    
                     switch self.tabIndex{
                     case 0:
-                        PersonPostCardGridView(postCards: .constant(postCardTemp ))
+                        PersonPostCardGridView()
+                            .environmentObject(userVM)
                             .zIndex(-1)
-  
+                            .padding(.vertical,3)
+
                     case 1:
-                        PersonPostCardGridView(postCards: .constant(postCardTemp2 ))
+                        LikedPostCardGridView(likedMovies: $userVM.user.UserLikedMovies)
+                            .padding(.vertical,3)
                             .zIndex(-1)
-       
-                    case 2:
-                        PersonPostCardGridView(postCards: .constant(postCardTemp3 ))
-                            .zIndex(-1)
-                     
                     default:
                         EmptyView()
                     }
-//                    HStack{
-//                        PersonPostCardGridView(postCards: .constant(postCardTemp ))
-//                            .frame(width: UIScreen.main.bounds.width)
-//                        PersonPostCardGridView(postCards: .constant(postCardTemp ))
-//                            .frame(width: UIScreen.main.bounds.width)
-//                        PersonPostCardGridView(postCards: .constant(postCardTemp ))
-//                            .frame(width: rect.width)
-//                    }
+
                     
                     
                 }
                 .modifier(PersonPageOffsetModifier(offset: $offset,isShowIcon:$isShowIcon))
             }
             .coordinateSpace(name: "SCROLL") //cotroll relate coordinateSpace
+            .zIndex(0)
             
         }
 
@@ -1100,7 +1191,7 @@ struct personProfile: View {
         VStack(alignment:.leading){
             Spacer()
             HStack(alignment:.center){
-                Image("image")
+                Image(uiImage: userVM.user.UserAvatar)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 80, height: 80, alignment: .center)
@@ -1110,23 +1201,26 @@ struct personProfile: View {
                             .stroke(lineWidth: 2)
                             .foregroundColor(.white)
                     )
-                    .overlay(
-                        HStack{
-                            Image(systemName: "plus")
-                                .imageScale(.small)
-                        }
-                            .frame(width: 20, height: 20)
-                            .background(Color.orange)
-                            .clipShape(Circle())
-                            ,alignment: .bottomTrailing
-                    )
+//                    .overlay(
+//                        HStack{
+//                            Image(systemName: "plus")
+//                                .imageScale(.small)
+//                        }
+//                            .frame(width: 20, height: 20)
+//                            .background(Color.orange)
+//                            .clipShape(Circle())
+//                            ,alignment: .bottomTrailing
+//                    )
 
                 VStack(alignment:.leading){
-                    Text("Jackson.tmm").bold()
+                    Text(userVM.user.UserName).bold()
                         .font(.title2)
-                    Text("mid:000000001")
-                        .font(.caption)
-                        .foregroundColor(Color.white.opacity(0.8))
+                    HStack(spacing:2){
+                        Text("MID:")
+                        Text(userVM.user.MID)
+                    }
+                    .font(.caption)
+                    .foregroundColor(Color.white.opacity(0.8))
                     
                 }
                 
@@ -1134,45 +1228,47 @@ struct personProfile: View {
             }
                 .padding(.bottom)
             
-            HStack(){
-                Text("歡迎來到我的個人頁面.")
+            VStack(alignment:.leading,spacing: 8){
+                Text("個人喜好電影🎬")
                     .font(.footnote)
-                    .lineLimit(3)
+                    .bold()
+                
+                if self.userVM.user.UserGenrePrerences.isEmpty{
+                    Text("使用者沒有特定喜好的電影項目~")
+                        .font(.footnote)
+                }else{
+                    
+                    HStack{
+                        ForEach(0..<userVM.user.UserGenrePrerences.count){i in
+                                Text(userVM.user.UserGenrePrerences[i].genreName)
+                                    .font(.caption)
+                                    .padding(8)
+                                    .background(BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+               
+
+                        }
+                    }
+                    .padding(.top,5)
+                }
             }
             
-            HStack{
-                Text("喜劇")
-                    .font(.caption)
-                    .padding(8)
-                    .background(BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
-                Text("動畫")
-                    .font(.caption)
-                    .padding(8)
-                    .background(BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
-                Text("驚悚")
-                    .font(.caption)
-                    .padding(8)
-                    .background(BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
-                
-            }
-            .padding(.top,5)
             
             HStack{
                 VStack{
-                    Text("0")
+                    Text("\(userVM.user.Following)")
                         .bold()
                     Text("Following")
                 }
                 
                 VStack{
-                    Text("0")
+                    Text("\(userVM.user.Followers)")
                         .bold()
                     Text("Followers")
                 }
 
                 
                 VStack{
-                    Text("0")
+                    Text("\(userVM.user.Likes)")
                         .bold()
                     Text("Likes")
                 }
@@ -1185,7 +1281,7 @@ struct personProfile: View {
                         self.isEditProfile.toggle()
                     }
                 }){
-                    NavigationLink(destination: EditProfile(isEditProfile: $isEditProfile), isActive: $isEditProfile){
+                    NavigationLink(destination: EditProfile(userInfo:$userVM.user, isEditProfile: $isEditProfile), isActive: $isEditProfile){
                         Text("Edit Profile")
                             .navigationBarBackButtonHidden(true)
                             .padding(8)
@@ -1199,7 +1295,7 @@ struct personProfile: View {
                 Button(action:{
                     //TODO : Edite data
                 }){
-                    NavigationLink(destination: UserSetting(isSetting: $isSetting) , isActive: $isSetting){
+                    NavigationLink(destination: UserSetting(isSetting: $isSetting), isActive: $isSetting){
                         Image(systemName: "gearshape")
                             .padding(.horizontal,5)
                             .padding(8)
@@ -1215,7 +1311,7 @@ struct personProfile: View {
         
         }
         .padding(.horizontal)
-        
+       
     }
 
     

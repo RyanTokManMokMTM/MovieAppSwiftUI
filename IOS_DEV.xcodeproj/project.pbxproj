@@ -157,6 +157,9 @@
 		7A675A95262BF78B00542DB2 /* MovieDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A675A94262BF78B00542DB2 /* MovieDetailView.swift */; };
 		7A6CE7EA2610E7EA00DB962B /* SocialLoginButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6CE7E92610E7EA00DB962B /* SocialLoginButton.swift */; };
 		7A74EECD2611A8A000B722CF /* HomePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A74EECC2611A8A000B722CF /* HomePage.swift */; };
+		7A82758327A3C781007EAC61 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A82758227A3C781007EAC61 /* MessageView.swift */; };
+		7A900EDF279FEC390076DC34 /* ImageCropping.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A900EDE279FEC390076DC34 /* ImageCropping.swift */; };
+		7A900EE1279FED4C0076DC34 /* ImageCropVIew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A900EE0279FED4C0076DC34 /* ImageCropVIew.swift */; };
 		7AB42EC4263184A300AC7FA6 /* HScrollList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB42EC3263184A300AC7FA6 /* HScrollList.swift */; };
 		7ACC9C5026217FAE00351E8D /* GlobalHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACC9C4F26217FAE00351E8D /* GlobalHelper.swift */; };
 		7ADA5A51261042E9000A84D9 /* SignUpInfoDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA5A4E261042E9000A84D9 /* SignUpInfoDetail.swift */; };
@@ -334,6 +337,9 @@
 		7A675A94262BF78B00542DB2 /* MovieDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieDetailView.swift; sourceTree = "<group>"; };
 		7A6CE7E92610E7EA00DB962B /* SocialLoginButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialLoginButton.swift; sourceTree = "<group>"; };
 		7A74EECC2611A8A000B722CF /* HomePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePage.swift; sourceTree = "<group>"; };
+		7A82758227A3C781007EAC61 /* MessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageView.swift; sourceTree = "<group>"; };
+		7A900EDE279FEC390076DC34 /* ImageCropping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCropping.swift; sourceTree = "<group>"; };
+		7A900EE0279FED4C0076DC34 /* ImageCropVIew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCropVIew.swift; sourceTree = "<group>"; };
 		7AB42EC3263184A300AC7FA6 /* HScrollList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HScrollList.swift; sourceTree = "<group>"; };
 		7ACC9C4F26217FAE00351E8D /* GlobalHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHelper.swift; sourceTree = "<group>"; };
 		7ADA5A4E261042E9000A84D9 /* SignUpInfoDetail.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SignUpInfoDetail.swift; sourceTree = "<group>"; };
@@ -564,6 +570,8 @@
 		01AB4530263F9F6300F95CC0 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				7A82758127A3C74E007EAC61 /* MessageView */,
+				7A900EDD279FEC270076DC34 /* ToolView */,
 				7A0EE931261041690056BC8C /* IOS_DEVApp.swift */,
 				01CF139C266B307D00066FC2 /* NavBar.swift */,
 				0168857B26D15D10005589BC /* SearchPage */,
@@ -687,6 +695,7 @@
 			children = (
 				6FDC01BE2777784A008F73F0 /* ProfileView.swift */,
 				6F7DD5CE278FDD180035FCFA /* personProfile.swift */,
+				7A900EE0279FED4C0076DC34 /* ImageCropVIew.swift */,
 			);
 			path = ProfilePage;
 			sourceTree = "<group>";
@@ -765,13 +774,13 @@
 		7A0EE930261041690056BC8C /* IOS_DEV */ = {
 			isa = PBXGroup;
 			children = (
+				01AB4530263F9F6300F95CC0 /* Views */,
 				6FAD51D42751D81900A25ED4 /* GoogleService-Info.plist */,
 				6FCFFE1A274FBE1500C46710 /* ViewModifire */,
 				0175ADEA26D4FA4300535C42 /* IOS_DEV.entitlements */,
 				0194A5E92695DD9000E24598 /* Resources */,
 				0194A5E12695A8B100E24598 /* Bindings */,
 				01EBF58B266BAA470059B196 /* Controller */,
-				01AB4530263F9F6300F95CC0 /* Views */,
 				01CCDF3B263E943B005E2424 /* Networking */,
 				7A314880261095C300B6E5FB /* IOS_DEVDebug.entitlements */,
 				7ADA5A6B26104355000A84D9 /* Components */,
@@ -820,6 +829,22 @@
 				0175AAE82658D4AE001BCD2E /* User */,
 			);
 			path = Model;
+			sourceTree = "<group>";
+		};
+		7A82758127A3C74E007EAC61 /* MessageView */ = {
+			isa = PBXGroup;
+			children = (
+				7A82758227A3C781007EAC61 /* MessageView.swift */,
+			);
+			path = MessageView;
+			sourceTree = "<group>";
+		};
+		7A900EDD279FEC270076DC34 /* ToolView */ = {
+			isa = PBXGroup;
+			children = (
+				7A900EDE279FEC390076DC34 /* ImageCropping.swift */,
+			);
+			path = ToolView;
 			sourceTree = "<group>";
 		};
 		7ACC9C5226217FBB00351E8D /* Helper */ = {
@@ -1128,6 +1153,7 @@
 				7A2F7310261E124E00C0A2FF /* Player.swift in Sources */,
 				0124A4742729874700D0A7CC /* FavoriteController.swift in Sources */,
 				6F458C2B275DFC4D0069E867 /* TrailerVM.swift in Sources */,
+				7A900EE1279FED4C0076DC34 /* ImageCropVIew.swift in Sources */,
 				01CF139D266B307D00066FC2 /* NavBar.swift in Sources */,
 				0168857826D0CEB6005589BC /* GestureDetailVeiw.swift in Sources */,
 				01CF139B266B2F0C00066FC2 /* SmallCoverIcon.swift in Sources */,
@@ -1174,6 +1200,7 @@
 				6FF3A22027510C920084637D /* LoadingView.swift in Sources */,
 				6FDC01BB27777582008F73F0 /* ChartView.swift in Sources */,
 				017018132696B71F00E51209 /* MovieCardCarousel.swift in Sources */,
+				7A82758327A3C781007EAC61 /* MessageView.swift in Sources */,
 				7ADA5A58261042F4000A84D9 /* tryy.swift in Sources */,
 				01715CCD26FE184D00161866 /* MyArticleView.swift in Sources */,
 				7A0EE932261041690056BC8C /* IOS_DEVApp.swift in Sources */,
@@ -1182,6 +1209,7 @@
 				6FDC01C3277778AD008F73F0 /* SignUp.swift in Sources */,
 				0175AAD12653EB4B001BCD2E /* ErrorResponse.swift in Sources */,
 				0124A4762729B9B000D0A7CC /* FavoriteView.swift in Sources */,
+				7A900EDF279FEC390076DC34 /* ImageCropping.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

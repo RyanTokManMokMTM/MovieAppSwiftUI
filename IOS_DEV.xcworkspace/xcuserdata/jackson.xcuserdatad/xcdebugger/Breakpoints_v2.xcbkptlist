@@ -78,8 +78,8 @@
             filePath = "IOS_DEV/Views/ProfilePage/personProfile.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "519"
-            endingLineNumber = "519"
+            startingLineNumber = "559"
+            endingLineNumber = "559"
             landmarkName = "SelectionView"
             landmarkType = "14">
          </BreakpointContent>
@@ -94,10 +94,58 @@
             filePath = "IOS_DEV/Views/ProfilePage/personProfile.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "511"
-            endingLineNumber = "511"
+            startingLineNumber = "551"
+            endingLineNumber = "551"
             landmarkName = "body"
             landmarkType = "24">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "1AFD38A0-DE2E-45ED-A2FA-FD64BA5D1CDF"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "IOS_DEV/Views/ProfilePage/personProfile.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "1067"
+            endingLineNumber = "1067"
+            landmarkName = "personProfile"
+            landmarkType = "14">
+            <Locations>
+               <Location
+                  uuid = "1AFD38A0-DE2E-45ED-A2FA-FD64BA5D1CDF - b4177c10cb5548b2"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "IOS_DEV.personProfile.init(userVM: @autoclosure () -&gt; IOS_DEV.UserInfoVM, topEdge: CoreGraphics.CGFloat) -&gt; IOS_DEV.personProfile"
+                  moduleName = "IOS_DEV"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/jackson/Desktop/MovieAppSwiftUI/IOS_DEV/Views/ProfilePage/personProfile.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "1067"
+                  endingLineNumber = "1067"
+                  offsetFromSymbolStart = "700">
+               </Location>
+               <Location
+                  uuid = "1AFD38A0-DE2E-45ED-A2FA-FD64BA5D1CDF - 56e7898977327f3"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "property wrapper backing initializer of IOS_DEV.personProfile.tabIndex : Swift.Int"
+                  moduleName = "IOS_DEV"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/jackson/Desktop/MovieAppSwiftUI/IOS_DEV/Views/ProfilePage/personProfile.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "1067"
+                  endingLineNumber = "1067"
+                  offsetFromSymbolStart = "20">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
