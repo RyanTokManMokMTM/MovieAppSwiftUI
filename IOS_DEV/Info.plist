@@ -42,6 +42,7 @@
 	</dict>
 	<key>UIAppFonts</key>
 	<array>
+		<string>ConcertOne-Regular.ttf</string>
 		<string>KleeOne-SemiBold.ttf</string>
 		<string>ZenKurenaido-Regular.ttf</string>
 		<string>ZCOOLKuaiLe-Regular.ttf</string>

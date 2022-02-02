@@ -42,9 +42,8 @@ struct CustomUITextView : UIViewRepresentable{
     }
     
     func updateUIView(_ uiView: UITextField, context: Context) {
-//        print(self.text)
-        uiView.text = self.text == "" ?  "" : self.text
-        if self.tag == 1{
+        uiView.text = self.text.isEmpty ?  "" : self.text
+        if self.focuse[tag]{
             DispatchQueue.main.async {
                 uiView.becomeFirstResponder()
             }
@@ -67,18 +66,21 @@ struct CustomUITextView : UIViewRepresentable{
             }
         }
         
-//        func textFieldDidChangeSelection(_ textField: UITextField) {
-//            self.parent.text = textField.text ?? ""
-//        }
+        func textFieldDidChangeSelection(_ textField: UITextField) {
+            DispatchQueue.main.async{
+                self.parent.text = textField.text ?? ""
+            }
+        }
         
         func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-            self.parent.text = textField.text ?? ""
+            
 //            print(textField.text ?? "")
             if parent.tag == 0{
                 parent.focuse = [false,true]
             }else{
                 parent.focuse = [false,false]
             }
+            self.parent.text = textField.text ?? ""
             return true
         }
     }
@@ -164,7 +166,7 @@ struct CustomTextView : UIViewRepresentable{
 //        }
         
         func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        
+            
 //            print(textField.text ?? "")
             if parent.tag == 0{
                 parent.focuse = [false,true]

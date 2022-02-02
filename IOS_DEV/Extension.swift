@@ -76,8 +76,19 @@ extension Font{
     static func setOswaldSemiBold(size : CGFloat) -> Font{
         Font.custom("Oswald-SemiBold", size: size)
     }
+    
+    static func setConcertOneRegular(size : CGFloat) -> Font{
+        Font.custom("ConcertOne-Regular", size: size)
+    }
 }
 //
+struct setConcertOneRegularFont : ViewModifier{
+    var size : CGFloat
+    func body(content: Content) -> some View {
+        content.font(Font.setConcertOneRegular(size: size))
+    }
+}
+
 struct setCourgetteRegularFont : ViewModifier{
     var size : CGFloat
     func body(content: Content) -> some View {
@@ -91,7 +102,6 @@ struct setTekoBoldFont : ViewModifier{
         content.font(Font.TekoBoldFont(size: size))
     }
 }
-
 
 
 struct setZCOOLKuaiLeRegular : ViewModifier{
@@ -161,6 +171,10 @@ extension View{
     func OswaldSemiBold(size : CGFloat = 18) -> some View{
         ModifiedContent(content: self, modifier: setsetOswaldSemiBoldFont(size: size))
     }
+    
+    func ConcertOneRegularFont(size : CGFloat = 18) -> some View{
+        ModifiedContent(content: self, modifier: setConcertOneRegularFont(size: size))
+    }
 }
 
 //extension UINavigationController: UIGestureRecognizerDelegate {
@@ -177,5 +191,37 @@ extension View{
 extension AVPlayer{
     func isPlaying() -> Bool{
         timeControlStatus == AVPlayer.TimeControlStatus.playing
+    }
+}
+
+
+extension Date{
+    
+    func dateDescriptiveString(dataStyle : DateFormatter.Style = .short) -> String {
+        //self = current class date
+        let formatter = DateFormatter()
+        formatter.dateStyle = dataStyle
+        let dayBetween = daysBetween(date: Date())
+        
+        if dayBetween == 0{
+            return "Today"
+        } else if dayBetween == 1 {
+            return "Yesterday"
+        }else if dayBetween < 5 {
+            let weekDay = Calendar.current.component(.weekday, from: self) - 1
+            return formatter.weekdaySymbols[weekDay]
+        }
+        return formatter.string(from: self)
+        
+    }
+    
+    func daysBetween(date : Date) -> Int{
+        let calender = Calendar.current
+        let date1 = calender.startOfDay(for: self)
+        let date2 = calender.startOfDay(for: date)
+        if let dayByDay = calender.dateComponents([.day], from: date1, to: date2).day{
+            return dayByDay
+        }
+        return 0
     }
 }

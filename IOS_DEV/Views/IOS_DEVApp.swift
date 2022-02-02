@@ -18,8 +18,8 @@ struct IOS_DEVApp: App {
         WindowGroup {
 //            NavBar(isLogOut: .constant(false), index: 0)
 //                .ignoresSafeArea()
-//            WelcomePage2()
-            ChattingView()
+            WelcomePage2()
+//            MessageView()
         }
     }
 }

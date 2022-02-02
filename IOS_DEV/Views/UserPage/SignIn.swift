@@ -14,7 +14,7 @@ var NowUserName:String = "" // user who login
 var NowUserID:UUID? // user who login
 var NowUserPhoto:Image? // user who login
 
-struct SignIn2: View {
+struct SignIn2: View   {
     @State private var username : String = ""
     @State private var password : String = ""
     
@@ -56,8 +56,8 @@ struct SignIn2: View {
                         
                     }
                     
-                    signUpInfo(FieldText: "UserName", bindText: $username, placeHolder: "Enter your email", keyType: .default, returnType: .default)
-                    signUpInfo(FieldText: "Password", bindText: $password, placeHolder: "Enter your password", keyType: .default, returnType: .default,isSecureText: true)
+                    LoginInfo(FieldText: "UserName", bindText: $username, placeHolder: "Enter your email", keyType: .default, returnType: .default)
+                    LoginInfo(FieldText: "Password", bindText: $password, placeHolder: "Enter your password", keyType: .default, returnType: .default,isSecureText: true)
                     
                     HStack{
                         Group{
@@ -152,12 +152,12 @@ struct SignIn2: View {
     }
     
     @ViewBuilder
-    func signUpInfo(FieldText : String,bindText: Binding<String>,placeHolder : String,keyType : UIKeyboardType,returnType:UIReturnKeyType,isSecureText : Bool = false) -> some View{
+    func LoginInfo(FieldText : String,bindText: Binding<String>,placeHolder : String,keyType : UIKeyboardType,returnType:UIReturnKeyType,isSecureText : Bool = false) -> some View{
         VStack(alignment:.leading){
             Text(FieldText)
                 .OswaldSemiBold()
                 .foregroundColor(.white)
-            CustomUITextView(focuse:$isFocuse,text: bindText, placeholder: placeHolder, keybooardType: keyType, returnKeytype: returnType, tag: 0,isSecureText:isSecureText)
+            CustomUITextView(focuse:$isFocuse,text: bindText, placeholder: placeHolder, keybooardType: keyType, returnKeytype: returnType, tag: 1,isSecureText:isSecureText)
                 .frame(height:23)
             Divider()
                 .background(Color.white)
@@ -197,7 +197,6 @@ struct SignIn2: View {
         }
     }
 }
-
 
 struct SignIn: View {
     @State private var failed = false
@@ -255,11 +254,6 @@ struct SignIn: View {
 
     }
 }
-//struct SignIn_Previews: PreviewProvider {
-//    static var previews: some View {
-//        SignIn(isSignIn: .constant(false))
-//    }
-//}
 
 struct SignInCell : View{
     
@@ -278,11 +272,11 @@ struct SignInCell : View{
     @ObservedObject private var networkingService = NetworkingService.shared
 
     func Login(UserName:String, Password:String){
+
         let login = UserLogin(UserName: UserName, Password: Password)
         
         //If token is not nil check then token first else login with request
         networkingService.requestLogin(endpoint: "/users/login", loginObject: login) { (result) in
-            print(result)
             switch result {
             case .success(let user):
                 print("login success")

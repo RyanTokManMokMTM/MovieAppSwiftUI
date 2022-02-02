@@ -105,7 +105,7 @@ struct SignUp2: View {
             Text(FieldText)
                 .OswaldSemiBold()
                 .foregroundColor(.white)
-            CustomUITextView(focuse:$isFocuse,text: bindText, placeholder: placeHolder, keybooardType: keyType, returnKeytype: returnType, tag: 0,isSecureText:isSecureText)
+            CustomUITextView(focuse:$isFocuse,text: bindText, placeholder: placeHolder, keybooardType: keyType, returnKeytype: returnType, tag: 1,isSecureText:isSecureText)
                 .frame(height:23)
             Divider()
                 .background(Color.white)

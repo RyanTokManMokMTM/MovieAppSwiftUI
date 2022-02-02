@@ -306,11 +306,14 @@ struct NavBar: View {
                         HomePage(showHomePage: $showHomePage, isLogOut: $isLogOut, mainPageHeight: $mainPageHeight)
                             .opacity(self.index == 0 ? 1 : 0)
                         
-                        ListView(lists: controller.listData)
-                            .opacity((self.index == 1 && GroupSelect == true) ? 1 : 0)
+//                        ListView(lists: controller.listData)
+//                            .opacity((self.index == 1 && GroupSelect == true) ? 1 : 0)
                         
                         
                         DragAndDropMainView()
+                            .opacity(self.index == 1 ? 1 : 0)
+                        
+                        MessageView()
                             .opacity(self.index == 2 ? 1 : 0)
                         
                         

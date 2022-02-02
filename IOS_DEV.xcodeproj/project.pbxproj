@@ -152,6 +152,8 @@
 		7A15788F279E94B0001BBD62 /* ScrollableTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A15788E279E94B0001BBD62 /* ScrollableTabBar.swift */; };
 		7A2F7307261E099200C0A2FF /* MovieTrailerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F7306261E099200C0A2FF /* MovieTrailerModel.swift */; };
 		7A2F7310261E124E00C0A2FF /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F730F261E124E00C0A2FF /* Player.swift */; };
+		7A47D57327A661BC00C9DEBC /* HotTopicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A47D57227A661BC00C9DEBC /* HotTopicView.swift */; };
+		7A47D57527A6730600C9DEBC /* ConcertOne-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7A47D57427A6730500C9DEBC /* ConcertOne-Regular.ttf */; };
 		7A645450262F120A006ACA4F /* Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A64544F262F120A006ACA4F /* Extension.swift */; };
 		7A675A7E262BE22B00542DB2 /* MovieVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A675A7D262BE22B00542DB2 /* MovieVM.swift */; };
 		7A675A95262BF78B00542DB2 /* MovieDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A675A94262BF78B00542DB2 /* MovieDetailView.swift */; };
@@ -330,8 +332,9 @@
 		7A15788E279E94B0001BBD62 /* ScrollableTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollableTabBar.swift; sourceTree = "<group>"; };
 		7A2F7306261E099200C0A2FF /* MovieTrailerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieTrailerModel.swift; sourceTree = "<group>"; };
 		7A2F730F261E124E00C0A2FF /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
-		7A31487B2610942100B6E5FB /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../../../../GoogleService-Info.plist"; sourceTree = "<group>"; };
 		7A314880261095C300B6E5FB /* IOS_DEVDebug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = IOS_DEVDebug.entitlements; sourceTree = "<group>"; };
+		7A47D57227A661BC00C9DEBC /* HotTopicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotTopicView.swift; sourceTree = "<group>"; };
+		7A47D57427A6730500C9DEBC /* ConcertOne-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "ConcertOne-Regular.ttf"; path = "../../../../Downloads/Concert_One/ConcertOne-Regular.ttf"; sourceTree = "<group>"; };
 		7A64544F262F120A006ACA4F /* Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extension.swift; sourceTree = "<group>"; };
 		7A675A7D262BE22B00542DB2 /* MovieVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieVM.swift; sourceTree = "<group>"; };
 		7A675A94262BF78B00542DB2 /* MovieDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieDetailView.swift; sourceTree = "<group>"; };
@@ -536,6 +539,7 @@
 		0194A5E92695DD9000E24598 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				7A47D57427A6730500C9DEBC /* ConcertOne-Regular.ttf */,
 				6F0D0523278EACF600356C2B /* Oswald-SemiBold.ttf */,
 				6F0D0525278EACF700356C2B /* Padauk-Regular.ttf */,
 				6F458C30275E0E070069E867 /* ZenKurenaido-Regular.ttf */,
@@ -570,6 +574,7 @@
 		01AB4530263F9F6300F95CC0 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				7A47D57127A6619C00C9DEBC /* HotTopicView */,
 				7A82758127A3C74E007EAC61 /* MessageView */,
 				7A900EDD279FEC270076DC34 /* ToolView */,
 				7A0EE931261041690056BC8C /* IOS_DEVApp.swift */,
@@ -831,6 +836,14 @@
 			path = Model;
 			sourceTree = "<group>";
 		};
+		7A47D57127A6619C00C9DEBC /* HotTopicView */ = {
+			isa = PBXGroup;
+			children = (
+				7A47D57227A661BC00C9DEBC /* HotTopicView.swift */,
+			);
+			path = HotTopicView;
+			sourceTree = "<group>";
+		};
 		7A82758127A3C74E007EAC61 /* MessageView */ = {
 			isa = PBXGroup;
 			children = (
@@ -862,7 +875,6 @@
 			children = (
 				6FDC01C0277778AC008F73F0 /* SignIn.swift */,
 				6FDC01C1277778AD008F73F0 /* SignUp.swift */,
-				7A31487B2610942100B6E5FB /* GoogleService-Info.plist */,
 				7ADA5A4E261042E9000A84D9 /* SignUpInfoDetail.swift */,
 			);
 			path = UserPage;
@@ -973,6 +985,7 @@
 			files = (
 				6F458C31275E0E070069E867 /* ZenKurenaido-Regular.ttf in Resources */,
 				6FAD51D52751D81900A25ED4 /* GoogleService-Info.plist in Resources */,
+				7A47D57527A6730600C9DEBC /* ConcertOne-Regular.ttf in Resources */,
 				0194A5EC2695DE0F00E24598 /* movie_info.json in Resources */,
 				6F458C2D275E0A310069E867 /* ZCOOLKuaiLe-Regular.ttf in Resources */,
 				6FD20E77274F41AB004F21F6 /* Courgette-Regular.ttf in Resources */,
@@ -1195,6 +1208,7 @@
 				7ADA5A7626104355000A84D9 /* Square.swift in Sources */,
 				0175AAE32658BA30001BCD2E /* Me.swift in Sources */,
 				01571B88263F99FD00C97164 /* MessageBoardView.swift in Sources */,
+				7A47D57327A661BC00C9DEBC /* HotTopicView.swift in Sources */,
 				0170180C2696A33C00E51209 /* MovieListView.swift in Sources */,
 				6FCFFE14274FBDEE00C46710 /* UsageDatas.swift in Sources */,
 				6FF3A22027510C920084637D /* LoadingView.swift in Sources */,
@@ -1267,7 +1281,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1322,7 +1336,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -1346,7 +1360,7 @@
 				DEVELOPMENT_TEAM = TB3MC545F4;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = IOS_DEV/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1373,7 +1387,7 @@
 				DEVELOPMENT_TEAM = TB3MC545F4;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = IOS_DEV/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
