@@ -61,4 +61,3 @@ struct NewLikeMovie: Encodable{
 struct CheckLike: Decodable{
     var id : UUID?
 }
-

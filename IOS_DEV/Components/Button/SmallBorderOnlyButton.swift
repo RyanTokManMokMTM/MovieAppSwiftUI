@@ -38,6 +38,37 @@ struct SmallBorderOnlyButton: View {
     }
 }
 
+//struct SmallRoundBorderButton: View {
+//    var title:String
+//    var icon:String
+//    var onChangeIcon : String
+//    var textColor : Color = .white
+//    var borderColor : Color = .white
+//    @Binding var isToggle:Bool
+//    
+//    var action : ()->()
+//    
+//    var body: some View {
+//        Button(action:action){
+//            HStack(spacing:10){
+//                Image(systemName: isMylist ? onChangeIcon : icon)
+//                    .resizable()
+//                    .frame(width: 18, height: 18)
+//                
+//                Text(title)
+//                    .font(.headline)
+//            }
+//            .foregroundColor(textColor)
+//            .frame(width:UIScreen.main.bounds.width / 3.5,height: 40)
+//            .overlay(
+//                RoundedRectangle(cornerRadius: 5)
+//                    .stroke(borderColor, lineWidth: 2)
+//
+//            )
+//        }
+//    }
+//}
+
 struct SmallBorderOnlyButton_Previews: PreviewProvider {
     static var previews: some View {
         

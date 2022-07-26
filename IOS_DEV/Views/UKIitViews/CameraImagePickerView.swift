@@ -53,7 +53,8 @@ struct CameraImagePickerView : UIViewControllerRepresentable{
 
 struct EditableImagePickerView : UIViewControllerRepresentable{
     var sourceType:UIImagePickerController.SourceType
-    @Binding var selectedImage : UIImage
+    @State private var selectedImage : UIImage? = nil
+    @EnvironmentObject var UserVM : UserViewModel
     func makeCoordinator() -> Coordinator {
         return Coordinator(picker: self)
     }
@@ -86,6 +87,8 @@ struct EditableImagePickerView : UIViewControllerRepresentable{
                 return
             }
             self.picker.selectedImage = selectedImage
+            //update user profile
+            //update view model and send the http request
             picker.dismiss(animated: true)
 
         }

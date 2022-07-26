@@ -85,7 +85,7 @@ class FavoriteController: ObservableObject {
                         switch result {
                         case 200 :
                             print("delete Favorite success")
-
+                            
                         default:
                             print("delete Favorite failed")
                         }

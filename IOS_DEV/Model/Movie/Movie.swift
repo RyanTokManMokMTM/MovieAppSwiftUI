@@ -24,32 +24,6 @@ struct MovieSearchInfo : Decodable,Identifiable{
 }
 
 
-//This information is used in StackCard View
-struct MovieCardResponse : Decodable {
-    let results : [MovieCardInfo]
-}
-
-struct MovieCardInfo : Identifiable,Decodable{
-    let id : Int
-    let title : String
-    let poster : String?
-    let vote_average : Double
-    
-    var posterURL: URL {
-        return URL(string: "https://image.tmdb.org/t/p/w500\(poster ?? "")")!
-    }
-    
-    var ratingText: String {
-        let rating = Int(vote_average)/2
-        let ratingText = (0..<rating).reduce("") { (acc, _) -> String in
-            return acc + "★"
-            
-        }
-        
-        return ratingText
-    }
-}
-
 
 struct Movie: Decodable, Identifiable, Hashable {
     static func == (lhs: Movie, rhs: Movie) -> Bool {
@@ -90,15 +64,15 @@ struct Movie: Decodable, Identifiable, Hashable {
     }()
     
     var backdropURL: URL {
-        return URL(string: "https://image.tmdb.org/t/p/w500\(backdropPath ?? "")")!
+        return URL(string: "https://image.tmdb.org/t/p/original\(backdropPath ?? "")")!
     }
     
     var posterURL: URL {
-        return URL(string: "https://image.tmdb.org/t/p/w500\(posterPath ?? "")")!
+        return URL(string: "https://image.tmdb.org/t/p/original\(posterPath ?? "")")!
     }
     
     var genreText: String {
-        genres?.first?.name ?? "n/a"
+        genres?.first?.name ?? "N/A"
     }
     
     var genreStr : String {
@@ -126,23 +100,23 @@ struct Movie: Decodable, Identifiable, Hashable {
     
     var scoreText: String {
         guard ratingText.count > 0 else {
-            return "n/a"
+            return "N/A"
         }
         return "\(ratingText.count)/5"
     }
     
     var yearText: String {
         guard let releaseDate = self.releaseDate, let date = Utils.dateFormatter.date(from: releaseDate) else {
-            return "n/a"
+            return "N/A"
         }
         return Movie.yearFormatter.string(from: date)
     }
     
     var durationText: String {
         guard let runtime = self.runtime, runtime > 0 else {
-            return "n/a"
+            return "N/A"
         }
-        return Movie.durationFormatter.string(from: TimeInterval(runtime) * 60) ?? "n/a"
+        return Movie.durationFormatter.string(from: TimeInterval(runtime) * 60) ?? "N/A"
     }
     
     var cast: [MovieCast]? {
@@ -216,16 +190,28 @@ struct MovieCredit: Decodable {
     let crew: [MovieCrew]
 }
 
+//adult: false,
+
+
 struct MovieCast: Decodable, Identifiable {
     let id: Int
     let character: String
     let name: String
+    let original_name: String?
+    let profilePath: String?
+
+    var posterURL : URL {
+        return URL(string: "https://image.tmdb.org/t/p/original\(profilePath ?? "")")!
+    }
+        
 }
 
 struct MovieCrew: Decodable, Identifiable {
     let id: Int
     let job: String
     let name: String
+    let original_name: String?
+    let profilePath: String?
 }
 
 struct MovieVideoResponse: Decodable {

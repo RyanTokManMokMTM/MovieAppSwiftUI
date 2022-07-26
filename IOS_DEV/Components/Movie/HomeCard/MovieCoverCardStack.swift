@@ -50,6 +50,11 @@ struct MovieCoverCardStack: View {
         }
     }
 }
+
+
+
+
+
 //struct MovieCoverCardStack_Previews: PreviewProvider {
 //    static var previews: some View {
 //        ZStack{

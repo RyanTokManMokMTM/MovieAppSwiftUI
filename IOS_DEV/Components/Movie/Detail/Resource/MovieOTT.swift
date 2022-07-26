@@ -42,10 +42,6 @@ struct MovieOTTView:View {
     var body: some View {
 
         VStack{
-
-           
-            Text("OTT").font(.headline)
-            Spacer()
             
             LazyVGrid(columns: columns, spacing: 20){
                 ForEach(OTT, id:\.ott) { resource in

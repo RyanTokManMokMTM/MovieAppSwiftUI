@@ -12,3 +12,9 @@ struct ErrorResponse: Decodable, LocalizedError {
     
     var errorDescription: String? { return reason }
 }
+
+struct ErrorResp: Decodable, LocalizedError{
+    let code : Int
+    let message : String
+    var errorDescription: String? { return message }
+}

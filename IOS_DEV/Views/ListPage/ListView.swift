@@ -95,7 +95,7 @@ struct ListButton:View{
         
     
             Button(action:{
-                listController.GetListDetail(listID: list.id!)  //取得片單內容
+//                listController.GetListDetail(listID: list.id!)  //取得片單內容
                 
             }){
                
@@ -119,7 +119,7 @@ struct ListButton:View{
                     
                     
                     
-                    Text(list.Title)
+                    Text(list.title)
                         .bold()
                         .font(.system(size: 18))
                         .padding(.top,25)
@@ -147,7 +147,7 @@ struct ListButton:View{
                 })
             })
             .fullScreenCover(isPresented: self.$todo, content: {
-                ListDetailView(todo: self.$todo,listDetails: listController.listDetails, listOwnerPhoto: list.user!.user_avatarURL,listOwner:list.user!.UserName,listTitle:list.Title)
+                ListDetailView(todo: self.$todo,listDetails: stubbedListDetail, listOwnerPhoto: list.user!.user_avatarURL,listOwner:list.user!.UserName,listTitle:list.title)
                 
             })
           

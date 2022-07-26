@@ -19,7 +19,9 @@ struct CustomUITextView : UIViewRepresentable{
     let returnKeytype : UIReturnKeyType
     var tag:Int
     var isSecureText : Bool = false
-    
+    let textColor : UIColor = .white
+    var placeholderColor : UIColor = .darkGray
+    var tinyColor : UIColor = .white
     func makeCoordinator() -> Coordinator {
         return Coordinator(self)
     }
@@ -28,12 +30,12 @@ struct CustomUITextView : UIViewRepresentable{
         let view = UITextField(frame: .zero)
         view.placeholder = placeholder
         view.attributedPlaceholder = NSAttributedString(string: self.placeholder, attributes:
-                                                            [NSAttributedString.Key.foregroundColor: UIColor.lightGray,NSAttributedString.Key.font : UIFont(name: "Oswald-SemiBold", size: 16) ?? UIFont()])
+                                                            [NSAttributedString.Key.foregroundColor: placeholderColor,NSAttributedString.Key.font : UIFont(name: "Oswald-SemiBold", size: 16) ?? UIFont()])
         view.returnKeyType = returnKeytype
         view.keyboardType = keybooardType
         view.isSecureTextEntry = isSecureText
-        view.textColor = .white
-        view.tintColor = .darkGray
+        view.textColor = textColor
+        view.tintColor = tinyColor
         view.autocorrectionType = .no
         view.tag = tag
         view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)

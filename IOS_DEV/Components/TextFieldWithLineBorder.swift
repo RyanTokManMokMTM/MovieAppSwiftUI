@@ -38,7 +38,7 @@ struct TextFieldWithLineBorder: View {
     @Binding var text: String
     var placeholder = ""
     private let lineThickness = CGFloat(2.0)
-    
+    var lineColor : Color = .white
     
     var body: some View {
         VStack {

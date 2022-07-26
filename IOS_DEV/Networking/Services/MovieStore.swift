@@ -7,9 +7,9 @@
 // MovieService concrete implementation
 
 import Foundation
+import SwiftUI
 
 class MovieStore: MovieService {
-
     static let shared = MovieStore()
     private init() {}
 
@@ -21,6 +21,7 @@ class MovieStore: MovieService {
 //    private let API_URL = "http://127.0.0.1:8080/api"
 //    private let API_PLAYGOUND_URI = "/playground"
     
+
     func searchRecommandMovie(query: String, completion: @escaping (Result<MovieSearchResponse, MovieError>) -> ()) {
         guard let url = URL(string: "\(baseAPIURL)/search/movie") else {
             completion(.failure(.invalidEndpoint))
@@ -35,7 +36,7 @@ class MovieStore: MovieService {
     }
 
     func fetchMovies(from endpoint: MovieListEndpoint, completion: @escaping (Result<MovieResponse, MovieError>) -> ()) {
-        guard let url = URL(string: "\(baseAPIURL)/movie/\(endpoint.rawValue)") else {
+        guard let url = URL(string: "\(baseAPIURL)\(endpoint.description)") else {
             completion(.failure(.invalidEndpoint))
             return
         }
@@ -245,12 +246,15 @@ class MovieStore: MovieService {
 }
 
 class APIService : ServerAPIServerServiceInterface{
+    
     static let shared = APIService()
     private init(){
     } //signleton mode
     
-    private let API_SERVER_HOST = "http://127.0.0.1:8080/api"
-    private let HOST = "http://127.0.0.1:8080"
+    @AppStorage("userToken") var token : String = ""
+    
+    private let API_SERVER_HOST = "http://127.0.0.1:8000/api/v1"
+    private let HOST = "http://127.0.0.1:8080/"
 //    private let API_SERVER_HOST = "http://127.0.0.1:8080/api"
     private let Client = URLSession.shared
     private let Decoder = JSONDecoder()
@@ -262,23 +266,309 @@ class APIService : ServerAPIServerServiceInterface{
     private let movie = "/movie"
     private let video = "/video"
     
-    func serverConnection(completion : @escaping (Result<ServerStatus,MovieError>)->()){
-        let url = URL(string: "\(HOST)/ping")!
-        print(url)
-        self.FetchAndDecode(url: url, completion: completion)
+    //TODO: HERLPER
+    func serverConnection(completion : @escaping (Result<ServerStatus,Error>)->()){
+        guard let url = URL(string: HOST + APIEndPoint.HealthCheck.apiUri) else{
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        self.FetchAndDecode(request: request, completion: completion)
     }
     
-    //To Fetching and Decoding the response body or throw an error
-    /*FetchAndDecode - parameters
-     @param {url} request - the endpoint url request
-     @param {[String : String]} - the header setting
-     @param { @escaping (Result<ResponseType,MovieError>) -> ()} - the closure that will call when the request is done
-     */
-    private func FetchAndDecode<ResponseType : Decodable>(url : URL,params : [String:String]? = nil,completion : @escaping (Result<ResponseType,MovieError>) -> ()){
+    
+    //MARK: --USER
+    func GetUserProfile(token : String, completion: @escaping (Result<UserProfile, Error>) -> ()) {
+        
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.UserProfile.apiUri) else{
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        
+        PostAndDecode(req: request, completion: completion)
+      
+    }
+    
+    func UserLogin(req: UserLoginReq, completion: @escaping (Result<UserLoginResp, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.UserLogin.apiUri) else{
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+       
+        do {
+            let userData = try JSONEncoder().encode(req)
+            request.httpBody = userData
+            
+        } catch {
+            completion(.failure(APIError.badEncoding))
+        }
+        
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        PostAndDecode(req: request, completion: completion)
+        
+    }
+    
+    func UserSignUp(req: UserSignInReq, completion: @escaping (Result<UserSignInResp, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.UserSignup.apiUri) else{
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        do{
+            let bodyData = try Encoder.encode(req)
+            request.httpBody = bodyData
+        }catch{
+            completion(.failure(APIError.badEncoding))
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    //MARK: --LIKED MOVIE
+    func PostLikedMovie(req : NewUserLikeMoviedReq,completion : @escaping (Result<CreateUserLikedMovieResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreateLikedMovie.apiUri) else{
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        do{
+            let bodyData = try Encoder.encode(req)
+            request.httpBody = bodyData
+        } catch {
+            completion(.failure(APIError.badEncoding))
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    func DeleteLikedMovie(req : DeleteUserLikedMovie,completion : @escaping (Result<DeleteUserLikedMovieResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.DeleteLikedMovie.apiUri) else{
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        do{
+            let bodyData = try Encoder.encode(req)
+            request.httpBody = bodyData
+        } catch {
+            completion(.failure(APIError.badEncoding))
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    func GetAllUserLikedMoive(userID : Int, completion : @escaping (Result<AllUserLikedMovieResp,Error>) -> ()) {
+        guard let url = URL(string: "\(API_SERVER_HOST)\(APIEndPoint.GetAllLikedMovie.apiUri)\(userID)") else{
+            completion(.failure(APIError.apiError))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
+    //MARK: --CUSTOM LIST
+    func CreateCustomList(req : CreateNewCustomListReq ,completion : @escaping (Result<CreateNewCustomListResp,Error>) -> ()){
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreateCustomList.apiUri) else{
+            completion(.failure(APIError.apiError))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do{
+            let bodyData = try Encoder.encode(req)
+            request.httpBody = bodyData
+        }catch{
+            completion(.failure(APIError.badEncoding))
+            return
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    func UpdateCustomList(req : UpdateCustomListReq, completion : @escaping (Result<UpdateCustomListResp,Error>) -> ()){
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.UpdateCustomList.apiUri) else{
+            completion(.failure(APIError.apiError))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do{
+            let bodyData = try Encoder.encode(req)
+            request.httpBody = bodyData
+        }catch{
+            completion(.failure(APIError.badEncoding))
+            return
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    func DeleteCustomList(req : DeleteCustomListReq, completion : @escaping (Result<DeleteCustomListResp,Error>) -> ()){
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.DeleteCustomList.apiUri) else{
+            completion(.failure(APIError.apiError))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do{
+            let bodyData = try Encoder.encode(req)
+            request.httpBody = bodyData
+        }catch{
+            completion(.failure(APIError.badEncoding))
+            return
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    func GetAllCustomLists(userID : Int,completion: @escaping (Result<AllUserListResp, Error>) -> ()){
+        guard let url = URL(string: "\(API_SERVER_HOST)\(APIEndPoint.GetAllUserLists.apiUri)\(userID)") else{
+            completion(.failure(APIError.apiError))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        
+        FetchAndDecode(request: request, completion: completion)
+
+    }
+    
+    func GetUserList(listID : Int , completion : @escaping (Result<UserListResp,Error> ) -> ()){
+        guard let url = URL(string: "\(API_SERVER_HOST)\(APIEndPoint.GetUserList.apiUri)\(listID)") else{
+            completion(.failure(APIError.apiError))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
+    func InsertMovieToList(){}
+    
+    func RemoveMOvieFromList(){}
+    
+    //MARK: --POST
+    func CreatePost(req : CreatePostReq , completion : @escaping (Result<CreatePostResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreatePost.apiUri) else{
+            completion(.failure(APIError.apiError))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do{
+            let bodyData = try Encoder.encode(req)
+            request.httpBody = bodyData
+        }catch{
+            completion(.failure(APIError.badEncoding))
+            return
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    func GetAllUserPost(completion : @escaping (Result <AllUserPostResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetAllPosts.apiUri) else{
+            completion(.failure(APIError.apiError))
+            return
+        }
+        print(url.absoluteURL)
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
+    func GetFollowUserPost(completion : @escaping (Result <FollowingUserPostResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetFollowingPosts.apiUri) else{
+            completion(.failure(APIError.apiError))
+            return
+        }
+        print(url.absoluteURL)
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
+    func GetUserPostByUserID(userID : Int ,completion : @escaping (Result <UserPostResp,Error>) -> ()) {
+        print("GET USER POST")
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetUserPosts.apiUri + userID.description) else{
+            completion(.failure(APIError.apiError))
+            return
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
+    //MARK: --MOVIE
+    func GetMovieCardInfoByGenre(genre: GenreType, completion :@escaping (Result<MoviePageListByGenreResp, Error>) -> ()) {
+        guard let url = URL(string: "\(API_SERVER_HOST)\(APIEndPoint.GetMoviesInfoByGenre.apiUri)/\(genre.rawValue)") else{
+            completion(.failure(APIError.apiError))
+            return
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        
+        FetchAndDecode(request: request,completion: completion)
+    }
+
+    //MARK: --API HEPLER
+    private func FetchAndDecode<ResponseType : Decodable>(request : URLRequest,params : [String:String]? = nil,completion : @escaping (Result<ResponseType,Error>) -> ()){
         
         //check the url
-        guard var component = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            completion(.failure(.invalidEndpoint))
+        guard var component = URLComponents(url: request.url!, resolvingAgainstBaseURL: false) else {
+            completion(.failure(APIError.invalidEndpoint))
             return
         }
         
@@ -289,10 +579,13 @@ class APIService : ServerAPIServerServiceInterface{
             component.queryItems = query
         }
         
-        guard let request = component.url else {
-            completion(.failure(.invalidEndpoint))
+        guard let url = component.url else {
+            completion(.failure(APIError.invalidEndpoint))
             return
         }
+
+    
+        
 //        print(request.absoluteURL)
         //do a URLSession
         
@@ -301,7 +594,7 @@ class APIService : ServerAPIServerServiceInterface{
             
             guard err == nil else {
                 DispatchQueue.main.async {
-                    completion(.failure(.apiError))
+                    completion(.failure(APIError.apiError))
                 }
                 return
             }
@@ -310,186 +603,223 @@ class APIService : ServerAPIServerServiceInterface{
             guard let statusCode = response as? HTTPURLResponse,200..<300 ~= statusCode.statusCode else{
                 DispatchQueue.main.async {
                     //Decode datas message???
-                    completion(.failure(.invalidResponse))
+                    
+                    completion(.failure(APIError.invalidResponse))
                 }
                 return
             }
             
             guard let data = data else{
                 DispatchQueue.main.async {
-                    completion(.failure(.noData))
+                    completion(.failure(APIError.noData))
                 }
                 return
             }
             
             
             do {
-                let result = try self.Decoder.decode(ResponseType.self, from: data)
-                DispatchQueue.main.async {
-                    completion(.success(result))
-//                    print("[DEBUG] DATA IS FETCHED SUCCESSFULLY")
+                if let result = try? self.Decoder.decode(ResponseType.self, from: data){
+                    DispatchQueue.main.async {
+                        completion(.success(result))
+    //                    print("[DEBUG] DATA IS FETCHED SUCCESSFULLY")
+                    }
+                }else{
+                    let errRes = try self.Decoder.decode(ErrorResp.self, from: data)
+                    DispatchQueue.main.async {
+                        completion(.failure(errRes))
+                    }
                 }
             } catch{
                 DispatchQueue.main.async {
-                    completion(.failure(.serializationError))
+                    completion(.failure(APIError.serializationError))
                 }
             }
         }.resume()
     }
     
-    //getactors?page
-    func fetchActors(page : Int = 1,completion: @escaping (Result<PersonInfoResponse, MovieError>) -> ()) {
-        //guard data size in greater than 0
-        if page < 0{
-            completion(.failure(.invalidEndpoint))
-            return
-        }
+    private func PostAndDecode<ResponseType : Decodable>(req : URLRequest,completion : @escaping (Result<ResponseType,Error>)->()) {
         
-        let url = URL(string: "\(API_SERVER_HOST)\(previewSearch)/getactors")!
-        
-        let params = [
-            "page" : page.description
-        ]
-//        print(url.absoluteURL)
-        self.FetchAndDecode(url: url, params: params,completion: completion)
-    }
-    
-    func fetchDirectors(page : Int = 1, completion: @escaping (Result<PersonInfoResponse, MovieError>) -> ()) {
-        //T
-        //guard data size in greater than 0
-        if page < 0{
-            completion(.failure(.invalidEndpoint))
-            return
-        }
-        
-        let url = URL(string: "\(API_SERVER_HOST)\(previewSearch)/getdirectors")!
-        
-        let params = [
-            "page" : page.description
-        ]
-//        print(url.absoluteURL)
-        self.FetchAndDecode(url: url, params: params,completion: completion)
-    }
-    
-    func fetchGenreById(genreID id: Int, dataSize size: Int = 5, completion: @escaping (Result<GenreInfoResponse, MovieError>) -> ()) {
-        //TODO
-        let url = URL(string: "\(API_SERVER_HOST)\(previewSearch)/getgenre")!
-        
-        let params = [
-            "id" : id.description,
-            "size" : size.description
-        ]
-//        print(url.absoluteURL)
-        self.FetchAndDecode(url: url, params: params,completion: completion)
-        
-    }
-    
-    func fetchAllGenres(completion: @escaping (Result<GenreInfoResponse, MovieError>) -> ()) {
-        //TODO
-        let url = URL(string: "\(API_SERVER_HOST)\(previewSearch)/getallgenres")!
-        
-//        print(url.absoluteURL)
-        self.FetchAndDecode(url: url,completion: completion)
-    
-    }
-    
-    func getPreviewMovie(datas: [SearchRef], completion: @escaping (Result<[MoviePreviewInfo], MovieError>) -> ()) {
-        let url = URL(string: "\(API_SERVER_HOST)\(previewSearch)/getpreview")
-        guard let component = URLComponents(url: url!, resolvingAgainstBaseURL: false) else {
-            completion(.failure(.invalidEndpoint))
-            return
-        }
-        
-        guard let requestComponent = component.url else {
-            completion(.failure(.invalidEndpoint))
-            return
-        }
-        
-        print(requestComponent.absoluteURL)
-        //do a URLSession
-        var request = URLRequest(url: requestComponent)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        guard let encodedData = try? Encoder.encode(datas) else {
-            completion(.failure(.apiError))
-            return
-        }
-        
-        Client.uploadTask(with: request, from: encodedData){ [weak self] (data,response,err) in
-            guard let self = self else {return} //if current task is break , return
-            
-            guard err == nil else {
-                DispatchQueue.main.async {
-                    completion(.failure(.apiError))
-                }
+        Client.dataTask(with: req){(data,response,error) in
+            guard error == nil else{
+                completion(.failure(error!))
                 return
             }
-            
-            //reponse cast to httpResponse ? and status code is 2xx?
             guard let statusCode = response as? HTTPURLResponse,200..<300 ~= statusCode.statusCode else{
+                //Decode datas message???
                 DispatchQueue.main.async {
-                    completion(.failure(.invalidResponse))
+//                    print((response as? HTTPURLResponse)?.statusCode)
+                    completion(.failure(APIError.badResponse))
                 }
                 return
+            }
+            
+            if let data = data {
+                do {
+                    if let decideData = try? self.Decoder.decode(ResponseType.self, from: data){
+                        completion(.success(decideData))
+                    }else{
+                        let errResp = try self.Decoder.decode(ErrorResp.self, from: data)
+                        print(errResp)
+                        completion(.failure(errResp))
+                    }
+                    
+                }catch{
+                    completion(.failure(error))
+                }
             }
 
-            
-            guard let data = data else{
-                DispatchQueue.main.async {
-                    completion(.failure(.noData))
-                }
-                return
-            }
-            
-            if statusCode.statusCode == 204{
-                DispatchQueue.main.async {
-                    completion(.failure(.noData))
-                }
-                return
-            }
-
-            
-            do {
-                
-                let result = try self.Decoder.decode([MoviePreviewInfo].self, from: data)
-                DispatchQueue.main.async {
-                    completion(.success(result))
-//                    print("[DEBUG] PREVIEW IS GOT")
-                }
-            } catch{
-                DispatchQueue.main.async {
-                    completion(.failure(.serializationError))
-                }
-            }
         }.resume()
     }
     
-    func getPreviewMovieList(completion: @escaping (Result<[MoviePreviewInfo], MovieError>) -> ()) {
-        let url = URL(string: "\(API_SERVER_HOST)\(previewSearch)/getpreviewlist")!
+    //MARK: ---UNUSE API
+    //getactors?page
+    func fetchActors(page : Int = 1,completion: @escaping (Result<PersonInfoResponse, Error>) -> ()) {
+        //guard data size in greater than 0
+//        if page < 0{
+//            completion(.failure(APIError.invalidEndpoint))
+//            return
+//        }
+//
+//        let url = URL(string: "\(API_SERVER_HOST)\(previewSearch)/getactors")!
+//
 //        let params = [
-//            "page" : page.description,
+//            "page" : page.description
 //        ]
-        self.FetchAndDecode(url: url,completion: completion)
+////        print(url.absoluteURL)
+//        self.FetchAndDecode(url: url, params: params,completion: completion)
     }
     
-    func getRecommandtionSearch(query key : String,completion : @escaping (Result<Movie,MovieError>)-> ()){
-        let url = URL(string: "\(API_SERVER_HOST)\(search)/query")!
-        self.FetchAndDecode(url: url, completion:completion)
+    func fetchDirectors(page : Int = 1, completion: @escaping (Result<PersonInfoResponse, Error>) -> ()) {
+        //T
+//        //guard data size in greater than 0
+//        if page < 0{
+//            completion(.failure(APIError.invalidEndpoint))
+//            return
+//        }
+//
+//        let url = URL(string: "\(API_SERVER_HOST)\(previewSearch)/getdirectors")!
+//
+//        let params = [
+//            "page" : page.description
+//        ]
+////        print(url.absoluteURL)
+//        self.FetchAndDecode(url: url, params: params,completion: completion)
     }
     
-    func getHotSeachingList(completion: @escaping (Result<[SearchHotItem], MovieError>) -> ()) {
-        let url = URL(string: "\(API_SERVER_HOST)\(search)/getrecommandsearch")!
-        self.FetchAndDecode(url: url, completion: completion)
+    func fetchGenreById(genreID id: Int, dataSize size: Int = 5, completion: @escaping (Result<GenreInfoResponse, Error>) -> ()) {
+        //TODO
+//        let url = URL(string: "\(API_SERVER_HOST)\(previewSearch)/getgenre")!
+//
+//        let params = [
+//            "id" : id.description,
+//            "size" : size.description
+//        ]
+////        print(url.absoluteURL)
+//        self.FetchAndDecode(url: url, params: params,completion: completion)
+        
     }
     
-    func getMovieCardInfoByGenre(genre: GenreType, completing: @escaping (Result<MovieCardResponse, MovieError>) -> ()) {
-        let url = URL(string: "\(API_SERVER_HOST)\(movie)/getmoviecard?genre=\(genre.rawValue)")!
-        self.FetchAndDecode(url: url, completion: completing)
+    func fetchAllGenres(completion: @escaping (Result<GenreInfoResponse, Error>) -> ()) {
+        //TODO
+//        let url = URL(string: "\(API_SERVER_HOST)\(previewSearch)/getallgenres")!
+//
+////        print(url.absoluteURL)
+//        self.FetchAndDecode(url: url,completion: completion)
+    
     }
     
-    func getMovieTrailerList(page : Int = 1 , completing : @escaping (Result<[TrailerInfo],MovieError>)->()){
-        let url = URL(string: "\(API_SERVER_HOST)\(video)/trailers?page=\(page)")!
-        self.FetchAndDecode(url: url, completion: completing)
+    func getPreviewMovie(datas: [SearchRef], completion: @escaping (Result<[MoviePreviewInfo], Error>) -> ()) {
+//        let url = URL(string: "\(API_SERVER_HOST)\(previewSearch)/getpreview")
+//        guard let component = URLComponents(url: url!, resolvingAgainstBaseURL: false) else {
+//            completion(.failure(APIError.invalidEndpoint))
+//            return
+//        }
+//
+//        guard let requestComponent = component.url else {
+//            completion(.failure(APIError.invalidEndpoint))
+//            return
+//        }
+//
+//        print(requestComponent.absoluteURL)
+//        //do a URLSession
+//        var request = URLRequest(url: requestComponent)
+//        request.httpMethod = "POST"
+//        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+//        guard let encodedData = try? Encoder.encode(datas) else {
+//            completion(.failure(APIError.apiError))
+//            return
+//        }
+//
+//        Client.uploadTask(with: request, from: encodedData){ [weak self] (data,response,err) in
+//            guard let self = self else {return} //if current task is break , return
+//
+//            guard err == nil else {
+//                DispatchQueue.main.async {
+//                    completion(.failure(APIError.apiError))
+//                }
+//                return
+//            }
+//
+//            //reponse cast to httpResponse ? and status code is 2xx?
+//            guard let statusCode = response as? HTTPURLResponse,200..<300 ~= statusCode.statusCode else{
+//                DispatchQueue.main.async {
+//                    completion(.failure(APIError.invalidResponse))
+//                }
+//                return
+//            }
+//
+//
+//            guard let data = data else{
+//                DispatchQueue.main.async {
+//                    completion(.failure(APIError.noData))
+//                }
+//                return
+//            }
+//
+//            if statusCode.statusCode == 204{
+//                DispatchQueue.main.async {
+//                    completion(.failure(APIError.noData))
+//                }
+//                return
+//            }
+//
+//
+//            do {
+//
+//                let result = try self.Decoder.decode([MoviePreviewInfo].self, from: data)
+//                DispatchQueue.main.async {
+//                    completion(.success(result))
+////                    print("[DEBUG] PREVIEW IS GOT")
+//                }
+//            } catch{
+//                DispatchQueue.main.async {
+//                    completion(.failure(APIError.serializationError))
+//                }
+//            }
+//        }.resume()
+    }
+    
+    func getPreviewMovieList(completion: @escaping (Result<[MoviePreviewInfo], Error>) -> ()) {
+//        let url = URL(string: "\(API_SERVER_HOST)\(previewSearch)/getpreviewlist")!
+////        let params = [
+////            "page" : page.description,
+////        ]
+//        self.FetchAndDecode(url: url,completion: completion)
+    }
+    
+    func getRecommandtionSearch(query key : String,completion : @escaping (Result<Movie,Error>)-> ()){
+//        let url = URL(string: "\(API_SERVER_HOST)\(search)/query")!
+//        self.FetchAndDecode(url: url, completion:completion)
+    }
+    
+    func getHotSeachingList(completion: @escaping (Result<[SearchHotItem], Error>) -> ()) {
+//        let url = URL(string: "\(API_SERVER_HOST)\(search)/getrecommandsearch")!
+//        self.FetchAndDecode(url: url, completion: completion)
+    }
+    
+    func getMovieTrailerList(page : Int = 1 , completing : @escaping (Result<[TrailerInfo],Error>)->()){
+//        let url = URL(string: "\(API_SERVER_HOST)\(video)/trailers?page=\(page)")!
+//        self.FetchAndDecode(url: url, completion: completing)
     }
 }
 

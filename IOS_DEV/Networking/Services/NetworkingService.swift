@@ -11,7 +11,7 @@ import Foundation
 import SwiftUI
 
 //let baseUrl="http://120.126.16.229:8080"
-let baseUrl="http://127.0.0.1:8080"
+let baseUrl="http://127.0.0.1:8000"
 
 class NetworkingService: ObservableObject {
     private var token = ""
@@ -23,8 +23,8 @@ class NetworkingService: ObservableObject {
     }
     //login
     func requestLogin(endpoint: String,
-                 loginObject: UserLogin,
-                 completion: @escaping (Result<Me, Error>) -> Void) {
+                 loginObject: UserLoginReq,
+                 completion: @escaping (Result<UserProfile, Error>) -> Void) {
         
         guard let url = URL(string: baseUrl + endpoint) else {
             completion(.failure(NetworkingError.badUrl))
@@ -35,33 +35,54 @@ class NetworkingService: ObservableObject {
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        do {
+        do{
             let payload = try JSONEncoder().encode(loginObject)
             print("login payload \(payload)")
-            URLSession.shared.uploadTask(with: request, from: payload){ (data, response, error) in
-                guard let data = data else {
-                    print("login failed")
-                    completion(.failure(NetworkingError.badUrl))
-                    return
+            request.httpBody = payload
+        }catch{
+            completion(.failure(NetworkingError.badEncoding))
+        }
+        
+        URLSession.shared.dataTask(with: request) { (data,response,error) in
+            
+            guard let _ = response as? HTTPURLResponse else{
+                completion(.failure(NetworkingError.badResponse))
+                return
+            }
+            
+            if let err = error {
+                print(err)
+                completion(.failure(err))
+                return
+            }
+            
+            if let resData = data{
+                do{
+                    let jsonData = try JSONSerialization.jsonObject(with: resData, options: [])
+                    print(jsonData)
+                    
+                    if let tokenData = try? JSONDecoder().decode(UserLoginResp.self, from: resData){
+                        print(tokenData)
+                        self.token = tokenData.token
+                        self.AuthUser(token: self.token, completion: completion)
+                    }else{
+                        let errRes = try JSONDecoder().decode(ErrorResp.self, from: resData)
+                        print(errRes)
+                        completion(.failure(errRes))
+                    }
+                }catch{
+                    completion(.failure(error))
                 }
                 
-                let token = String(data:data, encoding: String.Encoding.utf8)
-                print("login token \(String(describing:token))")
-                self.token = token ?? ""
-//                UserDefaults.standard.set(token ?? "", forKey: "USER_TOKEN")
-                self.AuthUser(token: self.token, completion: completion)
                 
-            }.resume()
-        } catch {
-            print ("Login failed during call")
-        }
-  
+            }
 
+        }.resume()
     }
     
     //驗證token,辨識user
-    func AuthUser(token:String, completion: @escaping (Result<Me, Error>) -> Void){
-        let url = URL(string: baseUrl+"/users/me")
+    func AuthUser(token:String, completion: @escaping (Result<UserProfile, Error>) -> Void){
+        let url = URL(string: baseUrl+"/api/v1/user/profile")
         
         var request = URLRequest(url: url!)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -74,7 +95,9 @@ class NetworkingService: ObservableObject {
                 return
             }
             do {
-                if let user = try? JSONDecoder().decode(Me.self, from: gotData) {
+                if let user = try? JSONDecoder().decode(UserProfile.self, from: gotData) {
+                    //get all the user datas
+                    print(user)
                     UserDefaults.standard.set(token, forKey: "userToken")
                     completion(.success(user))
                 }else {
@@ -84,8 +107,6 @@ class NetworkingService: ObservableObject {
             } catch {
                 print("failed to decode user objects")
             }
-            
-            
         }
         result.resume()
     }

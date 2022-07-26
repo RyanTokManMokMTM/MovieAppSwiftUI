@@ -26,6 +26,7 @@ class MovieDetailState: ObservableObject {
         
             switch result {
             case .success(let movie):
+                print(movie)
                 self.movie = movie
             case .failure(let error):
                 self.error = error as NSError

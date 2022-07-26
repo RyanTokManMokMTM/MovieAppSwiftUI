@@ -300,16 +300,6 @@ struct MovieSettingView: View {
     }
 }
 
-//
-//struct ProfileView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        AccountSettingView(userID: NowUserID)
-//
-//    }
-//}
-
-
-
 struct genrebutton: View {
     
     var genreInfo: MovieGenre

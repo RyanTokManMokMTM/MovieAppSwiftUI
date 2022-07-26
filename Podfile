@@ -10,6 +10,6 @@ pod 'Firebase/Auth'
 pod 'GoogleSignIn'
 pod 'Kingfisher'
 pod 'SDWebImageSwiftUI'
-
+pod 'SwiftUIPager'
 
 end

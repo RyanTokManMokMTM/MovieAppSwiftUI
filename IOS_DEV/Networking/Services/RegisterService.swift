@@ -10,10 +10,8 @@
 import Foundation
 
 class RegisterService: ObservableObject {
-    
-    
     func handleResponse(for request: URLRequest,
-                        completion: @escaping (Result<User, Error>) -> Void){
+                        completion: @escaping (Result<UserSignInResp, Error>) -> Void){
         
         let session = URLSession.shared
         
@@ -26,7 +24,7 @@ class RegisterService: ObservableObject {
                     return
                 }
             
-                print(unwrappedResponse.statusCode)
+//                print(unwrappedResponse)
                 switch unwrappedResponse.statusCode {
                 case 200 ..< 300:   //200~300 ,NOT INCLUDE 300
                     print("success")
@@ -48,10 +46,11 @@ class RegisterService: ObservableObject {
                         print(json)
                         
                         // decode data
-                        if let user = try? JSONDecoder().decode(User.self, from: unwrappedData) {       // try? : 沒辦法執行的話就進到else
+                        if let user = try? JSONDecoder().decode(UserSignInResp.self, from: unwrappedData) {       // try? : 沒辦法執行的話就進到else
                             completion(.success(user))
                         } else {
-                            let errorResponse = try JSONDecoder().decode(ErrorResponse.self, from: unwrappedData)   // try : 沒辦法執行的話跳到catch
+                            let errorResponse = try JSONDecoder().decode(ErrorResp.self, from: unwrappedData)   // try : 沒辦法執行的話跳到catch
+                            print(errorResponse)
                             completion(.failure(errorResponse))
     
                         }
@@ -70,8 +69,8 @@ class RegisterService: ObservableObject {
     }
     
     func requestRegister(endpoint: String,
-                 RegisterObject: UserRegister,
-                 completion: @escaping (Result<User, Error>) -> Void) {
+                 RegisterObject: UserSignInReq,
+                 completion: @escaping (Result<UserSignInResp, Error>) -> Void) {
         
         guard let url = URL(string: baseUrl + endpoint) else {
             completion(.failure(NetworkingError.badUrl))
@@ -87,6 +86,7 @@ class RegisterService: ObservableObject {
         } catch {
             completion(.failure(NetworkingError.badEncoding))
         }
+        
         
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")

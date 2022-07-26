@@ -16,12 +16,25 @@ struct MoviePosterCarousel: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(title)
-
-                .bold()
-                .font(.title2)
-                .padding(.horizontal,8)
-                .foregroundColor(.red)
+            HStack{
+                Text(title)
+                    .bold()
+                    .font(.system(size: 25))
+                    .padding(.horizontal,8)
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                Button(action:{
+                    print("View More\(title) movies")
+                }){
+                    Text("Show more")
+                        .bold()
+                        .padding(.horizontal,8)
+                        .foregroundColor(.blue)
+                        .font(.system(size:15))
+                }.buttonStyle(PlainButtonStyle())
+            }
             
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .top, spacing: 16) {
@@ -31,10 +44,6 @@ struct MoviePosterCarousel: View {
                         }.buttonStyle(PlainButtonStyle())
                             .padding(.leading, movie.id == self.movies.first!.id ? 16 : 0)
                             .padding(.trailing, movie.id == self.movies.last!.id ? 16 : 0)
-                        
-  
-                        
-                        
                     }
                 }
             }

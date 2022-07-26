@@ -1,0 +1,43 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "BottomSheet",
+        "repositoryURL": "https://github.com/lucaszischka/BottomSheet",
+        "state": {
+          "branch": null,
+          "revision": "39f59cd641dfb407cb4033966e3be51237011da4",
+          "version": "2.8.0"
+        }
+      },
+      {
+        "package": "LegacyScrollView",
+        "repositoryURL": "https://github.com/perimeter-inc/LegacyScrollView",
+        "state": {
+          "branch": null,
+          "revision": "8622c91bc5b8578adcca91ea3ebbb63ec132e9cf",
+          "version": "2.1.0"
+        }
+      },
+      {
+        "package": "Drawer",
+        "repositoryURL": "https://github.com/bwide/SwiftUI-Drawer",
+        "state": {
+          "branch": null,
+          "revision": "a3d14d295c7639e4ed1756ce2b238b828ca3a092",
+          "version": "1.3.0"
+        }
+      },
+      {
+        "package": "SwiftUIPager",
+        "repositoryURL": "https://github.com/fermoya/SwiftUIPager.git",
+        "state": {
+          "branch": "main",
+          "revision": "669d20f0ab90dc6cac5aadbb8462505875805459",
+          "version": null
+        }
+      }
+    ]
+  },
+  "version": 1
+}

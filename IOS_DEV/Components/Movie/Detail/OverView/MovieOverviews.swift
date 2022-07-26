@@ -132,16 +132,20 @@ struct MovieOverviews:View {
 
 
 
-
+//MARK: FROM https://prafullkumar77.medium.com/swiftui-how-to-make-see-more-see-less-style-button-at-the-end-of-text-675f859c2c4f
 struct ExpandableText: View {
     @State private var expanded: Bool = false
     @State private var truncated: Bool = false
+    var expandedStr : String
+    var lessStr : String
+    var fontColor : Color
     var text: String
-
-    
     let lineLimit: Int
 
-    init(_ text: String, lineLimit: Int) {
+    init(expandedStr : String = "more",lessStr:String = "less",fontColor : Color = .white,_ text: String, lineLimit: Int) {
+        self.expandedStr = expandedStr
+        self.lessStr = lessStr
+        self.fontColor = fontColor
         self.text = text
         self.lineLimit = lineLimit
     }
@@ -150,12 +154,12 @@ struct ExpandableText: View {
         if !truncated {
             return ""
         } else {
-            return self.expanded ? "less" : "more"
+            return self.expanded ? lessStr : expandedStr
         }
     }
     
     var body: some View {
-        VStack(alignment: .leading,spacing:5) {
+        VStack(alignment:.leading,spacing:5) {
             Text(text)
                 .lineLimit(expanded ? nil : lineLimit)
                 .background(
@@ -188,11 +192,7 @@ struct ExpandableText: View {
                 }
             }
         }
-        .font(.subheadline)
-        .foregroundColor(Color(UIColor.systemGray3))
-        
-
-        
+            .foregroundColor(fontColor)
     }
 }
 

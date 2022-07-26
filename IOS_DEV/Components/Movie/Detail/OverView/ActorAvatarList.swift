@@ -14,12 +14,6 @@ struct ActorAvatarList: View {
     @ObservedObject private var personSearchState0 = PersonSearchState()
     @ObservedObject private var personSearchState1 = PersonSearchState()
     @ObservedObject private var personSearchState2 = PersonSearchState()
-//    @ObservedObject private var personSearchState3 = PersonSearchState()
-//    @ObservedObject private var personSearchState4 = PersonSearchState()
-//    @ObservedObject private var personSearchState5 = PersonSearchState()
-//    @ObservedObject private var personSearchState6 = PersonSearchState()
-//    @ObservedObject private var personSearchState7 = PersonSearchState()
-//    @ObservedObject private var personSearchState8 = PersonSearchState()
     
     var body:some View{
         

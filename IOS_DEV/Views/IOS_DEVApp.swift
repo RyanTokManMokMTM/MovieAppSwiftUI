@@ -10,20 +10,297 @@ import SwiftUI
 import AVFoundation
 import SDWebImageSwiftUI
 
+import Drawer
+
 @main
 struct IOS_DEVApp: App {
     @UIApplicationDelegateAdaptor(Appdelegate.self) var delegate
     
     var body: some Scene {
         WindowGroup {
-//            NavBar(isLogOut: .constant(false), index: 0)
-//                .ignoresSafeArea()
-            WelcomePage2()
-//            MessageView()
+//            HomePage()
+            TestDetailView(movieId: 453395)
+//            WordSearchView()
+//            ArtistSongsView()
         }
     }
 }
 
+struct ScrollingHStackModifier: ViewModifier {
+    
+    @State private var scrollOffset: CGFloat
+    @State private var dragOffset: CGFloat
+    
+    var items: Int
+    var itemWidth: CGFloat
+    var itemSpacing: CGFloat
+    
+    init(items: Int, itemWidth: CGFloat, itemSpacing: CGFloat) {
+        self.items = items
+        self.itemWidth = itemWidth
+        self.itemSpacing = itemSpacing
+        
+        // Calculate Total Content Width
+        let contentWidth: CGFloat = CGFloat(items) * itemWidth + CGFloat(items - 1) * itemSpacing
+        let screenWidth = UIScreen.main.bounds.width
+        
+        // Set Initial Offset to first Item
+        let initialOffset = (contentWidth/2.0) - (screenWidth/2.0) + ((screenWidth - itemWidth) / 2.0)
+        
+        self._scrollOffset = State(initialValue: initialOffset)
+        self._dragOffset = State(initialValue: 0)
+    }
+    
+    func body(content: Content) -> some View {
+        content
+            .offset(x: scrollOffset + dragOffset, y: 0)
+            .gesture(DragGesture()
+                .onChanged({ event in
+                    dragOffset = event.translation.width
+                })
+                .onEnded({ event in
+                    // Scroll to where user dragged
+                    scrollOffset += event.translation.width
+                    dragOffset = 0
+                    
+                    // Now calculate which item to snap to
+                    let contentWidth: CGFloat = CGFloat(items) * itemWidth + CGFloat(items - 1) * itemSpacing
+                    let screenWidth = UIScreen.main.bounds.width
+                    
+                    // Center position of current offset
+                    let center = scrollOffset + (screenWidth / 2.0) + (contentWidth / 2.0)
+                    
+                    // Calculate which item we are closest to using the defined size
+                    var index = (center - (screenWidth / 2.0)) / (itemWidth + itemSpacing)
+                    
+                    // Should we stay at current index or are we closer to the next item...
+                    if index.remainder(dividingBy: 1) > 0.5 {
+                        index += 1
+                    } else {
+                        index = CGFloat(Int(index))
+                    }
+                    
+                    // Protect from scrolling out of bounds
+                    index = min(index, CGFloat(items) - 1)
+                    index = max(index, 0)
+                    
+                    // Set final offset (snapping to item)
+                    let newOffset = index * itemWidth + (index - 1) * itemSpacing - (contentWidth / 2.0) + (screenWidth / 2.0) - ((screenWidth - itemWidth) / 2.0) + itemSpacing
+                    
+                    // Animate snapping
+                    withAnimation {
+                        scrollOffset = newOffset
+                    }
+                    
+                })
+            )
+    }
+}
+
+struct TestCardView: View {
+    
+    var colors: [Color] = [.blue, .green, .red, .orange]
+    
+    var body: some View {
+        HStack(alignment: .center, spacing: 30) {
+            ForEach(0..<colors.count) { i in
+                 colors[i]
+                     .frame(width: 250, height: 400, alignment: .center)
+                     .cornerRadius(10)
+                
+            }
+        }.modifier(ScrollingHStackModifier(items: colors.count, itemWidth: 250, itemSpacing: 30))
+    }
+}
+
+//
+//struct WordSearchView: View {
+//    var body: some View {
+//        ZStack {
+//
+//            ScrollView {
+//                //...
+//                Text("???")
+//            }
+//
+//            Drawer{
+//                Color.blue
+//            }.edgesIgnoringSafeArea(.vertical)
+//        }
+//
+//    }
+//}
+
+
+//struct MyView: View {
+//    @State var index = 0;
+//     var body: some View {
+//          GeometryReader { proxy in
+//               ScrollView {
+//                  Image("dr6")
+//                       .resizable()
+//                       .aspectRatio(contentMode: .fit)
+//                       .frame(maxWidth:.infinity)
+////                       .background(Color.red)
+//                   TabView(selection:$index) {
+//                       ForEach(0..<3) { _ in
+//                               Text("testing data")
+//
+//
+//                       }
+//
+//                    }
+//                   .background(.blue)
+//                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+//                    .frame(height: proxy.size.height)
+//                }
+//            }
+//
+//        }
+//}
+
+//struct TestMulti: View {
+//    static var test:String = ""
+//    static var testBinding = Binding<String>(get: { test }, set: { test = $0 } )
+//    var body: some View {
+//        NavigationView {
+//            VStack(alignment: .leading) {
+//                Text("Enter Review Comments:")
+//                MultilineTextField("Type here", text: TestMulti.testBinding, onCommit: {
+//                    print("Final text: \(TestMulti.test)")
+//                })
+//                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.gray))
+//                Button(action: {
+//                    print("send Clicked")
+//                }) {
+//                    Text("send")
+//                }
+//                Spacer()
+//            }
+//            .padding()
+//            .navigationBarTitle(Text("SwiftUI"))
+//        }
+//
+//    }
+//}
+//
+//
+//struct MultilineTextField: View {
+//
+//    private var placeholder: String
+//    private var onCommit: (() -> Void)?
+//    @State private var viewHeight: CGFloat = 40 //start with one line
+//    @State private var shouldShowPlaceholder = false
+//    @Binding private var text: String
+//
+//    private var internalText: Binding<String> {
+//        Binding<String>(get: { self.text } ) {
+//            self.text = $0
+//            self.shouldShowPlaceholder = $0.isEmpty
+//        }
+//    }
+//
+//    var body: some View {
+//        UITextViewWrapper(text: self.internalText, calculatedHeight: $viewHeight, onDone: onCommit)
+//            .frame(minHeight: viewHeight, maxHeight: viewHeight)
+//            .background(placeholderView, alignment: .topLeading)
+//    }
+//
+//    var placeholderView: some View {
+//        Group {
+//            if shouldShowPlaceholder {
+//                Text(placeholder).foregroundColor(.gray)
+//                    .padding(.leading, 4)
+//                    .padding(.top, 8)
+//            }
+//        }
+//    }
+//
+//    init (_ placeholder: String = "", text: Binding<String>, onCommit: (() -> Void)? = nil) {
+//        self.placeholder = placeholder
+//        self.onCommit = onCommit
+//        self._text = text
+//        self._shouldShowPlaceholder = State<Bool>(initialValue: self.text.isEmpty)
+//    }
+//
+//}
+
+
+private struct UITextViewWrapper: UIViewRepresentable {
+    typealias UIViewType = UITextView
+
+    @Binding var text: String
+    @Binding var calculatedHeight: CGFloat
+    var onDone: (() -> Void)?
+
+    func makeUIView(context: UIViewRepresentableContext<UITextViewWrapper>) -> UITextView {
+        let textField = UITextView()
+        textField.delegate = context.coordinator
+
+        textField.isEditable = true
+        textField.font = UIFont.preferredFont(forTextStyle: .body)
+        textField.isSelectable = true
+        textField.isUserInteractionEnabled = true
+        textField.isScrollEnabled = false
+        textField.backgroundColor = UIColor.clear
+        if nil != onDone {
+            textField.returnKeyType = .done
+        }
+
+        textField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        return textField
+    }
+
+    func updateUIView(_ uiView: UITextView, context: UIViewRepresentableContext<UITextViewWrapper>) {
+        if uiView.text != self.text {
+            uiView.text = self.text
+        }
+        if uiView.window != nil, !uiView.isFirstResponder {
+            uiView.becomeFirstResponder()
+        }
+        UITextViewWrapper.recalculateHeight(view: uiView, result: $calculatedHeight)
+    }
+
+    private static func recalculateHeight(view: UIView, result: Binding<CGFloat>) {
+        let newSize = view.sizeThatFits(CGSize(width: view.frame.size.width, height: CGFloat.greatestFiniteMagnitude))
+        if result.wrappedValue != newSize.height {
+            DispatchQueue.main.async {
+                result.wrappedValue = newSize.height // call in next render cycle.
+            }
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        return Coordinator(text: $text, height: $calculatedHeight, onDone: onDone)
+    }
+
+    final class Coordinator: NSObject, UITextViewDelegate {
+        var text: Binding<String>
+        var calculatedHeight: Binding<CGFloat>
+        var onDone: (() -> Void)?
+
+        init(text: Binding<String>, height: Binding<CGFloat>, onDone: (() -> Void)? = nil) {
+            self.text = text
+            self.calculatedHeight = height
+            self.onDone = onDone
+        }
+
+        func textViewDidChange(_ uiView: UITextView) {
+            text.wrappedValue = uiView.text
+            UITextViewWrapper.recalculateHeight(view: uiView, result: calculatedHeight)
+        }
+
+        func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+            if let onDone = self.onDone, text == "\n" {
+                textView.resignFirstResponder()
+                onDone()
+                return false
+            }
+            return true
+        }
+    }
+
+}
 
 struct imagePickerTestView : View{
     @State private var isShowPicker : Bool = false
@@ -42,7 +319,7 @@ struct imagePickerTestView : View{
                     }
                 }
         }.fullScreenCover(isPresented: $isShowPicker){
-            EditableImagePickerView(sourceType: .photoLibrary, selectedImage: $image)
+            EditableImagePickerView(sourceType: .photoLibrary)
         }
     }
 }

@@ -62,12 +62,14 @@ PODS:
   - SDWebImage/Core (5.11.1)
   - SDWebImageSwiftUI (2.0.2):
     - SDWebImage (~> 5.10)
+  - SwiftUIPager (2.4.0)
 
 DEPENDENCIES:
   - Firebase/Auth
   - GoogleSignIn
   - Kingfisher
   - SDWebImageSwiftUI
+  - SwiftUIPager
 
 SPEC REPOS:
   trunk:
@@ -86,6 +88,7 @@ SPEC REPOS:
     - PromisesObjC
     - SDWebImage
     - SDWebImageSwiftUI
+    - SwiftUIPager
 
 SPEC CHECKSUMS:
   AppAuth: 31bcec809a638d7bd2f86ea8a52bd45f6e81e7c7
@@ -103,7 +106,8 @@ SPEC CHECKSUMS:
   PromisesObjC: 3113f7f76903778cf4a0586bd1ab89329a0b7b97
   SDWebImage: a7f831e1a65eb5e285e3fb046a23fcfbf08e696d
   SDWebImageSwiftUI: 8a3923c95108312b03a599ec1498754af55a6819
+  SwiftUIPager: 06833fb6991ffa64d096ee4a9fc0d32edd495f49
 
-PODFILE CHECKSUM: 9e95916b18422a6cf0bb19a39b326314eaf103cd
+PODFILE CHECKSUM: d090f0e770ca00f934e12102b9f5876b305af155
 
-COCOAPODS: 1.10.1
+COCOAPODS: 1.11.3

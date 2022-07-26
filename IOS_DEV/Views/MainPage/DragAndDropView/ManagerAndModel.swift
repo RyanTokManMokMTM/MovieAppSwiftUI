@@ -57,7 +57,7 @@ class PreviewModel : ObservableObject{
                     self.fetchError = nil
                     break
                 case .failure(let error):
-                    if error != .noData{
+                    if error as! APIError != APIError.noData{
                         let err = error as NSError
                         print(err.localizedDescription)
                         self.fetchError = error as NSError

@@ -260,15 +260,16 @@ struct MovieCardGesture :View{
             _ = self.movies.popLast()
 
                 if direction == .right{
-                    withAnimation(){
-                        self.previewMovieId = currentMovie!.id
-                    }
-                    self.isMovieDetail.toggle()
+//                    withAnimation(){
+//                        self.previewMovieId = currentMovie!.id
+//                    }
+//                    self.isMovieDetail.toggle()
                 }
                 
                 if direction == .left{
                     postLikeData(movie: currentMovie!)
                 }
+            
                 currentMovie = self.movies.last
                 
 
@@ -291,17 +292,18 @@ struct MovieCardGesture :View{
     }
     
     func postLikeData( movie:MovieCardInfo){
-        let data = NewLikeMovie(userID: NowUserID!, movie: movie.id, title: movie.title, posterPath: movie.poster!)
+//        let data = NewLikeMovie(userID: NowUserID!, movie: movie.id, title: movie.title, posterPath: movie.poster!)
+        let req = NewUserLikeMoviedReq(movie_id: movie.id)
         
-        favourController.POST_likeMovie(endpoint: "/likeMovie/new", RegisterObject: data){ (result) in
+        APIService.shared.PostLikedMovie(req:req){ (result) in
             switch result {
-                case 200 :
-                    print("post LikeMovie success")
-                default:
-                    print("post LikeMovie failed")
+            case .success(let data):
+                print(data)
+            case .failure(let err):
+                print("Movie:\(movie.title) added failed : \(err.localizedDescription)")
             }
             
-        }
+        } 
     }
 }
 
