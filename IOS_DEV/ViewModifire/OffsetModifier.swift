@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-struct PersonPageOffsetModifier : ViewModifier{
+struct PersonPageOffsetModifier : ViewModifier {
     @Binding var offset : CGFloat
     @Binding var isShowIcon : Bool
     func body(content: Content) -> some View {
@@ -18,7 +18,7 @@ struct PersonPageOffsetModifier : ViewModifier{
                     let minY = proxy.frame(in: .named("SCROLL")).minY
                     DispatchQueue.main.async {
                         self.offset = minY
-//                        print(minY)
+                        print(minY)
                         
                         if -minY > 110{
                             withAnimation(.easeInOut(duration: 0.3)){
@@ -30,6 +30,34 @@ struct PersonPageOffsetModifier : ViewModifier{
                             }
                         }
                         
+                    }
+                    return Color.clear
+                    
+                }
+                ,alignment: .top
+            )
+    }
+}
+
+struct MovieDetailPageOffsetModifier : ViewModifier {
+    @Binding var offset : CGFloat
+    @Binding var isShowIcon : Bool
+    func body(content: Content) -> some View {
+        content
+            .overlay(
+                GeometryReader{proxy -> Color in
+                    let minY = proxy.frame(in: .named("SCROLL")).minY
+                    DispatchQueue.main.async {
+                        self.offset = minY
+                        if -minY > 110{
+                            withAnimation(.spring()){
+                                self.isShowIcon = true
+                            }
+                        }else if -minY < 100{
+                            withAnimation(.spring()){
+                                self.isShowIcon = false
+                            }
+                        }
                     }
                     return Color.clear
                     

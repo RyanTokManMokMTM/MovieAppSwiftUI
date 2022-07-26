@@ -7,10 +7,13 @@
 
 import Foundation
 import SwiftUI
+import UIKit
 import AVFoundation
 import SDWebImageSwiftUI
-
+import DynamicOverlay
 import Drawer
+import BottomSheet
+import MapKit
 
 @main
 struct IOS_DEVApp: App {
@@ -18,10 +21,328 @@ struct IOS_DEVApp: App {
     
     var body: some Scene {
         WindowGroup {
-//            HomePage()
-            TestDetailView(movieId: 453395)
-//            WordSearchView()
-//            ArtistSongsView()
+            HomePage()
+        }
+    }
+}
+
+enum Notch: CaseIterable, Equatable {
+    case min, max
+}
+
+struct MapRootView: View {
+
+    struct State {
+        var notch: Notch = .min
+        var isEditing = false
+        var progress = 0.0
+    }
+
+    @SwiftUI.State
+    private var state = State()
+
+    // MARK: - View
+    var body: some View {
+        background
+            .dynamicOverlay(overlay)
+//            .dynamicOverlayBehavior(behavior)
+            .ignoresSafeArea()
+    }
+
+    // MARK: - Private
+    private var behavior: some DynamicOverlayBehavior {
+        MagneticNotchOverlayBehavior<Notch> { notch in
+            switch notch {
+            case .max:
+                return .fractional(0.8)
+            case .min:
+                return .fractional(0.3)
+            }
+        }
+        .disable(.min, state.isEditing)
+        .notchChange($state.notch)
+        .onTranslation { translation in
+            state.progress = translation.progress
+        }
+    }
+
+    private var background: some View {
+        ZStack {
+            MapView()
+            BackdropView().opacity(state.progress)
+        }
+        .ignoresSafeArea()
+    }
+
+    private var overlay: some View {
+        OverlayView { event in
+            switch event {
+            case .didBeginEditing:
+                state.isEditing = true
+                withAnimation { state.notch = .max }
+            case .didEndEditing:
+                state.isEditing = false
+                withAnimation { state.notch = .min }
+            }
+        }
+        .drivingScrollView()
+    }
+}
+////////
+struct ActionCell: View {
+
+    var body: some View {
+        Label("New Guide…", systemImage: "plus")
+    }
+}
+
+struct BackdropView: View {
+
+    var body: some View {
+        Color.black.opacity(0.3)
+    }
+}
+
+struct FavoriteCell: View {
+
+    let imageName: String
+    let title: String
+
+    var body: some View {
+        VStack {
+            Circle()
+                .foregroundColor(Color(.secondarySystemFill))
+                .frame(width: 70, height: 70)
+                .overlay(Image(systemName: imageName).font(.title2).foregroundColor(.blue))
+            Text(title)
+        }
+    }
+}
+struct MapView: View {
+
+    var body: some View {
+        MapViewAdaptor().ignoresSafeArea()
+    }
+}
+struct OverlayBackgroundView: View {
+
+    var body: some View {
+        Color(.systemBackground)
+            .cornerRadius(8.0, corners: [.topLeft, .topRight])
+            .shadow(color: Color.black.opacity(0.3), radius: 8.0)
+    }
+}
+struct OverlayView: View {
+
+    enum Event {
+        case didBeginEditing
+        case didEndEditing
+    }
+
+    let eventHandler: (Event) -> Void
+
+    // MARK: - View
+    var body: some View {
+        VStack(spacing: 0.0) {
+            header.draggable()
+            list
+        }
+        .background(OverlayBackgroundView())
+    }
+
+    // MARK: - Private
+    private var list: some View {
+        List {
+            Section(header: Text("Favorites")) {
+                ScrollView(.horizontal) {
+                    HStack {
+                        FavoriteCell(imageName: "house.fill", title: "House")
+                        FavoriteCell(imageName: "briefcase.fill", title: "Work")
+                        FavoriteCell(imageName: "plus", title: "Add")
+                    }
+                }
+            }
+            Section(header: Text("My Guides")) {
+                ActionCell()
+            }
+        }
+        .listStyle(GroupedListStyle())
+    }
+
+    private var header: some View {
+        SearchBar { event in
+            switch event {
+            case .didBeginEditing:
+                eventHandler(.didBeginEditing)
+            case .didCancel:
+                eventHandler(.didEndEditing)
+            }
+        }
+    }
+}
+struct SearchBar: View {
+
+    enum Event {
+        case didBeginEditing
+        case didCancel
+    }
+
+    let eventHandler: (Event) -> Void
+
+    var body: some View {
+        SearchBarAdaptor(
+            didBeginEditing: { eventHandler(.didBeginEditing) },
+            didCancel: { eventHandler(.didCancel) }
+        )
+    }
+}
+
+private class SearchBarCoordinator: NSObject, UISearchBarDelegate {
+
+    var didBeginEditing: (() -> Void)?
+    var didCancel: (() -> Void)?
+
+    // MARK: - UISearchBarDelegate
+    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
+        didBeginEditing?()
+    }
+
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.endEditing(true)
+        didCancel?()
+    }
+}
+
+private struct SearchBarAdaptor: UIViewRepresentable {
+
+    let didBeginEditing: () -> Void
+    let didCancel: () -> Void
+
+    func makeCoordinator() -> SearchBarCoordinator {
+        let coordinator = SearchBarCoordinator()
+        coordinator.didBeginEditing = didBeginEditing
+        coordinator.didCancel = didCancel
+        return coordinator
+    }
+
+    func makeUIView(context: Context) -> UISearchBar {
+        let searchBar = UISearchBar()
+        searchBar.searchBarStyle = .minimal
+        searchBar.showsCancelButton = true
+        searchBar.placeholder = "Search for a place or address"
+        searchBar.delegate = context.coordinator
+        return searchBar
+    }
+
+    func updateUIView(_ uiView: UISearchBar, context: Context) {}
+}
+private extension View {
+
+    func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
+        clipShape(RoundedCorner(radius: radius, corners: corners))
+    }
+}
+
+private struct RoundedCorner: Shape {
+
+    var radius: CGFloat = 0.0
+    var corners: UIRectCorner = .allCorners
+
+    func path(in rect: CGRect) -> Path {
+        Path(
+            UIBezierPath(
+                roundedRect: rect,
+                byRoundingCorners: corners,
+                cornerRadii: CGSize(width: radius, height: radius)
+            )
+            .cgPath
+        )
+    }
+}
+private struct MapViewAdaptor: UIViewRepresentable {
+
+    func makeUIView(context: Context) -> MKMapView {
+        MKMapView()
+    }
+
+    func updateUIView(_ uiView: MKMapView, context: Context) {}
+}
+
+////////
+struct SheetViewTest : View {
+    @State private var isToggle : Bool = false
+    var body: some View {
+        NavigationView{
+            Button(action:{
+                withAnimation(){
+                    self.isToggle.toggle()
+                }
+            }){
+                Text("SHOW SHEET")
+            }.navigationTitle("SheetTesting")
+                .halfSheet(showShate: $isToggle){
+                    Text("Hello")
+                } onEnded: {
+                    print("ended")
+                }
+        }
+    }
+}
+
+extension View {
+    func halfSheet<SheetView : View>(showShate : Binding<Bool>, @ViewBuilder sheetView: @escaping () -> SheetView,onEnded: @escaping ()->())-> some View{
+        return self
+            .background(
+                UIHalfSheetView(sheetView: sheetView(), isShow: showShate, onEnded: onEnded)
+            )
+    }
+}
+
+struct UIHalfSheetView<SheetView : View> : UIViewControllerRepresentable {
+    var sheetView : SheetView
+    @Binding var isShow : Bool
+    var onEnded : () -> ()
+
+    let controller = UIViewController()
+    func makeCoordinator() -> Coordinator {
+        return Coordinator(parent: self)
+    }
+    func makeUIViewController(context: Context) -> some UIViewController {
+        controller.view.backgroundColor = .clear
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {
+        if isShow {
+            let sheetController = CustomHostingController(rootView:  sheetView)
+            sheetController.presentationController?.delegate = context.coordinator
+            uiViewController.present(sheetController, animated: true)
+        }else {
+            uiViewController.dismiss(animated: true)
+        }
+    }
+
+    class Coordinator: NSObject, UISheetPresentationControllerDelegate {
+        var parent : UIHalfSheetView
+        init (parent : UIHalfSheetView){
+            self.parent = parent
+        }
+
+        func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+            parent.onEnded()
+        }
+    }
+}
+
+class CustomHostingController<Content : View>: UIHostingController<Content> {
+    override func viewDidLoad() {
+        if let presentationController = presentationController as?  UISheetPresentationController {
+            presentationController.detents = [
+                .medium(),
+//                .large()
+            ]
+
+            presentationController.prefersGrabberVisible = true
         }
     }
 }

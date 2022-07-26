@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import Firebase
+//import Firebase
 import GoogleSignIn
 import AuthenticationServices
 import CryptoKit

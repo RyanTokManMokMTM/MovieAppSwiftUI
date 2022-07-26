@@ -11,5 +11,6 @@ pod 'GoogleSignIn'
 pod 'Kingfisher'
 pod 'SDWebImageSwiftUI'
 pod 'SwiftUIPager'
+pod 'DynamicOverlay'
 
 end

@@ -4,6 +4,8 @@ PODS:
     - AppAuth/ExternalUserAgent (= 1.4.0)
   - AppAuth/Core (1.4.0)
   - AppAuth/ExternalUserAgent (1.4.0)
+  - DynamicOverlay (1.0.0):
+    - OverlayContainer (~> 3.5)
   - Firebase/Auth (7.10.0):
     - Firebase/CoreOnly
     - FirebaseAuth (~> 7.10.0)
@@ -56,6 +58,7 @@ PODS:
     - nanopb/encode (= 2.30908.0)
   - nanopb/decode (2.30908.0)
   - nanopb/encode (2.30908.0)
+  - OverlayContainer (3.5.2)
   - PromisesObjC (1.2.12)
   - SDWebImage (5.11.1):
     - SDWebImage/Core (= 5.11.1)
@@ -65,6 +68,7 @@ PODS:
   - SwiftUIPager (2.4.0)
 
 DEPENDENCIES:
+  - DynamicOverlay
   - Firebase/Auth
   - GoogleSignIn
   - Kingfisher
@@ -74,6 +78,7 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - AppAuth
+    - DynamicOverlay
     - Firebase
     - FirebaseAuth
     - FirebaseCore
@@ -85,6 +90,7 @@ SPEC REPOS:
     - GTMSessionFetcher
     - Kingfisher
     - nanopb
+    - OverlayContainer
     - PromisesObjC
     - SDWebImage
     - SDWebImageSwiftUI
@@ -92,6 +98,7 @@ SPEC REPOS:
 
 SPEC CHECKSUMS:
   AppAuth: 31bcec809a638d7bd2f86ea8a52bd45f6e81e7c7
+  DynamicOverlay: ced467b66b54ba3617d4c489d0421f96ff8516c2
   Firebase: fffddd0bab8677d07376538365faa93ff3889b39
   FirebaseAuth: 675f2c4eb4426e7c58a78a89965a6530e7863535
   FirebaseCore: ec566d917b2195fc2610aeb148dae99f57a788f9
@@ -103,11 +110,12 @@ SPEC CHECKSUMS:
   GTMSessionFetcher: b3503b20a988c4e20cc189aa798fd18220133f52
   Kingfisher: e71c6fac2aebb1262888cabc2cb13d313362a48f
   nanopb: a0ba3315591a9ae0a16a309ee504766e90db0c96
+  OverlayContainer: 6b2727437ee7d76dc22b00d0275a94c9191f962a
   PromisesObjC: 3113f7f76903778cf4a0586bd1ab89329a0b7b97
   SDWebImage: a7f831e1a65eb5e285e3fb046a23fcfbf08e696d
   SDWebImageSwiftUI: 8a3923c95108312b03a599ec1498754af55a6819
   SwiftUIPager: 06833fb6991ffa64d096ee4a9fc0d32edd495f49
 
-PODFILE CHECKSUM: d090f0e770ca00f934e12102b9f5876b305af155
+PODFILE CHECKSUM: d311283face58aca7cc7377f0f1455c6ade22462
 
 COCOAPODS: 1.11.3

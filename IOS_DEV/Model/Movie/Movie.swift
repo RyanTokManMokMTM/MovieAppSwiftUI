@@ -212,6 +212,10 @@ struct MovieCrew: Decodable, Identifiable {
     let name: String
     let original_name: String?
     let profilePath: String?
+    
+    var posterURL : URL {
+        return URL(string: "https://image.tmdb.org/t/p/original\(profilePath ?? "")")!
+    }
 }
 
 struct MovieVideoResponse: Decodable {
@@ -231,6 +235,10 @@ struct MovieVideo: Decodable, Identifiable {
             return nil
         }
         return URL(string: "https://youtube.com/watch?v=\(key)")
+    }
+    
+    var youtubeThumbnailURL: URL? {
+        return URL(string: "https://img.youtube.com/vi/\((key))/mqdefault.jpg")!
     }
 }
 

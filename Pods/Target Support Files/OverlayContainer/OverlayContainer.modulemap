@@ -1,0 +1,6 @@
+framework module OverlayContainer {
+  umbrella header "OverlayContainer-umbrella.h"
+
+  export *
+  module * { export * }
+}

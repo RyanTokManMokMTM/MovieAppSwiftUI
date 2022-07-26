@@ -14,8 +14,9 @@ struct MovieDetailView: View {
     let movieId: Int
     @State private var todo : Bool = false
     @StateObject private var movieDetailState = MovieDetailState()
-    @StateObject private var listController = ListController()
-    @StateObject private var favoriteController = FavoriteController()
+    @StateObject private var movieImagesState = MovieImagesState()
+//    @StateObject private var listController = ListController()
+//    @StateObject private var favoriteController = FavoriteController()
     @State var isMyFavorite = false
     @Binding var navBarHidden:Bool
     @Binding var isAction : Bool
@@ -28,69 +29,35 @@ struct MovieDetailView: View {
                 self.movieDetailState.loadMovie(id: self.movieId)
             }
             
-            if movieDetailState.movie != nil{
-                MovieDetailPage(movie: movieDetailState.movie! , navBarHidden: $navBarHidden, isAction: $isAction, isLoading: $isLoading,myMovieList:listController.mylistData, isMyFavorite:isMyFavorite)
-                
+            if movieDetailState.movie != nil && self.movieImagesState.movieImage != nil{
+                GeometryReader{ proxy in
+                    NewDetailView(movie: self.movieDetailState.movie!,movieImages: self.movieImagesState.movieImage!,isShow: $isAction ,topEdge: proxy.safeAreaInsets.top)
+                        .ignoresSafeArea(.all, edges: .top)
+                }
             }
         }
         .onAppear {
             //TODO : Ignore it now......
             self.movieDetailState.loadMovie(id: self.movieId)
-//            self.listController.GetMyList(userID: NowUserID!)
-//            self.favoriteController.CheckLikeMovie(movieID: movieId)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: {
-                if !self.favoriteController.favorite.isEmpty {
-                    self.isMyFavorite = true
-                }
-                self.todo = true
-            })
-    
+            self.movieImagesState.loadMovieImage(id: self.movieId)
         }
-    }
-}
-
-
-
-
-//struct GetMyMovieList: View {
-//    @ObservedObject private var listController = ListController()
-//    @State var NowUser:Me?
-//    @Binding var navBarHidden:Bool
-//    @Binding var isAction : Bool
-//    @Binding var isLoading : Bool
-//    @State var movie : Movie
-//
-//    var body: some View {
-//        ZStack {
-//
-//
-//
-//
-//        }
 //        .onAppear {
-//            self.listController.GetMyList(userID: (NowUser?.id)!)
+//            //TODO : Ignore it now......
+//            self.movieDetailState.loadMovie(id: self.movieId)
+//            self.movieImagesState.loadMovieImage(id: self.movieId)
+////            self.listController.GetMyList(userID: NowUserID!)
+////            self.favoriteController.CheckLikeMovie(movieID: movieId)
+////            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: {
+////                if !self.favoriteController.favorite.isEmpty {
+////                    self.isMyFavorite = true
+////                }
+////                self.todo = true
+////            })
 //
 //        }
-//    }
-//}
-
-
-
-struct movieImage:View{
-    let imgURL: URL
-    var body : some View{
-        WebImage(url:imgURL)
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .overlay(
-                LinearGradient(gradient: Gradient(colors: [Color.init("navBarBlack").opacity(0.0),Color.init("navBarBlack").opacity(0.95)]), startPoint:.top, endPoint: .bottom)
-
-
-            )
-            .background(Color.black.edgesIgnoringSafeArea(.all))
-
     }
 }
+
 
 
 
@@ -181,35 +148,32 @@ struct MovieDetailPage: View {
     }
 }
 
-
-
-
-struct TestDetailView: View {
-
-    let movieId: Int
-    @StateObject private var movieDetailState = MovieDetailState()
-    @StateObject private var movieImagesState = MovieImagesState()
-    var body: some View {
-        ZStack {
-
-            LoadingView(isLoading: self.movieDetailState.isLoading, error: self.movieDetailState.error) {
-                self.movieDetailState.loadMovie(id: self.movieId)
-            }
-            
-            if movieDetailState.movie != nil && self.movieImagesState.movieImage != nil{
-                GeometryReader{ proxy in
-                    NewDetailView(movie: self.movieDetailState.movie!,movieImages: self.movieImagesState.movieImage! ,topEdge: proxy.safeAreaInsets.top)
-                        .ignoresSafeArea(.all, edges: .top)
-                }
-            }
-        }
-        .onAppear {
-            //TODO : Ignore it now......
-            self.movieDetailState.loadMovie(id: self.movieId)
-            self.movieImagesState.loadMovieImage(id: self.movieId)
-        }
-    }
-}
+//struct TestDetailView: View {
+//
+//    let movieId: Int
+//    @StateObject private var movieDetailState = MovieDetailState()
+//    @StateObject private var movieImagesState = MovieImagesState()
+//    var body: some View {
+//        ZStack {
+//
+//            LoadingView(isLoading: self.movieDetailState.isLoading, error: self.movieDetailState.error) {
+//                self.movieDetailState.loadMovie(id: self.movieId)
+//            }
+//
+//            if movieDetailState.movie != nil && self.movieImagesState.movieImage != nil{
+//                GeometryReader{ proxy in
+//                    NewDetailView(movie: self.movieDetailState.movie!,movieImages: self.movieImagesState.movieImage! ,topEdge: proxy.safeAreaInsets.top)
+//                        .ignoresSafeArea(.all, edges: .top)
+//                }
+//            }
+//        }
+//        .onAppear {
+//            //TODO : Ignore it now......
+//            self.movieDetailState.loadMovie(id: self.movieId)
+//            self.movieImagesState.loadMovieImage(id: self.movieId)
+//        }
+//    }
+//}
 
 enum MovieDetailTabItem : String,CaseIterable {
     case More = "更多資訊"
@@ -221,13 +185,11 @@ enum MovieDetailTabItem : String,CaseIterable {
 struct NewDetailView: View {
     var movie: Movie
     let movieImages: MovieImages
+    @Binding var isShow : Bool
     private let max = UIScreen.main.bounds.height / 2.5
     var topEdge : CGFloat
     @State private var offset:CGFloat = 0.0
-    @State private var menuOffset:CGFloat = 0.0
     @State private var isShowIcon : Bool = false
-    @State private var tabBarOffset = UIScreen.main.bounds.width
-    @State private var tabOffset : CGFloat = 0.0
     @State private var tabIndex : MovieDetailTabItem = .More
     @State private var topOffset : CGFloat = 0
     @Namespace var namespace
@@ -235,11 +197,29 @@ struct NewDetailView: View {
     var body: some View {
         ZStack(alignment:.top){
             ZStack{
+                HStack{
+                    Button(action:{
+                        withAnimation{
+                            self.isShow.toggle()
+                        }
+                    }){
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.white)
+                            .font(.title2)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .frame(height: topEdge)
+                .padding(.top,30)
+                .zIndex(1)
                 VStack(alignment:.center){
                     Spacer()
                     HStack{
                         WebImage(url: movie.posterURL)
                             .resizable()
+                            .indicator(.activity) // Activity Indicator
+                            .transition(.fade(duration: 0.5)) // Fade Transition with duration
                             .aspectRatio(contentMode: .fill)
                             .frame(width: 30, height: 30, alignment: .center)
                             .clipShape(Circle())
@@ -250,7 +230,6 @@ struct NewDetailView: View {
                     }
                     Spacer()
                 }
-                
                 .transition(.move(edge: .bottom))
                 .offset(y:self.isShowIcon ? 0 : 40)
                 .padding(.horizontal,20)
@@ -259,14 +238,14 @@ struct NewDetailView: View {
                 .zIndex(10)
                 .clipped()
             }
-            .background(Color("ResultCardBlack"))
+            .background(Color.black.opacity(getOpacity()))
             .zIndex(1)
             .overlay(
                 GeometryReader{ proxy -> Color in
-                    let minY = proxy.frame(in: .global).minY
+                    let maxY = proxy.frame(in: .global).maxY
                     DispatchQueue.main.async {
                         if topOffset == 0{
-                            topOffset = minY
+                            topOffset = maxY
                         }
                     }
                     return Color.clear
@@ -308,14 +287,14 @@ struct NewDetailView: View {
                         
                         HStack{
                             
-                            fullButton(systemImg: "plus", buttonTitle: "加入討論區", backgroundColor: .blue, fontColor: .white){
+                            BackgroundButton(systemImg: "plus", buttonTitle: "加入討論區", backgroundColor: .blue, fontColor: .white){
                                 //TODO: JOIN THE GROUP
                             }
                             Spacer()
-                            circleButton(systemImg: "bookmark.fill", background: .yellow , buttonColor: .white,width:40,height:40){
+                            circleButton(systemImg: "bookmark.fill", imageScale: .medium,background: .yellow , buttonColor: .white,width:40,height:40){
                                 //TODO: ADD TO LIST OF REMOVE
                             }
-                            circleButton(systemImg: "heart.fill", background: .red , buttonColor: .white,width:40,height:40){
+                            circleButton(systemImg: "heart.fill",imageScale: .medium, background: .red , buttonColor: .white,width:40,height:40){
                                 //TODO: ADD TO LIST OF REMOVE
                             }
                             
@@ -329,10 +308,11 @@ struct NewDetailView: View {
                          2.
                          */
                         Section{
+                            //TODO: Need to find the solution
                             switch tabIndex {
                             case .More:
                                 MoreDetail()
-                                  
+
                             case .OnShow:
                                 VStack{
                                     Text("SERVICE NOT AVAILABLE YET...")
@@ -343,36 +323,24 @@ struct NewDetailView: View {
                                 GetMoreMovie(movieID: movie.id)
                             }
                         } header: {
-                            Group{
-                                GeometryReader {geo -> AnyView in
-                                    let minY = geo.frame(in: .global).minY
-                                    print("\(self.topOffset): \(minY)")
-                                    return AnyView(
-                                        VStack{
-                                            MovieDetailTabBar()
-                                            Divider()
-                                                .background(.gray)
-                                        }
-                                    )
-                                }
-                            }
-//                            .offset(y:self.menuOffset < 77 ? -self.menuOffset + 77: 0)
-//                            .overlay(
-//                                    GeometryReader{proxy -> Color in
-//                                        let minY = proxy.frame(in: .global).minY
-//                                        print(minY)
-//                                        DispatchQueue.main.async {
-//                                            self.menuOffset = minY
-//                                        }
-//                                        return Color.clear
-//                                    }.frame(width: 0, height: 0)
-//                                )
-                            
-                        }
-                        
     
+                            GeometryReader {geo -> AnyView in
+                                let minY = geo.frame(in: .global).minY
+                                let offset  = minY - self.topOffset
+                                return AnyView(
+                                    VStack(spacing:0){
+                                        MovieDetailTabBar()
+                                        Divider()
+                                            .background(.gray)
+                                    }
+                                        .frame(height: 60,alignment: .bottom)
+                                        .background(Color.black.edgesIgnoringSafeArea(.all))
+                                        .offset(y : offset < 0 ? -offset : 0)
+                                )
+                            } .frame(height: 60)
+                        }
                     }
-                    .modifier(PersonPageOffsetModifier(offset: $offset,isShowIcon:$isShowIcon))
+                    .modifier(MovieDetailPageOffsetModifier(offset: $offset,isShowIcon:$isShowIcon))
                     .frame(alignment:.top)
                 }
                 .coordinateSpace(name: "SCROLL") //cotroll relate coordinateSpace
@@ -393,7 +361,7 @@ struct NewDetailView: View {
                     .frame(width: 120, alignment: .center)
                     .cornerRadius(10)
                     .overlay(
-                        circleButton(systemImg: "play.fill", background: .red, buttonColor: .white,width: 35,height: 35){
+                        circleButton(systemImg: "play.fill",imageScale: .medium ,background: .red, buttonColor: .white,width: 35,height: 35){
                             //TODO: play trailer!!
                         }
                             .shadow(color: .red, radius: 10, x: 0, y: 0)
@@ -558,6 +526,59 @@ struct NewDetailView: View {
                 }
             }
             
+            if self.movie.credits != nil && self.movie.credits!.crew.count > 0{
+                VStack(alignment:.leading,spacing:10){
+                    HStack{
+                        Text("團隊")
+                            .font(.system(size: 16,weight: .semibold))
+                        
+                        Spacer()
+                        Button(action:{
+                            
+                        }){
+                            Text("顯示更多")
+                                .font(.system(size: 14,weight: .semibold))
+                                .foregroundColor(Color(uiColor: UIColor.darkGray))
+                        }
+                    }
+                    
+                    
+                    ScrollView(.horizontal, showsIndicators: false){
+                        LazyHStack{
+                            ForEach(0..<(self.movie.credits!.crew.count < 10 ? self.movie.credits!.crew.count :10 )){i in
+                                if self.movie.credits!.crew[i].profilePath != nil{
+                                    VStack(alignment:.center){
+                                        WebImage(url: self.movie.credits!.crew[i].posterURL)
+                                            .resizable()
+                                            .indicator(.activity) // Activity Indicator
+                                            .transition(.fade(duration: 0.5)) // Fade Transition with duration
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: 80)
+                                            .cornerRadius(10)
+                                    
+                                        Text(self.movie.credits!.crew[i].name)
+                                            .foregroundColor(.white)
+                                            .font(.caption)
+                                            .frame(width:120)
+                                            .lineLimit(1)
+                                        
+                                        Text(self.movie.credits!.crew[i].job)
+                                            .foregroundColor(.gray)
+                                            .font(.caption)
+                                            .frame(width:120)
+                                            .lineLimit(1)
+                                    }
+                                    
+                                }
+                            }
+                        }
+                        
+                        
+                    }
+                    
+                    
+                }
+            }
             
             VStack(alignment:.leading,spacing:10){
                 HStack{
@@ -593,21 +614,51 @@ struct NewDetailView: View {
             
             VStack(alignment:.leading, spacing:8) {
                 if movie.videos != nil && movie.videos!.results.count > 0 {
-                    Text("宣傳片")
-                        .font(.system(size: 16,weight: .semibold))
-                    
-                    ForEach(movie.videos!.results) { trailer in
-                        Button(action: {
-                            //                            self.selectedTrailer = trailer
-                        }) {
-                            HStack {
-                                Text(trailer.name)
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .lineLimit(1)
-                                Spacer()
-                                Image(systemName: "play.circle.fill")
-                                    .foregroundColor(Color(UIColor.systemBlue))
+                    HStack{
+                        Text("宣傳片")
+                            .font(.system(size: 16,weight: .semibold))
+                        Spacer()
+                        
+                        if self.movie.videos!.results.count >= 10 {
+                            Button(action:{
+                                //TODO: Load More Video
+                            }){
+                                Text("顯示更多")
+                                    .font(.system(size: 14,weight: .semibold))
+                                    .foregroundColor(Color(uiColor: UIColor.darkGray))
                             }
+                        }
+                    }
+                    
+                    ScrollView(.horizontal, showsIndicators: false){
+                        LazyHStack(spacing:10){
+                            ForEach(0..<(self.movie.videos!.results.count < 10 ? self.movie.videos!.results.count : 10)) { i in
+                                Button(action:{}){
+                                    ZStack(alignment:.center){
+                                        WebImage(url: self.movie.videos!.results[i].youtubeThumbnailURL)
+                                            .resizable()
+                                            .indicator(.activity) // Activity Indicator
+                                            .transition(.fade(duration: 0.5)) // Fade Transition with duration
+                                            .aspectRatio(contentMode: .fit)
+                                            .cornerRadius(5)
+                                        
+                                        ZStack(alignment:.center){
+                                            Circle()
+                                                .fill(Color.gray.opacity(0.5))
+                                                .frame(width: 50, height: 50)
+                                            
+                                            Image(systemName:"play.fill")
+                                                .imageScale(.large)
+                                                .foregroundColor(.white)
+                                                
+                                        }
+              
+                                            
+                                    }
+                                }
+                                
+                            }
+                            .padding(.horizontal,5)
                         }
                     }
                 }
@@ -618,7 +669,7 @@ struct NewDetailView: View {
     
     
     @ViewBuilder
-    func circleButton(systemImg: String,background:Color,buttonColor : Color,width:CGFloat,height:CGFloat,action: @escaping ()->()) -> some View{
+    func circleButton(systemImg: String,imageScale:Image.Scale,background:Color,buttonColor : Color,width:CGFloat,height:CGFloat,action: @escaping ()->()) -> some View{
         Button(action: action){
             ZStack(alignment:.center){
                 Circle()
@@ -626,38 +677,15 @@ struct NewDetailView: View {
                     .frame(width: width, height: height)
                 
                 Image(systemName: systemImg)
-                    .imageScale(.medium)
+                    .imageScale(imageScale)
                     .foregroundColor(buttonColor)
             }
         }
         
     }
-    
-    @ViewBuilder
-    func borderButton(systemImg: String,buttonTitle: String,borderColor:Color,fontColor : Color,action: @escaping ()->()) -> some View{
-        Button(action:action){
-            HStack(spacing:5){
-                Image(systemName: systemImg)
-                    .imageScale(.medium)
-                Text(buttonTitle)
-                    .font(.system(size:16,weight:.semibold))
-            }
-            .padding(.horizontal,5)
-            .foregroundColor(fontColor)
-            .frame(height: 40)
-            .cornerRadius(10)
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(borderColor, lineWidth: 2)
-                
-            )
-        }
-        .padding(.horizontal,3)
 
-    }
-    
     @ViewBuilder
-    func fullButton(systemImg: String,buttonTitle: String,backgroundColor:Color,fontColor : Color,action: @escaping ()->()) -> some View{
+    func BackgroundButton(systemImg: String,buttonTitle: String,backgroundColor:Color,fontColor : Color,action: @escaping ()->()) -> some View{
         Button(action:action){
             HStack(spacing:5){
                 Image(systemName: systemImg)
@@ -706,9 +734,8 @@ struct NewDetailView: View {
             }
         }
         .padding(.horizontal)
-        .padding(.top,25)
+//        .padding(.top,25)
         .padding(.bottom,5)
-        .background(Color.black.edgesIgnoringSafeArea(.all))
     }
 
     private func getHeaderHigth() -> CGFloat {
@@ -940,3 +967,16 @@ struct showBarItem:View{
     
 }
 //
+
+struct movieImage:View{
+    let imgURL: URL
+    var body : some View{
+        WebImage(url:imgURL)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .overlay(
+                LinearGradient(gradient: Gradient(colors: [Color.init("navBarBlack").opacity(0.0),Color.init("navBarBlack").opacity(0.95)]), startPoint:.top, endPoint: .bottom)
+            )
+            .background(Color.black.edgesIgnoringSafeArea(.all))
+    }
+}

@@ -1,0 +1,6 @@
+framework module DynamicOverlay {
+  umbrella header "DynamicOverlay-umbrella.h"
+
+  export *
+  module * { export * }
+}

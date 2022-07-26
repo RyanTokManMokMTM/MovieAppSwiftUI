@@ -15,7 +15,7 @@ struct test: View
         let FullSize = UIScreen.main.bounds.size
         VStack()
         {
-            SearchBar(text: .constant(""))
+            SearchBar1(text: .constant(""))
                 .padding(.top, 60)
                 .clipped()
                 Spacer()

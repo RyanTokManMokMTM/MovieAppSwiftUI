@@ -151,6 +151,7 @@
 		7A0EE934261041690056BC8C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0EE933261041690056BC8C /* ContentView.swift */; };
 		7A0EE9392610416A0056BC8C /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A0EE9382610416A0056BC8C /* Preview Assets.xcassets */; };
 		7A15788F279E94B0001BBD62 /* ScrollableTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A15788E279E94B0001BBD62 /* ScrollableTabBar.swift */; };
+		7A26B1D1288FE0240041492E /* SDWebImageSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A26B1D0288FE0240041492E /* SDWebImageSwiftUI */; };
 		7A2F7307261E099200C0A2FF /* MovieTrailerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F7306261E099200C0A2FF /* MovieTrailerModel.swift */; };
 		7A2F7310261E124E00C0A2FF /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F730F261E124E00C0A2FF /* Player.swift */; };
 		7A303BAC2877EF29004CCEB3 /* SoicalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A303BAB2877EF29004CCEB3 /* SoicalView.swift */; };
@@ -184,7 +185,7 @@
 		7ADA5A6926104347000A84D9 /* Appdelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA5A6826104347000A84D9 /* Appdelegate.swift */; };
 		7ADA5A7526104355000A84D9 /* TextFieldWithLineBorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA5A6C26104355000A84D9 /* TextFieldWithLineBorder.swift */; };
 		7ADA5A7626104355000A84D9 /* Square.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA5A6D26104355000A84D9 /* Square.swift */; };
-		7ADA5A7726104355000A84D9 /* SearchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA5A6E26104355000A84D9 /* SearchBar.swift */; };
+		7ADA5A7726104355000A84D9 /* SearchBar1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA5A6E26104355000A84D9 /* SearchBar1.swift */; };
 		7ADA5A7826104355000A84D9 /* UserIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA5A6F26104355000A84D9 /* UserIcon.swift */; };
 		7ADA5A7926104355000A84D9 /* CircleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA5A7026104355000A84D9 /* CircleButton.swift */; };
 		7ADA5A7A26104355000A84D9 /* RoundedRectangle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA5A7126104355000A84D9 /* RoundedRectangle.swift */; };
@@ -383,7 +384,7 @@
 		7ADA5A6826104347000A84D9 /* Appdelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Appdelegate.swift; sourceTree = "<group>"; };
 		7ADA5A6C26104355000A84D9 /* TextFieldWithLineBorder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextFieldWithLineBorder.swift; sourceTree = "<group>"; };
 		7ADA5A6D26104355000A84D9 /* Square.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Square.swift; sourceTree = "<group>"; };
-		7ADA5A6E26104355000A84D9 /* SearchBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchBar.swift; sourceTree = "<group>"; };
+		7ADA5A6E26104355000A84D9 /* SearchBar1.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchBar1.swift; sourceTree = "<group>"; };
 		7ADA5A6F26104355000A84D9 /* UserIcon.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserIcon.swift; sourceTree = "<group>"; };
 		7ADA5A7026104355000A84D9 /* CircleButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircleButton.swift; sourceTree = "<group>"; };
 		7ADA5A7126104355000A84D9 /* RoundedRectangle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RoundedRectangle.swift; sourceTree = "<group>"; };
@@ -409,6 +410,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A26B1D1288FE0240041492E /* SDWebImageSwiftUI in Frameworks */,
 				7A7896D82886E6C500FFF95A /* SwiftUIPager in Frameworks */,
 				7A80F232288708F500A58356 /* BottomSheet in Frameworks */,
 				0EFBEEB402995C63C993EF15 /* Pods_IOS_DEV.framework in Frameworks */,
@@ -975,7 +977,7 @@
 				7ADA5A6C26104355000A84D9 /* TextFieldWithLineBorder.swift */,
 				7ADA5A6D26104355000A84D9 /* Square.swift */,
 				01CF139A266B2F0C00066FC2 /* SmallCoverIcon.swift */,
-				7ADA5A6E26104355000A84D9 /* SearchBar.swift */,
+				7ADA5A6E26104355000A84D9 /* SearchBar1.swift */,
 				01CF139E266B30B900066FC2 /* CircleText.swift */,
 				7ADA5A6F26104355000A84D9 /* UserIcon.swift */,
 				7ADA5A7126104355000A84D9 /* RoundedRectangle.swift */,
@@ -1078,6 +1080,7 @@
 				7A7896D72886E6C500FFF95A /* SwiftUIPager */,
 				7A80F231288708F500A58356 /* BottomSheet */,
 				7A80F2372887100F00A58356 /* Drawer */,
+				7A26B1D0288FE0240041492E /* SDWebImageSwiftUI */,
 			);
 			productName = IOS_DEV;
 			productReference = 7A0EE92E261041690056BC8C /* IOS_DEV.app */;
@@ -1110,6 +1113,7 @@
 				7A7896D62886E6C400FFF95A /* XCRemoteSwiftPackageReference "SwiftUIPager" */,
 				7A80F230288708F400A58356 /* XCRemoteSwiftPackageReference "BottomSheet" */,
 				7A80F2362887100F00A58356 /* XCRemoteSwiftPackageReference "SwiftUI-Drawer" */,
+				7A26B1CF288FE0240041492E /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
 			);
 			productRefGroup = 7A0EE92F261041690056BC8C /* Products */;
 			projectDirPath = "";
@@ -1288,7 +1292,7 @@
 				0124A46D272957DC00D0A7CC /* Loader.swift in Sources */,
 				7A55618E28795F0600B0C987 /* CardFlowLayout.swift in Sources */,
 				01ED4F39267207E0009E2FD5 /* ListView.swift in Sources */,
-				7ADA5A7726104355000A84D9 /* SearchBar.swift in Sources */,
+				7ADA5A7726104355000A84D9 /* SearchBar1.swift in Sources */,
 				0175AAE02658AF95001BCD2E /* UserLogin.swift in Sources */,
 				6FCFFE1C274FBE2600C46710 /* OffsetModifier.swift in Sources */,
 				7ADA5A7526104355000A84D9 /* TextFieldWithLineBorder.swift in Sources */,
@@ -1584,6 +1588,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		7A26B1CF288FE0240041492E /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SDWebImage/SDWebImageSwiftUI.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
 		7A7896D62886E6C400FFF95A /* XCRemoteSwiftPackageReference "SwiftUIPager" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/fermoya/SwiftUIPager.git";
@@ -1611,6 +1623,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		7A26B1D0288FE0240041492E /* SDWebImageSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A26B1CF288FE0240041492E /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */;
+			productName = SDWebImageSwiftUI;
+		};
 		7A7896D72886E6C500FFF95A /* SwiftUIPager */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A7896D62886E6C400FFF95A /* XCRemoteSwiftPackageReference "SwiftUIPager" */;
