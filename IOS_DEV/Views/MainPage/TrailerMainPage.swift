@@ -103,11 +103,11 @@ struct TrailerMainPage:View{
         NavigationView{
             MovieListView(showHomePage: $showHomePage, isLogOut: self.$isLogOut,mainPageHeight:$mainPageHeight)
         }
-        .searchable(text: $queryText,placement: .navigationBarDrawer(displayMode: .always)){
-            //TODO.....
-            Text("SwiftUI").searchCompletion("SwiftUI")
-                Text("iOS 15").searchCompletion("iOS 15")
-        }
+//        .searchable(text: $queryText,placement: .navigationBarDrawer(displayMode: .always)){
+//            //TODO.....
+//            Text("SwiftUI").searchCompletion("SwiftUI")
+//                Text("iOS 15").searchCompletion("iOS 15")
+//        }
         .environment(\.horizontalSizeClass, .compact)
         
 

@@ -18,7 +18,7 @@ struct PersonPageOffsetModifier : ViewModifier {
                     let minY = proxy.frame(in: .named("SCROLL")).minY
                     DispatchQueue.main.async {
                         self.offset = minY
-                        print(minY)
+//                        print(minY)
                         
                         if -minY > 110{
                             withAnimation(.easeInOut(duration: 0.3)){

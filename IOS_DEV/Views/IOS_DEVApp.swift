@@ -26,247 +26,6 @@ struct IOS_DEVApp: App {
     }
 }
 
-enum Notch: CaseIterable, Equatable {
-    case min, max
-}
-
-struct MapRootView: View {
-
-    struct State {
-        var notch: Notch = .min
-        var isEditing = false
-        var progress = 0.0
-    }
-
-    @SwiftUI.State
-    private var state = State()
-
-    // MARK: - View
-    var body: some View {
-        background
-            .dynamicOverlay(overlay)
-//            .dynamicOverlayBehavior(behavior)
-            .ignoresSafeArea()
-    }
-
-    // MARK: - Private
-    private var behavior: some DynamicOverlayBehavior {
-        MagneticNotchOverlayBehavior<Notch> { notch in
-            switch notch {
-            case .max:
-                return .fractional(0.8)
-            case .min:
-                return .fractional(0.3)
-            }
-        }
-        .disable(.min, state.isEditing)
-        .notchChange($state.notch)
-        .onTranslation { translation in
-            state.progress = translation.progress
-        }
-    }
-
-    private var background: some View {
-        ZStack {
-            MapView()
-            BackdropView().opacity(state.progress)
-        }
-        .ignoresSafeArea()
-    }
-
-    private var overlay: some View {
-        OverlayView { event in
-            switch event {
-            case .didBeginEditing:
-                state.isEditing = true
-                withAnimation { state.notch = .max }
-            case .didEndEditing:
-                state.isEditing = false
-                withAnimation { state.notch = .min }
-            }
-        }
-        .drivingScrollView()
-    }
-}
-////////
-struct ActionCell: View {
-
-    var body: some View {
-        Label("New Guide…", systemImage: "plus")
-    }
-}
-
-struct BackdropView: View {
-
-    var body: some View {
-        Color.black.opacity(0.3)
-    }
-}
-
-struct FavoriteCell: View {
-
-    let imageName: String
-    let title: String
-
-    var body: some View {
-        VStack {
-            Circle()
-                .foregroundColor(Color(.secondarySystemFill))
-                .frame(width: 70, height: 70)
-                .overlay(Image(systemName: imageName).font(.title2).foregroundColor(.blue))
-            Text(title)
-        }
-    }
-}
-struct MapView: View {
-
-    var body: some View {
-        MapViewAdaptor().ignoresSafeArea()
-    }
-}
-struct OverlayBackgroundView: View {
-
-    var body: some View {
-        Color(.systemBackground)
-            .cornerRadius(8.0, corners: [.topLeft, .topRight])
-            .shadow(color: Color.black.opacity(0.3), radius: 8.0)
-    }
-}
-struct OverlayView: View {
-
-    enum Event {
-        case didBeginEditing
-        case didEndEditing
-    }
-
-    let eventHandler: (Event) -> Void
-
-    // MARK: - View
-    var body: some View {
-        VStack(spacing: 0.0) {
-            header.draggable()
-            list
-        }
-        .background(OverlayBackgroundView())
-    }
-
-    // MARK: - Private
-    private var list: some View {
-        List {
-            Section(header: Text("Favorites")) {
-                ScrollView(.horizontal) {
-                    HStack {
-                        FavoriteCell(imageName: "house.fill", title: "House")
-                        FavoriteCell(imageName: "briefcase.fill", title: "Work")
-                        FavoriteCell(imageName: "plus", title: "Add")
-                    }
-                }
-            }
-            Section(header: Text("My Guides")) {
-                ActionCell()
-            }
-        }
-        .listStyle(GroupedListStyle())
-    }
-
-    private var header: some View {
-        SearchBar { event in
-            switch event {
-            case .didBeginEditing:
-                eventHandler(.didBeginEditing)
-            case .didCancel:
-                eventHandler(.didEndEditing)
-            }
-        }
-    }
-}
-struct SearchBar: View {
-
-    enum Event {
-        case didBeginEditing
-        case didCancel
-    }
-
-    let eventHandler: (Event) -> Void
-
-    var body: some View {
-        SearchBarAdaptor(
-            didBeginEditing: { eventHandler(.didBeginEditing) },
-            didCancel: { eventHandler(.didCancel) }
-        )
-    }
-}
-
-private class SearchBarCoordinator: NSObject, UISearchBarDelegate {
-
-    var didBeginEditing: (() -> Void)?
-    var didCancel: (() -> Void)?
-
-    // MARK: - UISearchBarDelegate
-    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-        didBeginEditing?()
-    }
-
-    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-        searchBar.endEditing(true)
-        didCancel?()
-    }
-}
-
-private struct SearchBarAdaptor: UIViewRepresentable {
-
-    let didBeginEditing: () -> Void
-    let didCancel: () -> Void
-
-    func makeCoordinator() -> SearchBarCoordinator {
-        let coordinator = SearchBarCoordinator()
-        coordinator.didBeginEditing = didBeginEditing
-        coordinator.didCancel = didCancel
-        return coordinator
-    }
-
-    func makeUIView(context: Context) -> UISearchBar {
-        let searchBar = UISearchBar()
-        searchBar.searchBarStyle = .minimal
-        searchBar.showsCancelButton = true
-        searchBar.placeholder = "Search for a place or address"
-        searchBar.delegate = context.coordinator
-        return searchBar
-    }
-
-    func updateUIView(_ uiView: UISearchBar, context: Context) {}
-}
-private extension View {
-
-    func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
-        clipShape(RoundedCorner(radius: radius, corners: corners))
-    }
-}
-
-private struct RoundedCorner: Shape {
-
-    var radius: CGFloat = 0.0
-    var corners: UIRectCorner = .allCorners
-
-    func path(in rect: CGRect) -> Path {
-        Path(
-            UIBezierPath(
-                roundedRect: rect,
-                byRoundingCorners: corners,
-                cornerRadii: CGSize(width: radius, height: radius)
-            )
-            .cgPath
-        )
-    }
-}
-private struct MapViewAdaptor: UIViewRepresentable {
-
-    func makeUIView(context: Context) -> MKMapView {
-        MKMapView()
-    }
-
-    func updateUIView(_ uiView: MKMapView, context: Context) {}
-}
 
 ////////
 struct SheetViewTest : View {
@@ -351,16 +110,16 @@ struct ScrollingHStackModifier: ViewModifier {
     
     @State private var scrollOffset: CGFloat
     @State private var dragOffset: CGFloat
-    
+    @Binding private var index : Int
     var items: Int
     var itemWidth: CGFloat
     var itemSpacing: CGFloat
     
-    init(items: Int, itemWidth: CGFloat, itemSpacing: CGFloat) {
+    init(index : Binding<Int> ,items: Int, itemWidth: CGFloat, itemSpacing: CGFloat) {
         self.items = items
         self.itemWidth = itemWidth
         self.itemSpacing = itemSpacing
-        
+        self._index = index
         // Calculate Total Content Width
         let contentWidth: CGFloat = CGFloat(items) * itemWidth + CGFloat(items - 1) * itemSpacing
         let screenWidth = UIScreen.main.bounds.width
@@ -392,24 +151,27 @@ struct ScrollingHStackModifier: ViewModifier {
                     let center = scrollOffset + (screenWidth / 2.0) + (contentWidth / 2.0)
                     
                     // Calculate which item we are closest to using the defined size
-                    var index = (center - (screenWidth / 2.0)) / (itemWidth + itemSpacing)
+                    var Calindex = (center - (screenWidth / 2.0)) / (itemWidth + itemSpacing)
                     
                     // Should we stay at current index or are we closer to the next item...
-                    if index.remainder(dividingBy: 1) > 0.5 {
-                        index += 1
+                    if Calindex.remainder(dividingBy: 1) > 0.5 {
+                        Calindex += 1
                     } else {
-                        index = CGFloat(Int(index))
+                        Calindex = CGFloat(Int(Calindex))
                     }
                     
                     // Protect from scrolling out of bounds
-                    index = min(index, CGFloat(items) - 1)
-                    index = max(index, 0)
+                    Calindex = min(Calindex, CGFloat(items) - 1)
+                    Calindex = max(Calindex, 0)
                     
                     // Set final offset (snapping to item)
-                    let newOffset = index * itemWidth + (index - 1) * itemSpacing - (contentWidth / 2.0) + (screenWidth / 2.0) - ((screenWidth - itemWidth) / 2.0) + itemSpacing
+                    let newOffset = Calindex * itemWidth + (Calindex - 1) * itemSpacing - (contentWidth / 2.0) + (screenWidth / 2.0) - ((screenWidth - itemWidth) / 2.0) + itemSpacing
+                    
+
                     
                     // Animate snapping
                     withAnimation {
+                        index = (items - 1) - Int(Calindex)
                         scrollOffset = newOffset
                     }
                     
@@ -418,19 +180,67 @@ struct ScrollingHStackModifier: ViewModifier {
     }
 }
 
+struct GenrePost : Identifiable {
+    let id : Int
+    let image : String
+    let genreName : String
+}
+
+var postTempGenre : [GenrePost] = [
+    GenrePost(id: 1, image: "testMovie1",genreName:"動作"),
+    GenrePost(id: 2, image: "testMovie2",genreName:"冒險"),
+    GenrePost(id: 3, image: "testMovie3",genreName:"動畫"),
+    GenrePost(id: 4, image: "testMovie4",genreName:"喜劇"),
+    GenrePost(id: 5, image: "testMovie5",genreName:"犯罪"),
+    GenrePost(id: 6, image: "testMovie6",genreName:"紀錄"),
+    GenrePost(id: 7, image: "testMovie7",genreName:"奇幻"),
+]
+
 struct TestCardView: View {
-    
-    var colors: [Color] = [.blue, .green, .red, .orange]
-    
+    @State private var index : Int = 0;
+    var images :[GenrePost] = postTempGenre
     var body: some View {
         HStack(alignment: .center, spacing: 30) {
-            ForEach(0..<colors.count) { i in
-                 colors[i]
-                     .frame(width: 250, height: 400, alignment: .center)
-                     .cornerRadius(10)
+            ForEach(0..<images.count) { i in
                 
+                ZStack(alignment:.bottomLeading){
+                    Image(images[i].image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 250)
+                        .cornerRadius(10)
+                        .scaleEffect(self.index == i ? 1.1 : 0.8)
+                        .overlay(
+                            LinearGradient(colors: [
+                                Color("PersonCellColor").opacity(0.3),
+                                Color("PersonCellColor").opacity(0.6),
+                                Color("PersonCellColor").opacity(0.8),
+                            ], startPoint: .center, endPoint: .bottom)
+                                .cornerRadius(10)
+                                .scaleEffect(self.index == i ? 1.1 : 0.8)
+                        )
+                    
+
+                    HStack (alignment:.bottom){
+                        VStack(alignment:.leading){
+                            Text("電影類別")
+                                .font(.system(size:18))
+                            Text("**\(images[i].genreName)**")
+                                .font(.system(size:16))
+                        }
+                        
+                        Spacer()
+                        
+                        Text("點擊進入")
+                            .font(.system(size:14))
+                    }
+                    
+                    .opacity(self.index == i ? 1 : 0)
+                    
+                }
+
             }
-        }.modifier(ScrollingHStackModifier(items: colors.count, itemWidth: 250, itemSpacing: 30))
+        }.modifier(ScrollingHStackModifier(index:$index,items: images.count, itemWidth: 250, itemSpacing: 30))
     }
 }
 

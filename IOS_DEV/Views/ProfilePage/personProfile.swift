@@ -21,6 +21,7 @@ struct mainPersonView : View{
                     .navigationBarTitle("")
                     .navigationTitle("")
                     .navigationBarHidden(true)
+                    .navigationBarBackButtonHidden(true)
                     .navigationViewStyle(DoubleColumnNavigationViewStyle())
             }
         }
@@ -1167,70 +1168,50 @@ let tabsInfo : [ProfileViewTab] = [
 
 
 struct PersonPostTabBar : View{
-    @State private var offset : CGFloat = 0
-    @Binding var index : Int
-    @State private var width : CGFloat = 0
+    @Namespace var namespace
+    @Binding var tabIndex : Int
     var body : some View{
-        GeometryReader{proxy -> AnyView in
-            let eqWidth = proxy.frame(in: .global).width  / CGFloat(tabsInfo.count)
-            DispatchQueue.main.async {
-                self.width = eqWidth
-            }
-            
-            return AnyView(
-                ZStack(alignment:.bottomLeading){
-                    VStack{
-                        Capsule()
-                            .fill(.orange)
-                            .frame(width: width / 2.5, height: 3)
+        HStack(spacing:10){
+            ForEach(tabsInfo,id:\.id){ tab in
+                VStack(spacing:12){
+                    HStack{
+                        Image(systemName:tab.sysImg)
+                            .imageScale(.medium)
+                        Text(tab.tabName.rawValue)
+                            .font(.system(size:14,weight:.semibold))
+                         
                     }
-                    .frame(width: width )
-                    .offset(x:getOffset() ,y:-10)
+                    .foregroundColor(tabIndex == tab.id ? .white : .gray)
                     
-                    HStack(spacing:0){
-                        ForEach(tabsInfo,id: \.id){info in
-                            HStack(spacing:3){
-                                Image(systemName: info.sysImg)
-                                    .imageScale(.small)
-                                
-                                Text(info.tabName.rawValue)
-                                    .bold()
-                                    .font(.system(size:15))
-                                
-                            }
-                            .frame(width: width,height: 50)
-                            .foregroundColor(info.id == index ? Color.white : Color.gray)
-                            .onTapGesture {
-                                withAnimation(){
-                                    self.index = info.id
-                                    self.offset = CGFloat(self.index) * UIScreen.main.bounds.width
-                                    //                                    print(offset)
-                                    //                                    print(width)
-                                }
-                            }
+                    ZStack{
+                        if tabIndex == tab.id {
+                            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                .fill(Color.orange)
+                                .matchedGeometryEffect(id: "TAB", in: namespace)
+                        } else {
+                            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                .fill(.clear)
                         }
                     }
-//                    .background(.red)
+                    .padding(.horizontal,8)
+                    .frame(height: 4)
                 }
-                    .frame(maxWidth:.infinity,maxHeight: 50)
-//                    .padding()
-//                    .offset(y:-15)
-//                    .background(.blue)
-                    
-            
-            )
+//                .animation(.easeInOut)
+//                        .transition(.slide)
+                .contentShape(Rectangle())
+                .onTapGesture(){
+                    withAnimation(.easeInOut){
+                        tabIndex = tab.id
+                    }
+                }
+            }
         }
-        .frame(height:50)
-        .background(Color("PersonCellColor").clipShape(CustomeConer(width:15,coners: [.topLeft,.topRight])))
+        
+        .frame(height:50,alignment: .bottom)
+        .background(Color("PersonCellColor"))
     }
-    
-    func getOffset() -> CGFloat{
-        let progress = offset / UIScreen.main.bounds.width
-        return width * progress
-    }
+
 }
-
-
 
 struct personProfile: View {
     @EnvironmentObject var userVM : UserViewModel
@@ -1245,7 +1226,9 @@ struct personProfile: View {
     @State private var isShowIcon : Bool = false
     @State private var tabBarOffset = UIScreen.main.bounds.width
     @State private var tabOffset : CGFloat = 0.0
-    @State private var tabIndex = 0
+    @State private var tabIndex : Int = 0
+    
+
     var body: some View {
         ZStack(alignment:.top){
             ZStack{
@@ -1321,36 +1304,55 @@ struct personProfile: View {
                         .offset(y:-offset)
                         
                         Section {
-                            switch self.tabIndex{
-                            case 0:
-                                PersonPostCardGridView()
-                                    .padding(.vertical,3)
+                            TabView(selection:$tabIndex){
+                                VStack{
+                                    
+                                    PersonPostCardGridView()
+                                        .padding(.vertical,3)
+                                            .environmentObject(userVM)
+
+                                    Spacer()
+                                }
+                                .tag(0)
+      
+
+                                VStack{
+                                    LikedPostCardGridView()
                                         .environmentObject(userVM)
-                            case 1:
-                                LikedPostCardGridView()
-                                    .environmentObject(userVM)
-                                    .padding(.vertical,3)
-                                    .onAppear{
-                                        if userVM.profile!.UserLikedMovies == nil{
-                                            userVM.getUserLikedMovie()
+                                        .padding(.vertical,3)
+                                        .onAppear{
+                                            if userVM.profile!.UserLikedMovies == nil{
+                                                userVM.getUserLikedMovie()
+                                            }
                                         }
-                                    }
-                            case 2:
-                                CustomListView(addList: $isAddingList)
-                                    .environmentObject(userVM)
-                                    .padding(.vertical,3)
-                                    .onAppear{
-                                        if userVM.profile!.UserCustomList == nil{
-                                            userVM.getUserList()
+
+                                    Spacer()
+                                }
+                                .tag(1)
+
+                                VStack{
+                                    CustomListView(addList: $isAddingList)
+                                        .environmentObject(userVM)
+                                        .padding(.vertical,3)
+                                        .onAppear{
+                                            if userVM.profile!.UserCustomList == nil{
+                                                userVM.getUserList()
+                                            }
                                         }
-                                    }
-                            default:
-                                EmptyView()
+                                    Spacer()
+                                }
+                                    .tag(2)
+                                
                             }
+                            .animation(.default)
+                            .transition(.slide)
+                            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                            .frame(height:proxy.size.height, alignment: .top)
+            
                         } header: {
                             VStack(spacing:0){
                                 //
-                                PersonPostTabBar(index:$tabIndex)
+                                PersonPostTabBar(tabIndex: $tabIndex)
                                 Divider()
                             }
                             .offset(y:self.menuOffset < 77 ? -self.menuOffset + 77: 0)

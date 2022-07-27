@@ -13,23 +13,24 @@ class GenreTypeState: ObservableObject {
     @Published var genreMovies : [MovieCardInfo] = []
     @Published var isLoading = false
     @Published var error: NSError?
-    private let genreType : GenreType
+//    private let genreType : GenreType
     private let movieService: MovieService
     private let apiService : APIService
     
     
-    init(movieService: MovieService = MovieStore.shared,apiService : APIService = APIService.shared,genreType:GenreType) {
+    init(movieService: MovieService = MovieStore.shared,apiService : APIService = APIService.shared) {
         self.movieService = movieService
         self.apiService = apiService
-        self.genreType = genreType
-        
-        getGenreCard()
+//        self.genreType = genreType
+//
+////        getGenreCard()
     }
     
-    func getGenreCard() {
+    func getGenreCard(genreType:GenreType) {
+  
         self.isLoading = true
         self.error = nil
-        self.apiService.GetMovieCardInfoByGenre(genre: self.genreType){ [weak self] (result) in
+        self.apiService.GetMovieCardInfoByGenre(genre: genreType){ [weak self] (result) in
             guard let self = self else { return }
             
             switch result {

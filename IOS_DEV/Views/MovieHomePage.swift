@@ -329,21 +329,6 @@ struct MovieHomePage: View {
                                     .foregroundColor(.white)
                                 
                             }
-
-                        
-//                        Text("New Posts")
-//                            .tabItem{
-//                                if !menuState.isHidden{
-//                                    VStack(alignment:.center,spacing:10){
-//                                        Image(systemName:"plus.app.fill")
-//                                        Text("Post")
-//                                            .frame(width: 50)
-//                                            .font(.caption)
-//                                    }
-//                                }
-//                            }
-//
-                            
                         
                        Text("Search")
                             .tabItem{
@@ -368,27 +353,6 @@ struct MovieHomePage: View {
                                     .foregroundColor(.white)
                                 
                             }
-
-//                        MessageView()
-//                            .tabItem{
-//                                if !menuState.isHidden{
-//                                    VStack(alignment:.center,spacing:10){
-//                                        Image(systemName:"message")
-//                                            .font(.body)
-//                                        Text("My List")
-//                                            .frame(width: 50)
-//                                            .font(.caption)
-//                                    }
-//                                    .foregroundColor(.white)
-//                                }
-//                            }
-//                            .opacity(self.index == 2 ? 1 : 0)
-                        //
-                        //
-//                            .opacity(self.index == 3 ? 1 : 0)
-                        //                        ProfileView(MovieData:favoriteController.MovieData, ArticleData: favoriteController.ArticleData)
-                        //                            .opacity(self.index == 3 ? 1 : 0)
-                        //
                     }
                     .accentColor(.white)
 //                    .onAppear(){

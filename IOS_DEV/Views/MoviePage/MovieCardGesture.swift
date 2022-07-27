@@ -25,37 +25,47 @@ struct MovieCardGesture :View{
     @State private var previewMovieId : Int?
     
     let genreData = DataLoader().genreData
-    let genreID : Int
+    let name : String
     
     var body: some View {
         NavigationView{
             ZStack{
+        
                 ZStack(){
-                    ForEach(movies){movie in
-                        
-                        if self.movies.reversed().firstIndex(where: {$0.id == movie.id}) == 0{
-                            //render the current item as CoverGesture view
-                            //arrow to drag
-                            CardGesture(
-                                DragState: self.$gestureState,
-                                //                        onTapGesture: {},
-                                willEndTranslation: {(translation) in},
-                                EndTranslation: {(direction) in
-                                    self.getEndPostion(direction: direction)
-                                }, movie: movie)
+                    if movies.isEmpty {
+                        VStack{
+                            Text("**目前沒有任何相關電影資訊...**")
+                                .foregroundColor(.white)
+                                .font(.system(size:16,weight:.semibold))
+                        }
+                    }else {
+                        ForEach(movies){movie in
                             
-                        }else{
-                            //just show
-                            TheCard(movie: movie)
-                                .frame(width:245)
-                                .scaleEffect( 1 - CGFloat(self.movies.reversed().firstIndex(where: {$0.id == movie.id})!) * 0.03 + self.calculateScale())
-                                .padding(.top,1 - CGFloat(self.movies.reversed().firstIndex(where: {$0.id == movie.id})!) * 16)
-                                .animation(.spring())
+                            if self.movies.reversed().firstIndex(where: {$0.id == movie.id}) == 0{
+                                //render the current item as CoverGesture view
+                                //arrow to drag
+                                CardGesture(
+                                    DragState: self.$gestureState,
+                                    //                        onTapGesture: {},
+                                    willEndTranslation: {(translation) in},
+                                    EndTranslation: {(direction) in
+                                        self.getEndPostion(direction: direction)
+                                    }, movie: movie)
+                                
+                            }else{
+                                //just show
+                                TheCard(movie: movie)
+                                    .frame(width:245)
+                                    .scaleEffect( 1 - CGFloat(self.movies.reversed().firstIndex(where: {$0.id == movie.id})!) * 0.03 + self.calculateScale())
+                                    .padding(.top,1 - CGFloat(self.movies.reversed().firstIndex(where: {$0.id == movie.id})!) * 16)
+                                    .animation(.spring())
+                                
+                            }
                             
                         }
                         
                     }
-                    
+          
                     
                     GeometryReader{proxy in
                         Button(action:{
@@ -83,15 +93,18 @@ struct MovieCardGesture :View{
                                 .font(.title3)
                             
                             HStack{
-                                ForEach(genreData, id:\.id){ genre in
-                                    if genre.id == self.genreID {
-                                        Text(genre.name)
-                                            .bold()
-                                            .font(.subheadline)
-                                    }
-                                }
+                                //                                ForEach(genreData, id:\.id){ genre in
+                                //                                    if genre.id == self.genreID {
+                                //                                        Text(genre.name)
+                                //                                            .bold()
+                                //                                            .font(.subheadline)
+                                //                                    }
+                                //                                }
+                                Text(name)
+                                    .bold()
+                                    .font(.subheadline)
                             }
-
+                            
                         }
                         .position(x: proxy.frame(in: .local).midX
                                   , y: proxy.frame(in: .local).minY + 50)
@@ -106,6 +119,8 @@ struct MovieCardGesture :View{
                 }
                 .background(FullMovieCoverBackground(urlPath: self.currentMovie?.poster ?? "/ocUrMYbdjknu2TwzMHKT9PBBQRw.jpg").blur(radius: 50))
                 
+                
+
                 if previewMovieId != nil{
                     NavigationLink(destination: MovieDetailView(movieId:self.previewMovieId!, navBarHidden: .constant(true), isAction: .constant(false), isLoading: .constant(true)), isActive: self.$isMovieDetail){
                         EmptyView()
