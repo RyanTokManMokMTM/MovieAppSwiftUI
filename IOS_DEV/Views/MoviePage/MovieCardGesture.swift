@@ -122,7 +122,7 @@ struct MovieCardGesture :View{
                 
 
                 if previewMovieId != nil{
-                    NavigationLink(destination: MovieDetailView(movieId:self.previewMovieId!, navBarHidden: .constant(true), isAction: .constant(false), isLoading: .constant(true)), isActive: self.$isMovieDetail){
+                    NavigationLink(destination: MovieDetailView(movieId:self.previewMovieId!, isShowDetail: .constant(false)), isActive: self.$isMovieDetail){
                         EmptyView()
                     }
                 }

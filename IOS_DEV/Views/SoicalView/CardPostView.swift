@@ -10,8 +10,9 @@ import SDWebImageSwiftUI
 
 struct CardPostView: View {
     @State private var isLiked : Bool = false
-    var namespace : Namespace.ID
+    @EnvironmentObject var postVM : PostVM
     var postData : Post
+    var namespace : Namespace.ID
     var action : () -> ()
     var body: some View {
         VStack(alignment:.leading){
@@ -20,7 +21,7 @@ struct CardPostView: View {
                 WebImage(url: postData.post_movie_info.PosterURL)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .matchedGeometryEffect(id: "\(postData.user_info.id)_\(postData.post_movie_info.id)_\(postData.create_at)", in: namespace)
+                    .matchedGeometryEffect(id: postData.id, in: namespace)
                     .transition(.move(edge: .bottom))
                     .clipShape(CustomeConer(width: 5, height: 5, coners: [.topLeft,.topRight]))
                     

@@ -15,20 +15,19 @@ enum TabItem : String{
 }
 
 struct SoicalView: View {
-    @StateObject var postVM = PostVM()
-    @Namespace var namespace
-    @State var isShow : Bool = false
+    @EnvironmentObject var postVM : PostVM
+    var namespace : Namespace.ID
     var body: some View {
-        NavigationView{
+  
             GeometryReader{proxy in
-                ZStack(alignment:.top){
-                    VStack(spacing:0){
+//                ZStack(alignment:.top){
+                VStack(spacing:0){
                         NavTabView(index: self.$postVM.index)
                             .frame(maxWidth:.infinity)
                         
                         ScrollView(.horizontal, showsIndicators: false){
                             TabView(selection: self.$postVM.index){
-                                CardFlowLayout(namespace: namespace,isShow: $isShow,selectedData: self.$postVM.selectedMoreData)
+                                CardFlowLayout(namespace: namespace)
                                     .tag(TabItem.Explore)
                                 FollowUserPostView()
                                     .tag(TabItem.Follow)
@@ -37,37 +36,35 @@ struct SoicalView: View {
                             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                             .frame(width: proxy.size.width)
                             
-                        }.frame(maxHeight:.infinity,alignment: .top)
-                            .ignoresSafeArea()
+                        }.frame(alignment: .top)
+//                            .ignoresSafeArea()
                     }
-                    .zIndex(-1)
+                   
+                    
+
+                    //Change to any?????
+//                    if self.postVM.isShowMore &&  self.postVM.selectedMoreData != nil{
+//                        Color.black.opacity(0.1).edgesIgnoringSafeArea(.all)
+//
+//                        PostBottomSheet(info: self.postVM.selectedMoreData!)
+//                            .animation(.easeInOut)
+//                            .transition(.move(edge: .bottom))
+//                            .environmentObject(postVM)
+//                            .zIndex(2)
+//
+//
+//                    }//
+
                     
                     
-                    if isShow {
-                        PostDetailView(namespace: namespace, postData: self.postVM.selectedMoreData!, isShow: $isShow)
-                            .background(Color("appleDark"))
-                            .zIndex(1)
-                        
-                    }
-                    
-                    if self.postVM.isShowMore &&  self.postVM.selectedMoreData != nil{
-                        Color.black.opacity(0.1).edgesIgnoringSafeArea(.all)
-                        
-                        PostBottomSheet(info: self.postVM.selectedMoreData!)
-                            .animation(.easeInOut)
-                            .transition(.move(edge: .bottom))
-                            .environmentObject(postVM)
-                            .zIndex(2)
-                        
-                        
-                    }
-                    
-                }
+//                }
                 .environmentObject(postVM)
 
             }
-        }
-        
+            .onAppear{
+                self.postVM.GetAllUserPost()
+                self.postVM.GetFollowUserPost()
+            }
     }
 }
 

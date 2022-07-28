@@ -26,6 +26,7 @@ struct Post : Identifiable,Hashable,Decodable{
     let create_at : Int
     var comments : [CommentInfo]? // if comment count != to comments.size -> fetching
     
+
     var post_at : Date {
         return Date(timeIntervalSince1970: TimeInterval(create_at))
     }

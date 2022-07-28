@@ -55,7 +55,12 @@ class UserViewModel : ObservableObject{
                 self.IsPostLoading = false
                 switch result{
                 case .success(let data):
-                    self.profile!.UserCollection = data.post_info
+                    self.profile!.UserCollection = []
+                    for var info in data.post_info{
+                        info.comments = []
+                        self.profile!.UserCollection!.append(info)
+                    }
+              
                 case .failure(let err):
                     print("USER POST DATA")
                     print("USER ERR:\(err.localizedDescription)")

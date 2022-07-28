@@ -38,7 +38,7 @@ struct FlowLayoutView< T : Identifiable,Content : View> : View where T : Hashabl
     }
     
     var body: some View {
-        ScrollView(.vertical, showsIndicators: true){
+        ScrollView(.vertical, showsIndicators: false){
             if list.isEmpty {
                 VStack{
                     Text("There is no any post yet...")

@@ -11,20 +11,17 @@ import CoreAudio
 import Kingfisher
 import Combine //used to add a pulisher to a state variable
 
-struct mainPersonView : View{
+struct PersonProfileView : View{
+    var namespace: Namespace.ID
     var body: some View{
-        NavigationView{
-            GeometryReader{proxy in
-                let topEdge = proxy.safeAreaInsets.top
-                personProfile(topEdge: topEdge)
-                    .ignoresSafeArea(.all, edges: .top)
-                    .navigationBarTitle("")
-                    .navigationTitle("")
-                    .navigationBarHidden(true)
-                    .navigationBarBackButtonHidden(true)
-                    .navigationViewStyle(DoubleColumnNavigationViewStyle())
-            }
+        
+        GeometryReader{proxy in
+            let topEdge = proxy.safeAreaInsets.top
+            personProfile(topEdge: topEdge,namespace:namespace)
+                .ignoresSafeArea(.all, edges: .top)
         }
+
+        
     }
 }
 
@@ -586,6 +583,8 @@ struct userMoviePreferenceTab : View {
 struct profileCardCell : View {
     var post : Post
     @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var postVM : PostVM
+    var namespace: Namespace.ID
     var body: some View{
         VStack(alignment:.center){
             WebImage(url: post.post_movie_info.PosterURL)
@@ -594,8 +593,11 @@ struct profileCardCell : View {
                 .indicator(.activity)
                 .transition(.fade(duration: 0.5))
                 .aspectRatio(contentMode: .fill)
+                .matchedGeometryEffect(id: post.id, in: namespace)
                 .frame(height:230)
                 .clipShape(CustomeConer(width: 5, height: 5, coners: [.topLeft,.topRight]))
+                
+                
 
             Group{
     
@@ -646,12 +648,19 @@ struct profileCardCell : View {
         .padding(.bottom,5)
         .background(Color("MoviePostColor").cornerRadius(5))
         .padding(.horizontal,2)
+        .onTapGesture {
+            self.postVM.selectedPost = post
+            withAnimation{
+                self.postVM.isShowPostDetail.toggle()
+            }
+        }
     }
 }
 
 struct PersonPostCardGridView : View{
     let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
     @EnvironmentObject var userVM : UserViewModel
+    var namespace: Namespace.ID
     var body: some View{
         if userVM.profile!.UserCollection == nil {
             if self.userVM.IsPostLoading {
@@ -672,7 +681,7 @@ struct PersonPostCardGridView : View{
         }else{
             LazyVGrid(columns: gridItem){
                 ForEach(userVM.profile!.UserCollection!,id:\.id){post in
-                    profileCardCell(post: post)
+                    profileCardCell(post: post,namespace:namespace)
                 }
             }
         }
@@ -696,6 +705,7 @@ struct LikedMovieCard : Identifiable ,Codable{
 
 struct LikedPostCardGridView : View{
     @EnvironmentObject var userVM : UserViewModel
+    @State private var isShowMovieDetail : Bool = false
     let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
     var body: some View{
         VStack{
@@ -718,7 +728,7 @@ struct LikedPostCardGridView : View{
                     LazyVGrid(columns: gridItem){
                         ForEach(userVM.profile!.UserLikedMovies!,id:\.id){info in
                             
-                            NavigationLink(destination: Text("Testing detail")){
+                            NavigationLink(destination: MovieDetailView(movieId: info.id, isShowDetail: $isShowMovieDetail) ,isActive: $isShowMovieDetail){
                                 LikedCardCell(movieInfo: info)
                             }
                             .navigationBarTitle("")
@@ -769,19 +779,31 @@ struct LikedCardCell : View {
                     
                     VStack(alignment:.leading){
                         //Movie Full Name
-                        Text(movieInfo.movie_name)
-                            .foregroundColor(.white)
-                            .font(.system(size:18))
-                            .bold()
-                            .padding(.bottom,5)
-                        
-                        HStack(spacing:5){
-                            ForEach(0..<5){i in
-                                Image(systemName:"star.fill" )
-                                    .imageScale(.small)
-                                    .foregroundColor(i < Int(movieInfo.vote_average / 2) ? Color.yellow : Color.gray)
-                                    .font(.system(size:12))
+                        HStack{
+                            Text(movieInfo.movie_name)
+                                .foregroundColor(.white)
+                                .font(.system(size:18))
+                                .bold()
+                                .padding(.bottom,5)
+                            
+                            HStack(spacing:5){
+                                ForEach(0..<5){i in
+                                    Image(systemName:"star.fill" )
+                                        .imageScale(.small)
+                                        .foregroundColor(i < Int(movieInfo.vote_average / 2) ? Color.yellow : Color.gray)
+                                        .font(.system(size:12))
+                                }
                             }
+                            
+                            Spacer()
+                            Button(action:{
+                                //TODO: REMOVE THE MOVIE FROM LIST
+                            }){
+                                Image(systemName: "heart.fill")
+                                    .imageScale(.small)
+                                    .foregroundColor(.red)
+                            }
+                            
                         }
                     
                     }
@@ -1206,8 +1228,8 @@ struct PersonPostTabBar : View{
                 }
             }
         }
-        
         .frame(height:50,alignment: .bottom)
+        .padding(.bottom,5)
         .background(Color("PersonCellColor"))
     }
 
@@ -1221,6 +1243,7 @@ struct personProfile: View {
     
     private let max = UIScreen.main.bounds.height / 2.5
     var topEdge : CGFloat
+    var namespace: Namespace.ID
     @State private var offset:CGFloat = 0.0
     @State private var menuOffset:CGFloat = 0.0
     @State private var isShowIcon : Bool = false
@@ -1304,50 +1327,77 @@ struct personProfile: View {
                         .offset(y:-offset)
                         
                         Section {
-                            TabView(selection:$tabIndex){
-                                VStack{
-                                    
-                                    PersonPostCardGridView()
-                                        .padding(.vertical,3)
-                                            .environmentObject(userVM)
-
-                                    Spacer()
-                                }
-                                .tag(0)
-      
-
-                                VStack{
-                                    LikedPostCardGridView()
+                            switch tabIndex{
+                            case 0:
+                                PersonPostCardGridView(namespace:namespace)
+                                    .padding(.vertical,3)
                                         .environmentObject(userVM)
-                                        .padding(.vertical,3)
-                                        .onAppear{
-                                            if userVM.profile!.UserLikedMovies == nil{
-                                                userVM.getUserLikedMovie()
-                                            }
+                            case 1:
+                                LikedPostCardGridView()
+                                    .environmentObject(userVM)
+                                    .padding(.vertical,3)
+                                    .onAppear{
+                                        if userVM.profile!.UserLikedMovies == nil{
+                                            userVM.getUserLikedMovie()
                                         }
-
-                                    Spacer()
-                                }
-                                .tag(1)
-
-                                VStack{
-                                    CustomListView(addList: $isAddingList)
-                                        .environmentObject(userVM)
-                                        .padding(.vertical,3)
-                                        .onAppear{
-                                            if userVM.profile!.UserCustomList == nil{
-                                                userVM.getUserList()
-                                            }
+                                    }
+                            case 2:
+                                CustomListView(addList: $isAddingList)
+                                    .environmentObject(userVM)
+                                    .padding(.vertical,3)
+                                    .onAppear{
+                                        if userVM.profile!.UserCustomList == nil{
+                                            userVM.getUserList()
                                         }
-                                    Spacer()
-                                }
-                                    .tag(2)
-                                
+                                    }
+                            default:
+                                EmptyView()
                             }
-                            .animation(.default)
-                            .transition(.slide)
-                            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                            .frame(height:proxy.size.height, alignment: .top)
+                            
+//                            TabView(selection:$tabIndex){
+//                                VStack{
+//
+//                                    PersonPostCardGridView()
+//                                        .padding(.vertical,3)
+//                                            .environmentObject(userVM)
+//
+//                                    Spacer()
+//                                }
+//                                .tag(0)
+//
+//
+//                                VStack{
+//                                    LikedPostCardGridView()
+//                                        .environmentObject(userVM)
+//                                        .padding(.vertical,3)
+//                                        .onAppear{
+//                                            if userVM.profile!.UserLikedMovies == nil{
+//                                                userVM.getUserLikedMovie()
+//                                            }
+//                                        }
+//
+//                                    Spacer()
+//                                }
+//                                .tag(1)
+//
+//                                VStack{
+//                                    CustomListView(addList: $isAddingList)
+//                                        .environmentObject(userVM)
+//                                        .padding(.vertical,3)
+//                                        .onAppear{
+//                                            if userVM.profile!.UserCustomList == nil{
+//                                                userVM.getUserList()
+//                                            }
+//                                        }
+//                                    Spacer()
+//                                }
+//                                    .tag(2)
+//
+//                            }
+//                            .animation(.default)
+//                            .transition(.slide)
+//                            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+//                            .frame(height:proxy.size.height, alignment: .top)
             
                         } header: {
                             VStack(spacing:0){
@@ -1475,6 +1525,18 @@ struct personProfile: View {
                     Text("0")
                         .bold()
                     Text("Likes")
+                }
+                
+                VStack{
+                    Text("0")
+                        .bold()
+                    Text("Following")
+                }
+                
+                VStack{
+                    Text("0")
+                        .bold()
+                    Text("Follower")
                 }
 
                 Spacer()

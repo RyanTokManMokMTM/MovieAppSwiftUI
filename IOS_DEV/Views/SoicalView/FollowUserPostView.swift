@@ -40,6 +40,8 @@ struct FollowPostCell : View {
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
     @State private var commentText : String = ""
+    
+    @State private var isShowMovieDetail : Bool = false
     var info : Post
     @State private var moreText : Bool = false
     var body: some View{
@@ -92,16 +94,12 @@ struct FollowPostCell : View {
             
             PostButton()
             
-            Button(action:{
-                //TODO: GO TO MOVIE DETAIL VIEW
-            }){
+            NavigationLink(destination: MovieDetailView(movieId: info.post_movie_info.id, isShowDetail: $isShowMovieDetail),isActive: $isShowMovieDetail){
                 Text("#\(info.post_movie_info.title)")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.red)
+                    .padding(.top,5)
             }
-            .padding(.top,5)
-            
-            //
 
             HStack(alignment:.bottom){
                 Text(info.post_desc)
@@ -131,8 +129,8 @@ struct FollowPostCell : View {
                     Button(action:{
                         //TODO: A BOTTON SHEET SHOW COMMENT LIST AND INFO
                         withAnimation{
-                            self.postVM.isShowMore.toggle()
-                            self.postVM.selectedMoreData = info
+                            self.postVM.isReadComment.toggle()
+                            self.postVM.selectedPost = info
                         }
                     }){
                         Text("顯示全部")
@@ -199,8 +197,8 @@ struct FollowPostCell : View {
                 
                 Button(action:{
                     withAnimation{
-                        self.postVM.isShowMore.toggle()
-                        self.postVM.selectedMoreData = info
+                        self.postVM.isReadComment.toggle()
+                        self.postVM.selectedPost = info
                     }
                 }){
                     HStack(spacing:5){

@@ -327,76 +327,73 @@ struct ChattingView : View{
 
 struct MessageView: View {
     @StateObject private var msgVM = MessageViewModel()
-
+    
     var body: some View {
-        
-        NavigationView{
-            GeometryReader{proxy in
+        GeometryReader{ proxy in
+            VStack(spacing:0){
                 VStack(spacing:0){
-                    VStack(spacing:0){
-                        VStack{
-                            HStack(){
-                                Spacer()
-                                Text("Message")
-                                Spacer()
-                                
-                            }
-                            .font(.system(size:15))
-                            .padding(.horizontal,5)
-                            .padding(.bottom,10)
+                    VStack{
+                        HStack(){
+                            Spacer()
+                            Text("訊息")
+                            Spacer()
+                            
                         }
-                        .frame(width: UIScreen.main.bounds.width, height: proxy.safeAreaInsets.top + 30,alignment: .bottom)
-                        Divider()
-                        MessageHeaderTab()
-                            .padding(.top)
-                        
-                        List(){
-                            ForEach(self.msgVM.ChatList,id:\.id){info in
-                                ZStack{
-                                    chatRow(info:info)
-                                    
-                                    NavigationLink(destination:ChattingView(chatInfo: info)
-                                            .environmentObject(msgVM)
-                                    ){
-                                        EmptyView()
-                                    }
-                                    .opacity(0)
-                                    .buttonStyle(PlainButtonStyle())
-                                    .frame(width: 0)
-                                }
-                                
-//                                .swipeActions(edge: .leading,allowsFullSwipe: true){
-//                                    Button(action:{
-//                                        self.msgVM.updateReadMark(!info.hasUnrealMsg, info: info)
-//                                    }){
-//                                        if info.hasUnrealMsg{
-//                                            Label("Read", image: "text.bubble")
-//                                        }else{
-//                                            Label("Unread", image: "circle.fill")
-//                                        }
-//                                    }
-//                                    .tint(.blue)
-//                                }
-                                
-                            }
-                            .onDelete(perform: { indexSet in
-                                self.msgVM.ChatList.remove(atOffsets: indexSet)
-                            })
-                        }
-                        .listStyle(.plain)
-                        
-                        .padding(.top)
+                        .font(.system(size:15))
+                        .padding(.horizontal,5)
+                        .padding(.bottom,10)
                     }
-                    //        }
+                    .frame(width: UIScreen.main.bounds.width, height: proxy.safeAreaInsets.top + 30,alignment: .bottom)
+                    Divider()
+                    MessageHeaderTab()
+                        .padding(.top)
+                    
+                    List(){
+                        ForEach(self.msgVM.ChatList,id:\.id){info in
+                            ZStack{
+                                chatRow(info:info)
+                                
+                                NavigationLink(destination:ChattingView(chatInfo: info)
+                                                .environmentObject(msgVM)
+                                ){
+                                    EmptyView()
+                                }
+                                .opacity(0)
+                                .buttonStyle(PlainButtonStyle())
+                                .frame(width: 0)
+                            }
+                            
+                            //                                .swipeActions(edge: .leading,allowsFullSwipe: true){
+                            //                                    Button(action:{
+                            //                                        self.msgVM.updateReadMark(!info.hasUnrealMsg, info: info)
+                            //                                    }){
+                            //                                        if info.hasUnrealMsg{
+                            //                                            Label("Read", image: "text.bubble")
+                            //                                        }else{
+                            //                                            Label("Unread", image: "circle.fill")
+                            //                                        }
+                            //                                    }
+                            //                                    .tint(.blue)
+                            //                                }
+                            
+                        }
+                        .onDelete(perform: { indexSet in
+                            self.msgVM.ChatList.remove(atOffsets: indexSet)
+                        })
+                    }
+                    .listStyle(.plain)
+                    
+                    .padding(.top)
                 }
-                .edgesIgnoringSafeArea(.all)
-                
+                //        }
             }
-            .navigationTitle("")
-            .navigationBarHidden(true)
-            .navigationBarTitle("")
+            .edgesIgnoringSafeArea(.all)
+            
         }
         .accentColor(.white)
+
+//        .navigationBarHidden(true)
+//        .navigationBarBackButtonHidden(true)
     }
 }
 
@@ -451,15 +448,15 @@ struct MessageHeaderTab : View{
     var body: some View{
         HStack{
             Spacer()
-            tabButton(systemIcon: "heart.circle.fill", iconColor: .red, buttonText: "Likes & Collects"){
+            tabButton(systemIcon: "heart.circle.fill", iconColor: .red, buttonText: "點讚"){
                 print("any like")
             }
             Spacer()
-            tabButton(systemIcon: "person.fill", iconColor: .blue, buttonText: "New Followers"){
+            tabButton(systemIcon: "person.fill", iconColor: .blue, buttonText: "新增追蹤"){
                 print("any follow")
             }
             Spacer()
-            tabButton(systemIcon: "paperplane.fill", iconColor: .orange, buttonText: "Comments"){
+            tabButton(systemIcon: "paperplane.fill", iconColor: .orange, buttonText: "評論"){
                 print("any comment")
             }
             Spacer()

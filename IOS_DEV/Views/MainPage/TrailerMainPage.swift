@@ -98,18 +98,10 @@ struct TrailerMainPage:View{
     @Binding var showHomePage : Bool
     @Binding var isLogOut : Bool
     @Binding var mainPageHeight : CGFloat
-    @State private var queryText : String = ""
+    @StateObject var SearchVM = SearchMovieVM()
     var body:some View{
-        NavigationView{
-            MovieListView(showHomePage: $showHomePage, isLogOut: self.$isLogOut,mainPageHeight:$mainPageHeight)
-        }
-//        .searchable(text: $queryText,placement: .navigationBarDrawer(displayMode: .always)){
-//            //TODO.....
-//            Text("SwiftUI").searchCompletion("SwiftUI")
-//                Text("iOS 15").searchCompletion("iOS 15")
-//        }
-        .environment(\.horizontalSizeClass, .compact)
-        
+        MovieListView(showHomePage: $showHomePage,mainPageHeight:$mainPageHeight)
+            .environment(\.horizontalSizeClass, .compact)
 
     }
 }
@@ -644,15 +636,15 @@ struct MovieIntrol: View {
 //                }
                 
                 VStack{
-                    NavigationLink(destination: MovieDetailView(movieId:trailer.id,navBarHidden: $TrailerManager.isNavBarHidden,isAction: $TrailerManager.isActive,isLoading: $TrailerManager.isLoading)){
-                        SmallCoverIcon(posterPath: trailer.info.poster)
-                            .navigationBarTitle(TrailerManager.isActive ? "Back" : "")
-
-                    }
-                    .navigationTitle( "")
-                    .navigationBarTitle("")
-                    .navigationBarHidden(true)
-                    .buttonStyle(StaticButtonStyle())
+//                    NavigationLink(destination: MovieDetailView(movieId:trailer.id,navBarHidden: $TrailerManager.isNavBarHidden,isShowDetail: $TrailerManager.isActive,isLoading: $TrailerManager.isLoading)){
+//                        SmallCoverIcon(posterPath: trailer.info.poster)
+//                            .navigationBarTitle(TrailerManager.isActive ? "Back" : "")
+//
+//                    }
+//                    .navigationTitle( "")
+//                    .navigationBarTitle("")
+//                    .navigationBarHidden(true)
+//                    .buttonStyle(StaticButtonStyle())
                     
 
                 }

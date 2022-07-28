@@ -45,7 +45,7 @@ struct DragAndDropMainView: View {
                         if self.StateManager.previewResult{
                             //Loading previeModel preview Data
                             //Toggle preview result state
-                            NavigationLink(destination:  MovieDetailView(movieId:self.previewModel.previewData!.id, navBarHidden: .constant(true), isAction: .constant(false), isLoading: .constant(true)), isActive: self.$StateManager.previewResult){
+                            NavigationLink(destination:  MovieDetailView(movieId:self.previewModel.previewData!.id, isShowDetail: .constant(false)), isActive: self.$StateManager.previewResult){
                                 EmptyView()
                                 
                             }
@@ -193,7 +193,7 @@ struct SearchResultsView : View {
                 LazyVGrid(columns: gridItem){
                     ForEach(movies,id:\.self){ info in
                         VStack{
-                            NavigationLink(destination:   MovieDetailView(movieId:selectedID, navBarHidden: .constant(true), isAction: .constant(false), isLoading: .constant(true)), isActive: self.$isShowDetail){
+                            NavigationLink(destination:   MovieDetailView(movieId:selectedID, isShowDetail: .constant(false)), isActive: self.$isShowDetail){
                                     ResultCareVIew(movie: info)
                                     .onTapGesture(){
                                         self.selectedID = info.id

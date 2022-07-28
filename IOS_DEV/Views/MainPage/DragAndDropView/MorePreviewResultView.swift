@@ -28,7 +28,7 @@ struct MorePreviewResultView : View{
         ZStack(alignment:.top){
             //Show Movie detail
             if selectedId != nil{
-                NavigationLink(destination: MovieDetailView(movieId:self.selectedId!, navBarHidden: .constant(true), isAction: .constant(false), isLoading: .constant(true)), isActive: self.$isShowResult){EmptyView()}
+                NavigationLink(destination: MovieDetailView(movieId:self.selectedId!,  isShowDetail: .constant(false)), isActive: self.$isShowResult){EmptyView()}
             }
             
             ZStack{

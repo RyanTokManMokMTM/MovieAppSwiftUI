@@ -43,7 +43,7 @@ struct MoreMovieView: View {
             LazyVGrid(columns: columns, spacing: 20){
                 ForEach(self.movies ,id: \.id) { movie in
                     
-                    NavigationLink(destination: MovieDetailView(movieId: movie.id, navBarHidden: .constant(true), isAction: .constant(false), isLoading: .constant(true)))
+                    NavigationLink(destination: MovieDetailView(movieId: movie.id, isShowDetail: .constant(false)))
                     {
                         MovieItem(movie: movie)
                     }

@@ -19,7 +19,7 @@ struct movieRecord: View {
         LazyVGrid(columns: columns, spacing: 20){
             ForEach(movies, id:\.id){ movie in
                 
-                NavigationLink(destination: MovieDetailView(movieId: movie.movie, navBarHidden: .constant(true), isAction: .constant(false), isLoading: .constant(true))){
+                NavigationLink(destination: MovieDetailView(movieId: movie.movie,  isShowDetail: .constant(false))){
                     WebImage(url: movie.posterURL)
                         .resizable()
                         .aspectRatio(contentMode: .fill)

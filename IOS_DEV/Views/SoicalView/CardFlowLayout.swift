@@ -8,21 +8,16 @@
 import SwiftUI
 import SDWebImageSwiftUI
 
-
-
 struct CardFlowLayout: View {
     @EnvironmentObject var postVM : PostVM
-    var namespace : Namespace.ID
-    @Binding var isShow : Bool
-    @Binding  var selectedData : Post?
-//    var columns = Array(repeating: GridItem(.flexible()), count: 2)
+    var namespace: Namespace.ID
     var body: some View {
-        
-        FlowLayoutView(list: postVM.postData, columns: 2,HSpacing: 5,VSpacing: 10){ info in
-            CardPostView(namespace: namespace,postData: info){
-                self.selectedData = info
+        FlowLayoutView(list: self.postVM.postData, columns: 2,HSpacing: 5,VSpacing: 10){ info in
+            CardPostView(postData: info,namespace:namespace){
+
+                self.postVM.selectedPost = info
                 withAnimation{
-                    self.isShow.toggle()
+                    self.postVM.isShowPostDetail.toggle()
                 }
             }
         }

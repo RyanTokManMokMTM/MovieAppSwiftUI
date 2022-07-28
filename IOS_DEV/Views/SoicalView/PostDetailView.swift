@@ -10,45 +10,43 @@ import SDWebImageSwiftUI
 
 
 struct PostDetailView: View {
+    @EnvironmentObject var postVM : PostVM
     var namespace : Namespace.ID
-    var postData : Post
     @State private var value : CGSize = .zero
-    @Binding var isShow : Bool
+    
     var body: some View {
         ZStack(alignment: .top){
             VStack(spacing:0){
-                PostDetailViewTopBar(namespace: namespace, postData: postData,isShow: $isShow)
+                PostDetailViewTopBar()
+//                    .background(Color.red)
                 
                 //Image tab view
                 ScrollView(.vertical, showsIndicators: false){
-                    PostDetailDescView(namespace: namespace,postData: postData)
+                    PostDetailDescView(namespace: namespace)
                         
                 }
-                .frame(maxHeight:.infinity,alignment:.top)
-//                .edgesIgnoringSafeArea(.all)
+//                .frame(maxHeight:.infinity,alignment:.top)
             }
-//            .edgesIgnoringSafeArea(.all)
-//            .ignoresSafeArea()
-            
-            
         }
-        .frame(maxHeight:.infinity,alignment: .top)
+//        .frame(maxHeight:.infinity,alignment: .top)/
         .background(Color("appleDark").edgesIgnoringSafeArea(.all))
-        .scaleEffect(self.value.width / -500 + 1)
+        .contentShape(Rectangle())
+        .offset(x : self.value.width)
+//        .scaleEffect(self.value.width > (self.value.width / 2) ? self.value.width / -500 + 1 : 1)
         .gesture(
             DragGesture()
                 .onChanged{ value in
                     guard value.translation.width > 0 else {return }
 
                     //left only
-                    if value.translation.width < 100 {
+//                    if value.translation.width < 100 {
                         self.value = value.translation
-                    }
+//                    }
                 }
                 .onEnded{ value in
                     withAnimation(.spring()){
                         if value.translation.width > 80 {
-                            self.isShow.toggle()
+                            self.postVM.isShowPostDetail.toggle()
                         }else {
                             self.value = .zero
                         }
@@ -60,15 +58,16 @@ struct PostDetailView: View {
 }
 
 struct PostDetailViewTopBar : View {
-    var namespace : Namespace.ID
-    var postData : Post
-    @Binding var isShow : Bool
+    @EnvironmentObject var postVM : PostVM
+    @EnvironmentObject var userVM : UserViewModel
+//    var postData : Post
+//    @Binding var isShow : Bool
     @State private var isFollowing = false
     var body: some View{
         HStack(alignment:.center){
             Button(action:{
                 withAnimation(){
-                    self.isShow = false
+                    self.postVM.isShowPostDetail = false
                 }
             }){
                 Image(systemName: "chevron.left")
@@ -80,61 +79,70 @@ struct PostDetailViewTopBar : View {
             .padding(.horizontal,5)
             
             
-            WebImage(url:postData.user_info.UserPhotoURL)
+            WebImage(url:self.postVM.selectedPost!.user_info.UserPhotoURL)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(width: 40, height: 40)
                 .clipShape(Circle())
 //                .matchedGeometryEffect(id: postData.user_info.user_avatar, in: namespace)
             
-            Text(postData.user_info.name)
+            Text(self.postVM.selectedPost!.user_info.name)
                 .font(.system(size: 14, weight: .semibold))
 //                .matchedGeometryEffect(id: postData.user_info.id, in: namespace)
             
             Spacer()
             
-            Button(action:{
-                withAnimation{
-                    self.isFollowing.toggle()
+            if self.postVM.selectedPost!.user_info.id != userVM.profile!.id{
+                Button(action:{
+                    withAnimation{
+                        self.isFollowing.toggle()
+                    }
+                }){
+                    Text(self.isFollowing ? "Following" : "Follow")
+                        .foregroundColor(self.isFollowing ? Color.white.opacity(0.8) : .red)
+                        .font(.system(size: 14))
+                        .padding(5)
+                        .padding(.horizontal,5)
+                        .overlay(RoundedRectangle(cornerRadius: 25).stroke().fill(self.isFollowing ? Color.white.opacity(0.8) : .red))
                 }
-            }){
-                Text(self.isFollowing ? "Following" : "Follow")
-                    .foregroundColor(self.isFollowing ? Color.white.opacity(0.8) : .red)
-                    .font(.system(size: 14))
-                    .padding(5)
-                    .padding(.horizontal,5)
-                    .overlay(RoundedRectangle(cornerRadius: 25).stroke().fill(self.isFollowing ? Color.white.opacity(0.8) : .red))
+            }else {
+                Button(action:{
+                    //TODO: MODIFY THE POST
+                }){
+                    Image(systemName: "line.3.horizontal")
+                        .foregroundColor(.white)
+                        .imageScale(.medium)
+                }
             }
-            
+
         }
         .edgesIgnoringSafeArea(.all)
         .padding(.horizontal,5)
-     
-        .frame(width:UIScreen.main.bounds.width,height:UIApplication.shared.keyWindow?.safeAreaInsets.top)
+        .frame(width:UIScreen.main.bounds.width,height:50)
         .background(Color("appleDark").edgesIgnoringSafeArea(.all))
     }
 }
 
 struct PostDetailDescView : View {
     @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var postVM : PostVM
     var namespace : Namespace.ID
-    var postData : Post
     @State private var index = 0
     @State private var commentText : String = ""
-
+    @State private var isShowMoreDetail : Bool = false
     var body: some View {
         VStack(spacing:5){
             ZStack(alignment:.topTrailing){
-//                TabView(selection:$index){
-                WebImage(url: postData.post_movie_info.PosterURL)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .matchedGeometryEffect(id: "\(postData.user_info.id)_\(postData.post_movie_info.id)_\(postData.create_at)", in: namespace)
-//                }
-//                .tabViewStyle(.page(indexDisplayMode: .never))
-                       
-                .matchedGeometryEffect(id: postData.post_movie_info.id, in: namespace)
-                .frame(width: UIScreen.main.bounds.width)
+                //                TabView(selection:$index){
+                WebImage(url: self.postVM.selectedPost!.post_movie_info.PosterURL)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .matchedGeometryEffect(id: self.postVM.selectedPost!.id, in: namespace)
+                //                }
+                //                .tabViewStyle(.page(indexDisplayMode: .never))
+                
+                    .matchedGeometryEffect(id: self.postVM.selectedPost!.post_movie_info.id, in: namespace)
+                    .frame(width: UIScreen.main.bounds.width)
                 //maxinum image is 10
                 Text("\(index + 1)/1")
                     .font(.system(size: 12, weight: .semibold))
@@ -173,21 +181,20 @@ struct PostDetailDescView : View {
     func PostContent() -> some View{
    
             //Jump to the detail view
+        NavigationLink(destination: MovieDetailView(movieId: self.postVM.selectedPost!.post_movie_info.id, isShowDetail: $isShowMoreDetail),isActive: $isShowMoreDetail){
+            Text("#\(self.postVM.selectedPost!.post_movie_info.title)")
+                .font(.system(size: 15))
+                .foregroundColor(.red)
+        }
 
-            Button(action:{}){
-                Text("#\(postData.post_movie_info.title)")
-                    .font(.system(size: 15))
-                    .foregroundColor(.red)
-            }
             
-            
-        Text(postData.post_title)
+        Text(self.postVM.selectedPost!.post_title)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(.white)
 //                .matchedGeometryEffect(id: postData.post_title, in: namespace)
                 .multilineTextAlignment(.leading)
         
-        Text(postData.post_desc)
+        Text(self.postVM.selectedPost!.post_desc)
             .font(.system(size: 15,weight: .regular))
                 .multilineTextAlignment(.leading)
                 .lineSpacing(8)
@@ -202,7 +209,7 @@ struct PostDetailDescView : View {
 //            .foregroundColor(.blue)
 //            .font(.system(size: 15,weight: .semibold))
         
-        Text("Posted at \(postData.post_at.dateDescriptiveString())")
+        Text("Posted at \(self.postVM.selectedPost!.post_at.dateDescriptiveString())")
             .foregroundColor(Color(uiColor: .systemGray2))
                 .font(.caption2)
             
@@ -212,10 +219,11 @@ struct PostDetailDescView : View {
     
     @ViewBuilder
     func CommentView() -> some View{
-        Text("Comments : \(postData.post_comment_count)")
+        Text("Comments : \(self.postVM.selectedPost!.post_comment_count)")
             .foregroundColor(.white)
             .font(.system(size: 14,weight: .medium))
         
+        //This Maybe change ~~
         HStack{
             WebImage(url: userVM.profile!.UserPhotoURL)
                 .resizable()
@@ -239,7 +247,7 @@ struct PostDetailDescView : View {
         //All Comment
         PostViewDivider
         
-        if postData.comments != nil && postData.comments!.count == 0 {
+        if self.postVM.selectedPost!.comments != nil && self.postVM.selectedPost!.comments!.count == 0 {
             HStack{
                 Spacer()
                 Image(systemName: "text.bubble")
@@ -251,7 +259,7 @@ struct PostDetailDescView : View {
                 Spacer()
             }
         }else {
-            ForEach(postData.comments!,id:\.id){ info in
+            ForEach(self.postVM.selectedPost!.comments!,id:\.id){ info in
                 HStack(alignment:.top){
     //                HStack(alignment:.center){
                     WebImage(url: info.user_info.UserPhotoURL)

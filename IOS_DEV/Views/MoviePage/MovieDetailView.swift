@@ -12,15 +12,9 @@ import SDWebImageSwiftUI
 struct MovieDetailView: View {
 
     let movieId: Int
-    @State private var todo : Bool = false
     @StateObject private var movieDetailState = MovieDetailState()
     @StateObject private var movieImagesState = MovieImagesState()
-//    @StateObject private var listController = ListController()
-//    @StateObject private var favoriteController = FavoriteController()
-    @State var isMyFavorite = false
-    @Binding var navBarHidden:Bool
-    @Binding var isAction : Bool
-    @Binding var isLoading : Bool
+    @Binding var isShowDetail : Bool
 
     var body: some View {
         ZStack {
@@ -31,122 +25,113 @@ struct MovieDetailView: View {
             
             if movieDetailState.movie != nil && self.movieImagesState.movieImage != nil{
                 GeometryReader{ proxy in
-                    NewDetailView(movie: self.movieDetailState.movie!,movieImages: self.movieImagesState.movieImage!,isShow: $isAction ,topEdge: proxy.safeAreaInsets.top)
+                    NewDetailView(movie: self.movieDetailState.movie!,movieImages: self.movieImagesState.movieImage!,isShow: $isShowDetail ,topEdge: proxy.safeAreaInsets.top)
                         .ignoresSafeArea(.all, edges: .top)
                 }
             }
         }
+        .navigationBarTitle("")
+        .navigationBarHidden(true)
+        .navigationTitle("")
+        .navigationBarBackButtonHidden(true)
         .onAppear {
             //TODO : Ignore it now......
+            print(movieId)
             self.movieDetailState.loadMovie(id: self.movieId)
             self.movieImagesState.loadMovieImage(id: self.movieId)
         }
-//        .onAppear {
-//            //TODO : Ignore it now......
-//            self.movieDetailState.loadMovie(id: self.movieId)
-//            self.movieImagesState.loadMovieImage(id: self.movieId)
-////            self.listController.GetMyList(userID: NowUserID!)
-////            self.favoriteController.CheckLikeMovie(movieID: movieId)
-////            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: {
-////                if !self.favoriteController.favorite.isEmpty {
-////                    self.isMyFavorite = true
-////                }
-////                self.todo = true
-////            })
+    }
+}
+
+
+
+
+//struct MovieDetailPage: View {
+//    
+//    @State var movie : Movie
+//    //MOVIE URL
+//    @State private var size = 0.0
+//    @State private var opacity = 0.0
+//    @State private var showMovieName = false
+//    @State private var showAnimation = false
+//    @Binding var navBarHidden:Bool
+//    @Binding var isAction : Bool
+//    @Binding var isLoading : Bool
+//    @State private var isAppear:Bool = false
+//    @State var myMovieList : [CustomList]
+//    @State var isMyFavorite:Bool
 //
+//    var body: some View {
+//        
+//        
+//        ZStack(alignment:Alignment(horizontal: .center, vertical: .top)){
+//            
+//            ScrollView(.vertical, showsIndicators: false){
+//                GeometryReader{ proxy in
+//                    if proxy.frame(in:.global).minY > -480{
+//                        movieImage(imgURL: movie.posterURL)
+//                            .offset(y:-proxy.frame(in:.global).minY)
+//                            .frame(width: isAppear ?  0: proxy.frame(in:.global).maxX, height:
+//                                   isAppear ? 0 :proxy.frame(in:.global).minY  > 0 ?
+//                                    proxy.frame(in:.global).minY + 480 : 480   )
+//                            
+//                            .opacity((Double(proxy.frame(in:.global).minY * 0.0045 + 1)) < 0.45 ? 0.45 :(Double(proxy.frame(in:.global).minY * 0.0045 + 1)))
+//                            .blur(radius: CGFloat((Double(proxy.frame(in:.global).minY * 0.005 + 1)) < 0.45  ? (Double(proxy.frame(in:.global).minY) * -1 * 0.03) : 0))
+//                        
+//                    }
+//                }
+//                .frame(height: 510)
+//                //.frame(height:480 - 150)
+//                .animation(.spring(),value:showAnimation)
+//                //                        Detail Items
+//                
+//               
+//               
+//                MovieInfoDetail(myMovieList:myMovieList , movie: movie, isMyFavorite:isMyFavorite)
+//                    .padding([.bottom],UIApplication.shared.windows.first?.safeAreaInsets.bottom)
+//                    
+//                //     .offset(y:10)
+//                //   .background(Color.black.edgesIgnoringSafeArea(.all))
+//                
+//                
+//            }
+//            .foregroundColor(.white)
+//            .frame(width: UIScreen.main.bounds.width,height: UIScreen.main.bounds.height)
+//            .background(Color.init("navBarBlack").edgesIgnoringSafeArea(.all))
 //        }
-    }
-}
-
-
-
-
-struct MovieDetailPage: View {
-    
-    @State var movie : Movie
-    //MOVIE URL
-    @State private var size = 0.0
-    @State private var opacity = 0.0
-    @State private var showMovieName = false
-    @State private var showAnimation = false
-    @Binding var navBarHidden:Bool
-    @Binding var isAction : Bool
-    @Binding var isLoading : Bool
-    @State private var isAppear:Bool = false
-    @State var myMovieList : [CustomList]
-    @State var isMyFavorite:Bool
-
-    var body: some View {
-        
-        
-        ZStack(alignment:Alignment(horizontal: .center, vertical: .top)){
-            
-            ScrollView(.vertical, showsIndicators: false){
-                GeometryReader{ proxy in
-                    if proxy.frame(in:.global).minY > -480{
-                        movieImage(imgURL: movie.posterURL)
-                            .offset(y:-proxy.frame(in:.global).minY)
-                            .frame(width: isAppear ?  0: proxy.frame(in:.global).maxX, height:
-                                   isAppear ? 0 :proxy.frame(in:.global).minY  > 0 ?
-                                    proxy.frame(in:.global).minY + 480 : 480   )
-                            
-                            .opacity((Double(proxy.frame(in:.global).minY * 0.0045 + 1)) < 0.45 ? 0.45 :(Double(proxy.frame(in:.global).minY * 0.0045 + 1)))
-                            .blur(radius: CGFloat((Double(proxy.frame(in:.global).minY * 0.005 + 1)) < 0.45  ? (Double(proxy.frame(in:.global).minY) * -1 * 0.03) : 0))
-                        
-                    }
-                }
-                .frame(height: 510)
-                //.frame(height:480 - 150)
-                .animation(.spring(),value:showAnimation)
-                //                        Detail Items
-                
-               
-               
-                MovieInfoDetail(myMovieList:myMovieList , movie: movie, isMyFavorite:isMyFavorite)
-                    .padding([.bottom],UIApplication.shared.windows.first?.safeAreaInsets.bottom)
-                    
-                //     .offset(y:10)
-                //   .background(Color.black.edgesIgnoringSafeArea(.all))
-                
-                
-            }
-            .foregroundColor(.white)
-            .frame(width: UIScreen.main.bounds.width,height: UIScreen.main.bounds.height)
-            .background(Color.init("navBarBlack").edgesIgnoringSafeArea(.all))
-        }
-        .edgesIgnoringSafeArea(.all)
-        .frame(height:UIScreen.main.bounds.height)
-        .navigationTitle(self.isAction ?  movie.title : "")
-        .navigationBarTitle(self.isAction ?  movie.title  : "")
-        .navigationBarItems(trailing:showBarItem(imgURL: movie.posterURL, name:movie.title).opacity(showMovieName ? 1 : 0).animation(.linear).transition(.flipFromBottom))
-        .padding(.horizontal,10)
-        .onAppear{
-            isAppear = false
-            loading()
-            print(self.movie)
-//            withAnimation(){
-//                self.navBarHidden = false
-//            }
-//            UIScrollView.appearance().bounces = true
-            
-        }
-        .onDisappear{
-//            withAnimation(){
-//                self.navBarHidden = true
-//            }
-            self.isLoading = true
-//            UIScrollView.appearance().bounces = false
-        }
-        
-        
-    }
-    
-    func loading(){
-        DispatchQueue.main.asyncAfter(deadline:.now() + 1.25){
-            self.isLoading = false
-        }
-    }
-}
+//        .edgesIgnoringSafeArea(.all)
+//        .frame(height:UIScreen.main.bounds.height)
+//        .navigationTitle(self.isAction ?  movie.title : "")
+//        .navigationBarTitle(self.isAction ?  movie.title  : "")
+//        .navigationBarItems(trailing:showBarItem(imgURL: movie.posterURL, name:movie.title).opacity(showMovieName ? 1 : 0).animation(.linear).transition(.flipFromBottom))
+//        .padding(.horizontal,10)
+//        .onAppear{
+//            isAppear = false
+//            loading()
+//            print(self.movie)
+////            withAnimation(){
+////                self.navBarHidden = false
+////            }
+////            UIScrollView.appearance().bounces = true
+//            
+//        }
+//        .onDisappear{
+////            withAnimation(){
+////                self.navBarHidden = true
+////            }
+//            self.isLoading = true
+////            UIScrollView.appearance().bounces = false
+//        }
+//        
+//        
+//    }
+//    
+//    func loading(){
+//        DispatchQueue.main.asyncAfter(deadline:.now() + 1.25){
+//            self.isLoading = false
+//        }
+//    }
+//}
 
 //struct TestDetailView: View {
 //
@@ -297,6 +282,8 @@ struct NewDetailView: View {
                             circleButton(systemImg: "heart.fill",imageScale: .medium, background: .red , buttonColor: .white,width:40,height:40){
                                 //TODO: ADD TO LIST OF REMOVE
                             }
+                            
+                            //Share to social page?
                             
                         }
                         .padding(.vertical,5)

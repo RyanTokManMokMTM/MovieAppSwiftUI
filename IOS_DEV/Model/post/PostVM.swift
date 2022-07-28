@@ -10,10 +10,13 @@ import SwiftUI
 
 
 class PostVM : ObservableObject {
-    @Published var postData : [Post] = []
-    @Published var followingData : [Post] = []
+    @Published var postData : [Post] = [] //set to nil for first time
+    @Published var followingData : [Post] = [] //set to nil for firs time
     @Published var index : TabItem = .Explore
-    @Published var isShowMore : Bool = false
+    @Published var isShowPostDetail : Bool = false
+    @Published var selectedPost : Post?
+//    
+    @Published var isReadComment : Bool = false
     @Published var selectedMoreData : Post? = nil
     
     @Published var isLoading : Bool = false
@@ -24,9 +27,10 @@ class PostVM : ObservableObject {
     
     @Published var isGetFollowPostLoading : Bool = false
     @Published var isGetFollowPostErr : Error?
+    
     init(){
-        self.GetAllUserPost()
-        self.GetFollowUserPost()
+//        self.GetAllUserPost()
+//        self.GetFollowUserPost()
     }
 
     func CreatePost(title : String, desc : String,movie: Movie,user: UserProfile){
@@ -55,7 +59,7 @@ class PostVM : ObservableObject {
     func GetAllUserPost() {
         self.isGetPostLoading = true
         self.isGetPostErr = nil
-        
+        self.postData = []
         APIService.shared.GetAllUserPost(){result in
             DispatchQueue.main.async {
                 self.isGetPostLoading = false
@@ -66,7 +70,7 @@ class PostVM : ObservableObject {
                         info.comments = [] //we will fetch the data when user press the comment
                         self.postData.append(info)
                     }
-                    
+//                    self.postData = data.post_info //not fetching!
                 case .failure(let err):
 //                    print("POST DATA")
 //                    print(err.localizedDescription)
@@ -79,7 +83,7 @@ class PostVM : ObservableObject {
     func GetFollowUserPost() {
         self.isGetFollowPostLoading = true
         self.isGetFollowPostErr = nil
-        
+        self.followingData = []
         APIService.shared.GetFollowUserPost(){result in
             DispatchQueue.main.async {
                 self.isGetFollowPostLoading = false
@@ -90,7 +94,7 @@ class PostVM : ObservableObject {
                         info.comments = [] //we will fetch the data when user press the comment
                         self.followingData.append(info)
                     }
-                    
+//                    self.followingData = data.post_info
                 case .failure(let err):
 //                    print("POST DATA")
 //                    print(err.localizedDescription)

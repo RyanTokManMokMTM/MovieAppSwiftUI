@@ -40,35 +40,68 @@ var GenreRefsAll : [GenreTypeRef] = [
     GenreTypeRef(id : 10770,ref_path : "/vVuJmsydZzkS2aW1VTc3kwTdpxq.jpg",genre_name:"電視電影",genre_type: .TvMovie ),
     GenreTypeRef(id : 53,ref_path : "/5aiWjszOlAqE7Wo5KFCfs20bQeh.jpg",genre_name:"戰爭",genre_type: .War ),
     GenreTypeRef(id : 37,ref_path : "/g52uwPys1BOj3LiB8LBA7AkSu0v.jpg",genre_name:"西部",genre_type: .Western ),
-    
 ]
+
+struct MovieList : Identifiable {
+    let id : String = UUID().uuidString
+    let title : String
+    let list_end_point : MovieListEndpoint
+}
+
+var MovieLists : [MovieList] = [
+    MovieList(title: "熱映中", list_end_point: .nowPlaying),
+    MovieList(title: "即將推出", list_end_point: .upcoming),
+    MovieList(title: "評分最高", list_end_point: .topRated),
+    MovieList(title: "最受歡迎", list_end_point: .popular),
+    MovieList(title: "熱門", list_end_point: .trending)
+]
+
+class SearchMovieVM : ObservableObject {
+    @Published var query : String = "" {
+        didSet{
+//            SearchingMovie()
+        }
+    }
+    @Published var queryResult : [Movie] = []
+    @Published var error : Error?
+    @Published var isSearching : Bool = false
+    init(){
+    }
+    
+    func SearchingMovie(){
+        if query.isEmpty { return }
+        
+        self.isSearching = true
+        self.error = nil
+        MovieStore.shared.searchMovieInfo(query: self.query){ result in
+            switch result{
+            case.success(let data):
+                self.queryResult.removeAll()
+                self.queryResult = data.results
+//                print(data)
+            case .failure(let err):
+                print(err.localizedDescription)
+                self.error = err
+            }
+        }
+    }
+}
 
 struct MovieListView: View {
     //Manager this in a class
     @EnvironmentObject var userVM : UserViewModel
     @StateObject var TrailerModel = TrailerVideoVM()
-    
-    @StateObject  var nowPlayingState = MovieListState(endpoint: .nowPlaying)
-    @StateObject  var upcomingState = MovieListState(endpoint: .upcoming)
-    @StateObject  var topRatedState = MovieListState(endpoint: .topRated)
-    @StateObject  var popularState = MovieListState(endpoint: .popular)
-    @StateObject  var trendingState = MovieListState(endpoint: .trending)
-    
-//    @StateObject var actionVM = GenreTypeState(genreType: .Action)
-//    @StateObject var animationVM = GenreTypeState(genreType: .Animation)
-//    @StateObject var adventureVM = GenreTypeState(genreType: .Adventure)
-//    @StateObject var comedyVM = GenreTypeState(genreType: .Comedy)
-//    @StateObject var crimeVM = GenreTypeState(genreType: .Crime)
+
     
     @Binding var showHomePage:Bool
-    @Binding var isLogOut : Bool
     @Binding var mainPageHeight : CGFloat
     @State private var isCardSelected : Bool = false
     @State private var index : Int = 0
+
+    @State private var showMovieDetail : Bool = false
     var body: some View {
-        ScrollView(.vertical){
+        ScrollView(.vertical,showsIndicators: false){
             VStack(alignment:.leading){
-                
                 TabView(selection: $index){
                     
                     ForEach(GenreRefsAll) { ref in
@@ -76,7 +109,6 @@ struct MovieListView: View {
                             let minX = proxy.frame(in: .global).minX
                             MovieGenreCardSelectionView(isCardSelectedMovie: $isCardSelected, genreRef: ref)
                                 .frame(width: proxy.frame(in: .global).width)
-//                                .animation(.easeInOut)
                                 .rotation3DEffect(.degrees(minX / -10), axis: (x:0,y:1,z:0))
                                 .padding(.vertical)
                                 .onTapGesture{
@@ -88,181 +120,50 @@ struct MovieListView: View {
                         }
                     }
                 }
-//                .animation(.easeInOut)
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                 .frame(height: 430)
                 
-                
-                
                 MoviesStateList()
             }
-
+            
         }
-        .navigationBarBackButtonHidden(true)
-        .navigationBarTitleDisplayMode(.large)
-        .navigationBarTitle("為您推薦")
-        .navigationTitle("為您推薦")
-//        List{
-//            HStack(alignment: .center, spacing: 30) {
-//                ForEach(0..<GenreRefsAll.count) { i in
-//
-//                    ZStack(alignment:.bottomLeading){
-//                        WebImage(url: GenreRefsAll[i].ref_path_URL)
-//                            .resizable()
-//                            .aspectRatio(contentMode: .fit)
-//                            .frame(width: 250)
-//                            .cornerRadius(10)
-//                            .scaleEffect(self.index == i ? 1.1 : 0.8)
-//                            .overlay(
-//                                LinearGradient(colors: [
-//                                    Color("PersonCellColor").opacity(0.3),
-//                                    Color("PersonCellColor").opacity(0.6),
-//                                    Color("PersonCellColor").opacity(0.8),
-//                                ], startPoint: .center, endPoint: .bottom)
-//                                    .cornerRadius(10)
-//                                    .scaleEffect(self.index == i ? 1.1 : 0.8)
-//                            )
-//
-//
-//                        HStack (alignment:.bottom){
-//                            VStack(alignment:.leading){
-//                                Text("電影類別")
-//                                    .font(.system(size:18))
-//                                Text("**\(GenreRefsAll[i].genre_name)**")
-//                                    .font(.system(size:16))
-//                            }
-//
-//                            Spacer()
-//
-//                            Text("點擊進入")
-//                                .font(.system(size:14))
-//                        }
-//
-//                        .opacity(self.index == i ? 1 : 0)
-//
-//                    }
-//
-//                }
-//            }.modifier(ScrollingHStackModifier(index:$index,items: GenreRefsAll.count, itemWidth: 250, itemSpacing: 30))
-//
-////            .frame(height:300)
-//
-//            MoviesStateList()
-//        }
-//        .listStyle(PlainListStyle())
-//        HStack(alignment: .center, spacing: 30) {
-//            ForEach(0..<GenreRefsAll.count) { i in
-//
-//                ZStack(alignment:.bottomLeading){
-//                    WebImage(url: GenreRefsAll[i].ref_path_URL)
-//                        .resizable()
-//                        .aspectRatio(contentMode: .fit)
-//                        .frame(width: 250)
-//                        .cornerRadius(10)
-//                        .scaleEffect(self.index == i ? 1.1 : 0.8)
-//                        .overlay(
-//                            LinearGradient(colors: [
-//                                Color("PersonCellColor").opacity(0.3),
-//                                Color("PersonCellColor").opacity(0.6),
-//                                Color("PersonCellColor").opacity(0.8),
-//                            ], startPoint: .center, endPoint: .bottom)
-//                                .cornerRadius(10)
-//                                .scaleEffect(self.index == i ? 1.1 : 0.8)
-//                        )
-//
-//
-//                    HStack (alignment:.bottom){
-//                        VStack(alignment:.leading){
-//                            Text("電影類別")
-//                                .font(.system(size:18))
-//                            Text("**\(GenreRefsAll[i].genre_name)**")
-//                                .font(.system(size:16))
-//                        }
-//
-//                        Spacer()
-//
-//                        Text("點擊進入")
-//                            .font(.system(size:14))
-//                    }
-//
-//                    .opacity(self.index == i ? 1 : 0)
-//
-//                }
-//
-//            }
-//        }.modifier(ScrollingHStackModifier(index:$index,items: GenreRefsAll.count, itemWidth: 250, itemSpacing: 30))
-//        .navigationBarBackButtonHidden(true)
-//        .navigationBarTitleDisplayMode(.large)
-//        .navigationBarTitle("Movies")
-//        .toolbar{
-//            ToolbarItemGroup(placement:.navigationBarTrailing){
-//            Image(systemName: "exclamationmark.bubble")
-//                .resizable()
-//                .frame(width: 20, height: 20, alignment: /*@START_MENU_TOKEN@*/.center/*@END_MENU_TOKEN@*/)
-//            }
-//        }//toolbar
     }
-    
-//    func getTime() -> String{
-//        let hour = Calendar.current.component(.hour, from: Date())
-//
-//        switch hour{
-//        case 6..<12:
-//            return "早上好!"
-//        case 12:
-//            return "中午好!"
-//        case 13..<17:
-//            return "下午好!"
-//        case 17..<22:
-//            return "傍晚好!"
-//        default:
-//            return "晚上好!"
-//        }
-//
-//    }
     
     @ViewBuilder
     func MoviesStateList() -> some View {
-
-            
-            MovieStateView(Title: "Now Playing")
-                .environmentObject(nowPlayingState)
-//                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 16, trailing: 0))
-            
-            MovieStateView(Title: "Upcoming")
-                .environmentObject(upcomingState)
-//                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 16, trailing: 0))
-            
-           
-            MovieStateView(Title: "Top Rated")
-                .environmentObject(topRatedState)
-//                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 16, trailing: 0))
-            
-            MovieStateView(Title: "Popular")
-                .environmentObject(popularState)
-//                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 16, trailing: 0))
         
-            MovieStateView(Title:"Trending")
-                .environmentObject(trendingState)
-//                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 16, trailing: 0))
-        
+        VStack{
+            ForEach(MovieLists){ listInfo in
+                MovieStateView(info: listInfo)
+                    .padding(.vertical,8)
+            }
+        }
     }
 }
 
 struct MovieStateView : View{
-    @EnvironmentObject var State : MovieListState
-    var Title : String
+    //    @EnvironmentObject var State : MovieListState
+    @StateObject var State = MovieListState()
+    var info : MovieList
     var body : some View {
-        if State.movies != nil {
-            MoviePosterCarousel(title: Title, movies: State.movies!)
-                .padding(.bottom)
-            
-        } else {
-            LoadingView(isLoading: self.State.isLoading, error: self.State.error) {
-                self.State.loadMovies()
+        VStack{
+            if State.movies != nil {
+                MoviePosterCarousel(title: info.title)
+                    .environmentObject(State)
+//                    .padding(.bottom)
+                
+            } else {
+                LoadingView(isLoading: self.State.isLoading, error: self.State.error) {
+                    //                self.State.loadMovies()
+                    self.State.loadMovies(endpoint: info.list_end_point)
+                }
             }
         }
+        .onAppear{
+            self.State.loadMovies(endpoint: info.list_end_point)
+        }
     }
+
 }
 
 struct MovieGenreStateView : View{

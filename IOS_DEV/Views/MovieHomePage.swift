@@ -282,11 +282,15 @@ let favoriteController = FavoriteController()
 //}
 //
 
+
 struct MovieHomePage: View {
     @StateObject var previewModel = PreviewModel()
     @StateObject var StateManager  = SeachingViewStateManager()
     @StateObject var DragAndDropPreview = DragSearchModel()
-
+    @StateObject var postVM = PostVM()
+    @ObservedObject  var userController = UserController() //Image Update
+    @StateObject var SearchVM = SearchMovieVM()
+    
     @Binding var isLogOut : Bool
     @State var index : Int
     @State private var GroupSelect : Bool = false
@@ -295,133 +299,178 @@ struct MovieHomePage: View {
     @State private var orientation = UIDeviceOrientation.unknown
     @State private var isHiddenNav : Bool = false
     @State private var mainPageHeight : CGFloat = 0
-    @State private var tabIndex : Int = 0;
-    
-    
-    @ObservedObject private var userController = UserController() //Image Update
-    
+    @State private var tabIndex : Int = 1;
+
+    @Namespace var namespace
     var body: some View {
-        ZStack(alignment:.top){
-            VStack(spacing:0){
-                GeometryReader{geo in
-                    TabView{
-                        TrailerMainPage(showHomePage: $showHomePage, isLogOut: $isLogOut, mainPageHeight: $mainPageHeight)
-                            .tabItem{
         
-                                    VStack(alignment:.center,spacing:10){
-                                        Image(systemName:"film")
-                                        Text("Movie")
-                                            .frame(width: 50)
-                                            .font(.caption)
+        NavigationView{
+            ZStack(alignment:.top){
+                VStack(spacing:0){
+                    GeometryReader{ geo in
+                        TabView(selection: $tabIndex ){
+                            Text("????")
+                                .navigationBarHidden(false)
+                                .navigationBarTitle("為您推薦")
+                                .navigationTitle("為您推薦")
+                                .tabItem{
+                                        VStack(alignment:.center,spacing:10){
+                                            Image(systemName:"film")
+                                            Text("電影")
+                                                .frame(width: 50)
+                                                .font(.caption)
+                                        }
+                                        .foregroundColor(.white)
+                                    
+                                }.tag(1)
+
+                            
+      
+                            ScrollView(.vertical){
+                                VStack{
+                                    ForEach(0..<100){i in
+                                        Text("\(i)")
                                     }
-                                    .foregroundColor(.white)
-                                
+                                }
                             }
-  
-                        SoicalView()
-                            .tabItem{
-                                    VStack(alignment:.center,spacing:10){
-                                        Image(systemName:"network")
-                                        Text("News")
-                                            .frame(width: 50)
-                                            .font(.caption)
-                                    }
-                                    .foregroundColor(.white)
-                                
-                            }
-                        
-                       Text("Search")
-                            .tabItem{
-                                    VStack(alignment:.center,spacing:10){
-                                        Image(systemName:"magnifyingglass")
-                                        Text("Search")
-                                            .frame(width: 50)
-                                            .font(.caption)
-                                    }
-                                
-                            }
-               
-                        mainPersonView()
-                            .tabItem{
-                                    VStack(alignment:.center,spacing:10){
-                                        Image(systemName:"person")
-                                            .font(.body)
-                                        Text("Profile")
-                                            .frame(width: 50)
-                                            .font(.caption)
-                                    }
-                                    .foregroundColor(.white)
-                                
-                            }
-                    }
-                    .accentColor(.white)
-//                    .onAppear(){
-//                        self.mainPageHeight = geo.frame(in: .global).height
-//                    }
-                
+                            .navigationBarHidden(true)
+                            .navigationBarTitle( "")
+                            .navigationTitle("")
+                                .tabItem{
+                                        VStack(alignment:.center,spacing:10){
+                                            Image(systemName:"network")
+                                            Text("文章")
+                                                .frame(width: 50)
+                                                .font(.caption)
+                                        }
+                                        .foregroundColor(.white)
+                                    
+                                }.tag(2)
+
+
+
+                           MessageView()
+                                .tabItem{
+                                        VStack(alignment:.center,spacing:10){
+                                            Image(systemName:"paperplane.fill")
+                                            Text("訊息")
+                                                .frame(width: 50)
+                                                .font(.caption)
+                                        }
+                                    
+                                }.tag(3)
+
+                   
+                            PersonProfileView(namespace:namespace)
+                                .tabItem{
+                                        VStack(alignment:.center,spacing:10){
+                                            Image(systemName:"person")
+                                                .font(.body)
+                                            Text("我")
+                                                .frame(width: 50)
+                                                .font(.caption)
+                                        }
+                                        .foregroundColor(.white)
+                                    
+                                }.tag(4)
+
+                        }
+                        .accentColor(.white)
+//                        .navigationBarTitleDisplayMode(.large)
+//                        .toolbar{
+//                            ToolbarItemGroup(placement:.navigationBarTrailing){
+//                                Image(systemName: "exclamationmark.bubble")
+//                                    .resizable()
+//                                    .frame(width: 20, height: 20, alignment: /*@START_MENU_TOKEN@*/.center/*@END_MENU_TOKEN@*/)
+//                            }
+//                        }//toolbar
+    //                    .onAppear(){
+    //                        self.mainPageHeight = geo.frame(in: .global).height
+    //                    }
                     
-//                    ZStack(alignment:.top){
-//                        TrailerMainPage(showHomePage: $showHomePage, isLogOut: $isLogOut, mainPageHeight: $mainPageHeight)
-//                            .opacity(self.index == 0 ? 1 : 0)
-//
-////                        CardScrollingView()
-////                            .opacity((self.index == 1 && GroupSelect == true) ? 1 : 0)
-//                        ListView(lists: controller.listData)
-//                            .opacity((self.index == 1 && GroupSelect == true) ? 1 : 0)
-////
-//
-////                        DragAndDropMainView()
-////                            .opacity(self.index == 1 ? 1 : 0)
-////
-//                        MessageView()
-//                            .opacity(self.index == 2 ? 1 : 0)
-////
-////
-//                        mainPersonView()
-//                            .opacity(self.index == 3 ? 1 : 0)
-////                        ProfileView(MovieData:favoriteController.MovieData, ArticleData: favoriteController.ArticleData)
-////                            .opacity(self.index == 3 ? 1 : 0)
-//                        //
-//                    }.onAppear(){
-//                        self.mainPageHeight = geo.frame(in: .global).height
+                        
+    //                    ZStack(alignment:.top){
+    //                        TrailerMainPage(showHomePage: $showHomePage, isLogOut: $isLogOut, mainPageHeight: $mainPageHeight)
+    //                            .opacity(self.index == 0 ? 1 : 0)
+    //
+    ////                        CardScrollingView()
+    ////                            .opacity((self.index == 1 && GroupSelect == true) ? 1 : 0)
+    //                        ListView(lists: controller.listData)
+    //                            .opacity((self.index == 1 && GroupSelect == true) ? 1 : 0)
+    ////
+    //
+    ////                        DragAndDropMainView()
+    ////                            .opacity(self.index == 1 ? 1 : 0)
+    ////
+    //                        MessageView()
+    //                            .opacity(self.index == 2 ? 1 : 0)
+    ////
+    ////
+    //                        mainPersonView()
+    //                            .opacity(self.index == 3 ? 1 : 0)
+    ////                        ProfileView(MovieData:favoriteController.MovieData, ArticleData: favoriteController.ArticleData)
+    ////                            .opacity(self.index == 3 ? 1 : 0)
+    //                        //
+    //                    }.onAppear(){
+    //                        self.mainPageHeight = geo.frame(in: .global).height
+    //                    }
+                    }
+    //                if !isHiddenNav { //Show this when lock portrait
+    //                    NavItemButton(index: self.$index ,GroupSelect: self.$GroupSelect)
+    //                }
+
+                }
+                  
+                .edgesIgnoringSafeArea(.all)
+                //thse all padding is to adding back the padding of ignoresSafeArea()
+//                //ignoresSafeArea() just for keyboard
+//                .padding(.bottom,UIApplication.shared.windows.first?.safeAreaInsets.bottom)
+//                .padding(.top,UIApplication.shared.windows.first?.safeAreaInsets.top)
+//                .padding(.leading,UIApplication.shared.windows.first?.safeAreaInsets.left)
+//                .padding(.trailing,UIApplication.shared.windows.first?.safeAreaInsets.right)
+                .environmentObject(previewModel)
+                .environmentObject(StateManager) //here due to bottomSheet need to use to update some state
+                .environmentObject(DragAndDropPreview) //here due to bottomSheet need to use to update some state
+                .environmentObject(postVM)
+                .ignoresSafeArea()
+
+                
+//                BottomSheet()
+//                    .animation(.spring())
+//                if self.postVM.isShowMore
+                if self.postVM.isShowPostDetail && self.postVM.selectedPost != nil {
+                    PostDetailView(namespace: namespace)
+                        .zIndex(1)
+                        .environmentObject(postVM)
+                }
+
+            }
+            .navigationViewStyle(StackNavigationViewStyle())
+//            .onRotate { newOrientation in
+//                if Appdelegate.orientationLock == .landscape {
+//                    withAnimation(){
+//                        self.isHiddenNav = true
 //                    }
-                }
-//                if !isHiddenNav { //Show this when lock portrait
-//                    NavItemButton(index: self.$index ,GroupSelect: self.$GroupSelect)
+//                }else{
+//                    withAnimation(){
+//                        self.isHiddenNav = false
+//                    }
 //                }
-
-            }
-              
-            .edgesIgnoringSafeArea(.all)
-            //thse all padding is to adding back the padding of ignoresSafeArea()
-            //ignoresSafeArea() just for keyboard
-            .padding(.bottom,UIApplication.shared.windows.first?.safeAreaInsets.bottom)
-            .padding(.top,UIApplication.shared.windows.first?.safeAreaInsets.top)
-            .padding(.leading,UIApplication.shared.windows.first?.safeAreaInsets.left)
-            .padding(.trailing,UIApplication.shared.windows.first?.safeAreaInsets.right)
+//
+//                orientation = newOrientation
+//            }
+    //        .environmentObject(menuState)
+//            .environmentObject(previewModel)
+//            .environmentObject(StateManager) //here due to bottomSheet need to use to update some state
+//            .environmentObject(DragAndDropPreview) //here due to bottomSheet need to use to update some state
+//            .ignoresSafeArea()
+//            .navigationBarTitle("")
+//            .navigationBarHidden(true)
+//            .navigationTitle("")
+//            .navigationBarBackButtonHidden(true)
             
-            BottomSheet()
-                .animation(.spring())
+        }
 
-        }
-        .onRotate { newOrientation in
-            if Appdelegate.orientationLock == .landscape {
-                withAnimation(){
-                    self.isHiddenNav = true
-                }
-            }else{
-                withAnimation(){
-                    self.isHiddenNav = false
-                }
-            }
-            
-            orientation = newOrientation
-        }
-//        .environmentObject(menuState)
-        .environmentObject(previewModel)
-        .environmentObject(StateManager) //here due to bottomSheet need to use to update some state
-        .environmentObject(DragAndDropPreview) //here due to bottomSheet need to use to update some state
-        .ignoresSafeArea()
 
     }
 }
