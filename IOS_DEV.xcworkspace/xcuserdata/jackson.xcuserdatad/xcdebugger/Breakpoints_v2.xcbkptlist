@@ -23,17 +23,17 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "B9FF42C7-210D-4535-95F7-43BC9B8D8F7C"
+            uuid = "A67A7A7E-9038-4944-AD51-0721E39E7B3A"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "IOS_DEV/Views/MovieHomePage.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "285"
-            endingLineNumber = "285"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            filePath = "IOS_DEV/Views/ProfilePage/personProfile.swift"
+            startingColumnNumber = "13"
+            endingColumnNumber = "13"
+            startingLineNumber = "1119"
+            endingLineNumber = "1119"
+            landmarkName = "body"
+            landmarkType = "24">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

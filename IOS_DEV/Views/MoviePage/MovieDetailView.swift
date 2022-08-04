@@ -9,26 +9,40 @@ import SwiftUI
 import SDWebImageSwiftUI
 
 
+
+    
 struct MovieDetailView: View {
 
     let movieId: Int
     @StateObject private var movieDetailState = MovieDetailState()
     @StateObject private var movieImagesState = MovieImagesState()
     @Binding var isShowDetail : Bool
-
+    @State private var isShowCustomList = false
+    
+    
+    @EnvironmentObject var userVM : UserViewModel
     var body: some View {
-        ZStack {
-
-            LoadingView(isLoading: self.movieDetailState.isLoading, error: self.movieDetailState.error) {
-                self.movieDetailState.loadMovie(id: self.movieId)
-            }
-            
+        VStack {
             if movieDetailState.movie != nil && self.movieImagesState.movieImage != nil{
                 GeometryReader{ proxy in
-                    NewDetailView(movie: self.movieDetailState.movie!,movieImages: self.movieImagesState.movieImage!,isShow: $isShowDetail ,topEdge: proxy.safeAreaInsets.top)
+                    NewDetailView(movie: self.movieDetailState.movie!,movieImages: self.movieImagesState.movieImage!,isShow: $isShowDetail ,topEdge: proxy.safeAreaInsets.top, isShowCustomList: $isShowCustomList)
                         .ignoresSafeArea(.all, edges: .top)
                 }
+                
+            }else {
+                
+                LoadingView(isLoading: self.movieDetailState.isLoading, error: self.movieDetailState.error) {
+                    self.movieDetailState.loadMovie(id: self.movieId)
+                }
+                
             }
+        }
+        .halfSheet(showShate: self.$isShowCustomList){
+            UserListView(isShowCustomList: $isShowCustomList)
+                .environmentObject(userVM)
+        } onEnded:{
+            self.isShowCustomList = false
+            
         }
         .navigationBarTitle("")
         .navigationBarHidden(true)
@@ -36,9 +50,106 @@ struct MovieDetailView: View {
         .navigationBarBackButtonHidden(true)
         .onAppear {
             //TODO : Ignore it now......
-            print(movieId)
+//            print(movieId)
             self.movieDetailState.loadMovie(id: self.movieId)
             self.movieImagesState.loadMovieImage(id: self.movieId)
+        }
+        
+    }
+}
+
+struct UserListView : View {
+    @EnvironmentObject var userVM : UserViewModel
+    @Binding var isShowCustomList : Bool
+    var body: some View {
+        VStack(spacing:0){
+            Text("加入專輯")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(Color(uiColor: UIColor.lightText))
+                .overlay(
+                    HStack{
+                        Spacer()
+                        Button(action: {
+                            withAnimation{
+                                self.isShowCustomList = false
+                            }
+                        }){
+                            Image(systemName: "xmark")
+                                .imageScale(.large)
+                                .foregroundColor(.white)
+                        }
+                    }
+                        .padding(.horizontal,10)
+                        .frame(width: UIScreen.main.bounds.width)
+                )
+                .padding(.vertical,8)
+                .padding(5)
+//                Divider()
+            VStack(spacing:0){
+                if userVM.IsListLoading || userVM.ListError != nil {
+                    HStack{
+                        LoadingView(isLoading: userVM.IsListLoading, error: userVM.ListError as NSError?){
+                            //TODO: Fetch again
+                        }
+                    }.frame(maxHeight:.infinity,alignment: .top)
+                    
+                } else if userVM.profile!.UserCustomList != nil {
+                    if userVM.profile!.UserCustomList!.isEmpty {
+                        HStack{
+                            Text("Haven't create an list yet!")
+                                .font(.system(size:14))
+                        }.frame(maxHeight:.infinity,alignment: .top)
+                    }else {
+                        List(userVM.profile!.UserCustomList!,id:\.id){  listInfo  in
+                            Button(action:{
+                                //TODO: ADD TO THE LIST
+                                print("Add to list")
+                            }){
+                                HStack{
+                                    if listInfo.movie_list != nil {
+                                        WebImage(url: listInfo.movie_list![0].posterURL)
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: 35)
+                                            .cornerRadius(8)
+                                    }else {
+                                        Rectangle()
+                                            .fill(Color("DarkMode2"))
+                                            .frame(width: 35,height:35 * 1.5)
+                                            .cornerRadius(8)
+                                        
+                                    }
+                                    
+                                    Text(listInfo.title)
+                                        .font(.system(size:14,weight:.semibold))
+                                        .foregroundColor(.white)
+                                        .lineLimit(1)
+                                    
+                                    Spacer()
+                                }
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        .listStyle(.plain)
+                    }
+                }
+                else {
+                    HStack{
+                        Text("???")
+                    }
+                }
+            }
+            .frame(maxHeight:.infinity,alignment: .top)
+            
+           
+            Divider()
+            HStack{
+                Text("新增專輯")
+                    .font(.system(size:16,weight:.semibold))
+//                        .padding(.bottom)
+            }
+            .padding()
         }
     }
 }
@@ -162,12 +273,15 @@ struct MovieDetailView: View {
 
 enum MovieDetailTabItem : String,CaseIterable {
     case More = "更多資訊"
-    case OnShow = "院線" // new feature
+//    case OnShow = "院線" // new feature
     case Online = "OTT資源" //get netfilx ... etc
     case Similar = "相似電影"
 }
 
 struct NewDetailView: View {
+    @EnvironmentObject var postVM : PostVM
+    @EnvironmentObject var userVM : UserViewModel
+    
     var movie: Movie
     let movieImages: MovieImages
     @Binding var isShow : Bool
@@ -177,16 +291,26 @@ struct NewDetailView: View {
     @State private var isShowIcon : Bool = false
     @State private var tabIndex : MovieDetailTabItem = .More
     @State private var topOffset : CGFloat = 0
+    
+    @State private var isAddPost : Bool = false
+    @State private var isShowMore : Bool = false
+    
+    @State private var testLike : Bool = false // Need to remove after implement the like function
+    
+    @Binding  var isShowCustomList : Bool
     @Namespace var namespace
     
+    @Environment(\.dismiss) private var dissmiss
     var body: some View {
         ZStack(alignment:.top){
             ZStack{
                 HStack{
                     Button(action:{
-                        withAnimation{
-                            self.isShow.toggle()
-                        }
+                        print("is active again??")
+//                        withAnimation{
+//                            self.isShow = false
+//                        }
+                        dissmiss()
                     }){
                         Image(systemName: "chevron.left")
                             .foregroundColor(.white)
@@ -237,6 +361,8 @@ struct NewDetailView: View {
                 }
             )
             
+            
+            
             GeometryReader { proxy in
                 ScrollView(showsIndicators: false){
                     LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]){
@@ -254,6 +380,7 @@ struct NewDetailView: View {
                                             Color("PersonCellColor"),
                                             Color.black
                                         ], startPoint: .top, endPoint: .bottom).frame(width: UIScreen.main.bounds.width, height: offset > 0 ? offset + max + 20 : getHeaderHigth() + 20, alignment: .bottom)
+                                            .blur(radius: self.offset / 10)
                                     )
                                     .blur(radius: self.offset / 10)
                                     .zIndex(0)
@@ -272,15 +399,26 @@ struct NewDetailView: View {
                         
                         HStack{
                             
-                            BackgroundButton(systemImg: "plus", buttonTitle: "加入討論區", backgroundColor: .blue, fontColor: .white){
+                            BackgroundButton(systemImg: "plus", buttonTitle: "發表文章", backgroundColor: .blue, fontColor: .white){
                                 //TODO: JOIN THE GROUP
+                                withAnimation{
+                                    self.isAddPost.toggle()
+                                }
                             }
                             Spacer()
-                            circleButton(systemImg: "bookmark.fill", imageScale: .medium,background: .yellow , buttonColor: .white,width:40,height:40){
+                            circleButton(systemImg: "star.fill", imageScale: .medium,background: .yellow , buttonColor: .white,width:40,height:40){
                                 //TODO: ADD TO LIST OF REMOVE
+//                                withAnimation{
+
+                                    userVM.getUserList()
+                                    self.isShowCustomList = true
+//                                }
                             }
-                            circleButton(systemImg: "heart.fill",imageScale: .medium, background: .red , buttonColor: .white,width:40,height:40){
+                            circleButton(systemImg: "heart.fill",imageScale: .medium, background: self.testLike ? .white : .red , buttonColor: self.testLike ? .red : .white,width:40,height:40){
                                 //TODO: ADD TO LIST OF REMOVE
+                                withAnimation{
+                                    self.testLike.toggle()
+                                }
                             }
                             
                             //Share to social page?
@@ -288,6 +426,19 @@ struct NewDetailView: View {
                         }
                         .padding(.vertical,5)
                         .padding(.horizontal,5)
+                        .background(
+                            NavigationLink(destination:
+                                            AddPostView(selectedMovie: self.movie, isSelectedMovie: self.$isAddPost, isAddPost: self.$isAddPost)
+                                            .navigationBarTitle("")
+                                            .navigationTitle("")
+                                            .navigationBarHidden(true)
+                                            .environmentObject(postVM)
+                                            .environmentObject(userVM),
+                                           isActive: self.$isAddPost){
+                                               EmptyView()
+                                           }
+                            
+                        )
                         
                         //SrcollTabBar
                         /*
@@ -300,10 +451,10 @@ struct NewDetailView: View {
                             case .More:
                                 MoreDetail()
 
-                            case .OnShow:
-                                VStack{
-                                    Text("SERVICE NOT AVAILABLE YET...")
-                                }
+//                            case .OnShow:
+//                                VStack{
+//                                    Text("SERVICE NOT AVAILABLE YET...")
+//                                }
                             case .Online:
                                 MovieOTT(movieTitle: movie.title)
                             case .Similar:
@@ -334,6 +485,7 @@ struct NewDetailView: View {
                 .zIndex(0)
 //                .background(Color("appleDark"))
             }
+            
         }
     }
     
@@ -362,7 +514,7 @@ struct NewDetailView: View {
                         .multilineTextAlignment(.leading)
                     
                     VStack(spacing:5){
-                        HStack{
+                        HStack(spacing:5){
                             Text("類型:")
                                 .foregroundColor(.gray)
                             Spacer()
@@ -370,14 +522,32 @@ struct NewDetailView: View {
                             if movie.genres == nil{
                                 Text("N/A")
                             }else {
-                                ForEach(0..<movie.genres!.count){i in
-                                    Text(movie.genres![i].name)
-                                    if i < movie.genres!.count - 1 {
-                                        Circle()
-                                            .fill(.red)
-                                            .frame(width: 5, height: 5)
+                                VStack(alignment:.trailing,spacing:5){
+                                    HStack(spacing:5){
+                                        ForEach(0..<(movie.genres!.count < 3 ? movie.genres!.count : 3)){i in
+                                            Text(movie.genres![i].name)
+                                            if i < ((movie.genres!.count < 3 ? movie.genres!.count : 3) - 1){
+                                                Circle()
+                                                    .fill(.red)
+                                                    .frame(width: 5, height: 5)
+                                            }
+                                        }
+                                    }
+                                    
+                                    if movie.genres!.count > 3 {
+                                        HStack(spacing:5){
+                                            ForEach(3..<movie.genres!.count){i in
+                                                Text(movie.genres![i].name)
+                                                if i < movie.genres!.count - 1 {
+                                                    Circle()
+                                                        .fill(.red)
+                                                        .frame(width: 5, height: 5)
+                                                }
+                                            }
+                                        }
                                     }
                                 }
+
                             }
                         }
                         .font(.system(size: 14))
@@ -451,11 +621,35 @@ struct NewDetailView: View {
         VStack(alignment:.leading,spacing:25){
             //More Detail
             VStack(alignment:.leading,spacing:10){
-                Text("概況")
+                Text("簡介")
                     .font(.system(size: 16,weight: .semibold))
-                Text(movie.overview)
-                    .foregroundColor(.gray)
-                    .font(.system(size: 14))
+                
+                //Need to be expand the test
+                
+                if movie.overview.isEmpty {
+                    Text("抱歉,沒有相關電影簡介")
+                        .foregroundColor(.gray)
+                        .font(.system(size: 14))
+                       
+                }else {
+                    Button(action:{
+                        withAnimation{
+                            self.isShowMore.toggle()
+                        }
+                    }){
+                        VStack(alignment:.leading,spacing:10){
+                            Text(movie.overview)
+                                .foregroundColor(.gray)
+                                .font(.system(size: 14))
+                                .lineLimit(self.isShowMore ? nil : 3)
+                            
+                            Text(self.isShowMore ? "顯示更少" : "顯示更多")
+                                .foregroundColor(Color(uiColor: UIColor.white))
+                                .font(.system(size: 12))
+                        }
+                    }
+                }
+
             }
             
             
@@ -501,7 +695,7 @@ struct NewDetailView: View {
                                             .frame(width:120)
                                             .lineLimit(1)
                                     }
-                                    
+       
                                 }
                             }
                         }
@@ -572,19 +766,19 @@ struct NewDetailView: View {
                     Text("劇情")
                         .font(.system(size: 16,weight: .semibold))
                     Spacer()
-                    Button(action:{
-                        
-                    }){
-                        Text("顯示更多")
-                            .font(.system(size: 14,weight: .semibold))
-                            .foregroundColor(Color(uiColor: UIColor.darkGray))
-                    }
+//                    Button(action:{
+//
+//                    }){
+//                        Text("顯示更多")
+//                            .font(.system(size: 14,weight: .semibold))
+//                            .foregroundColor(Color(uiColor: UIColor.darkGray))
+//                    }
                 }
 
                 
                 ScrollView(.horizontal, showsIndicators: false){
                     LazyHStack(){
-                        ForEach(0..<(self.movieImages.backdrops.count < 10 ? self.movieImages.backdrops.count : 10)){ i in
+                        ForEach(0..<(self.movieImages.backdrops.count < 20 ? self.movieImages.backdrops.count : 20)){ i in
                             WebImage(url: self.movieImages.backdrops[i].MovieImageURL)
                                 .resizable()
                                 .indicator(.activity) // Activity Indicator
@@ -605,47 +799,26 @@ struct NewDetailView: View {
                         Text("宣傳片")
                             .font(.system(size: 16,weight: .semibold))
                         Spacer()
-                        
-                        if self.movie.videos!.results.count >= 10 {
-                            Button(action:{
-                                //TODO: Load More Video
-                            }){
-                                Text("顯示更多")
-                                    .font(.system(size: 14,weight: .semibold))
-                                    .foregroundColor(Color(uiColor: UIColor.darkGray))
-                            }
-                        }
+//
+//                        if self.movie.videos!.results.count >= 10 {
+//                            Button(action:{
+//                                //TODO: Load More Video
+//                            }){
+//                                Text("顯示更多")
+//                                    .font(.system(size: 14,weight: .semibold))
+//                                    .foregroundColor(Color(uiColor: UIColor.darkGray))
+//                            }
+//                        }
                     }
                     
                     ScrollView(.horizontal, showsIndicators: false){
-                        LazyHStack(spacing:10){
+                        HStack(spacing:10){
                             ForEach(0..<(self.movie.videos!.results.count < 10 ? self.movie.videos!.results.count : 10)) { i in
-                                Button(action:{}){
-                                    ZStack(alignment:.center){
-                                        WebImage(url: self.movie.videos!.results[i].youtubeThumbnailURL)
-                                            .resizable()
-                                            .indicator(.activity) // Activity Indicator
-                                            .transition(.fade(duration: 0.5)) // Fade Transition with duration
-                                            .aspectRatio(contentMode: .fit)
-                                            .cornerRadius(5)
-                                        
-                                        ZStack(alignment:.center){
-                                            Circle()
-                                                .fill(Color.gray.opacity(0.5))
-                                                .frame(width: 50, height: 50)
-                                            
-                                            Image(systemName:"play.fill")
-                                                .imageScale(.large)
-                                                .foregroundColor(.white)
-                                                
-                                        }
-              
-                                            
-                                    }
-                                }
-                                
+                                YoutubeView(video_id: self.movie.videos!.results[i].key)
+                                    .frame(width:UIScreen.main.bounds.width - 20,height:UIScreen.main.bounds.height * 0.3)
+                                    .cornerRadius(10)
+//                                    .padding(.horizontal)
                             }
-                            .padding(.horizontal,5)
                         }
                     }
                 }

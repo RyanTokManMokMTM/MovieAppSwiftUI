@@ -10,11 +10,13 @@ import Foundation
 /// RESQUEST
 struct CreateNewCustomListReq : Encodable{
     let title : String
+    let intro : String
 }
 
 struct UpdateCustomListReq : Encodable {
     let id : Int
     let title : String
+    let intro : String
 }
 
 struct DeleteCustomListReq : Encodable {
@@ -26,7 +28,8 @@ struct DeleteCustomListReq : Encodable {
 /// RESPONSE
 struct CreateNewCustomListResp : Decodable {
     let id : Int
-    var title: String
+    let title: String
+    let intro : String
 }
 
 
@@ -42,10 +45,16 @@ struct UserListResp : Decodable {
 struct CustomListInfo : Identifiable,Decodable {
     let id : Int
     var title: String
+    var intro : String
     var movie_list: [MovieInfo]?// need to change
+    
+    var introStr : String {
+        return intro.isEmpty ? "作者沒有設定專輯簡介喲~" : intro
+    }
 }
 
-struct MovieInfo : Decodable,Identifiable {
+struct MovieInfo : Decodable,Identifiable,Hashable {
+    
     let id : Int
     let poster : String
     let title : String

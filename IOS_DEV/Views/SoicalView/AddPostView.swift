@@ -16,6 +16,7 @@ struct AddPostView: View {
     @State private var title : String = ""
     @State private var desc : String = ""
     @FocusState private var isEditDesc : Bool
+    
     var body: some View {
             ZStack(alignment:.top){
                 VStack(spacing:0){
@@ -35,13 +36,15 @@ struct AddPostView: View {
 
 struct AddPostViewBar : View{
     @Binding var isAddPost : Bool
+    @Environment(\.dismiss) private var dissmiss
     var body: some View{
         HStack(alignment:.center){
             Button(action:{
                 //TODO: BACK TO MOVIE SELECTION PAGE
-                withAnimation(){
-                    self.isAddPost.toggle()
-                }
+                dissmiss()
+//                withAnimation(){
+//                    self.isAddPost.toggle()
+//                }
             }){
                 Image(systemName: "chevron.left")
                     .imageScale(.large)

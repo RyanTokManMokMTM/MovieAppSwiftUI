@@ -38,7 +38,7 @@ struct FollowingUserPostResp : Decodable {
 }
 
 struct UserPostResp : Decodable {
-    let post_info : [Post]
+    let post_info : [Post]? // can be empty
 }
 
 struct PostInfoReq : Decodable {

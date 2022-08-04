@@ -20,6 +20,14 @@ struct UserSignInReq: Encodable{
 //    var confirmPassword: String
 }
 
+struct UserProfileUpdateReq  : Encodable{
+    let name : String
+}
+
+struct UserUpdateAvatarReq  : Encodable{}
+
+struct UserUpdateCoverReq  : Encodable{}
+
 /// RESPONSE
 struct UserLoginResp : Decodable{
     var token: String
@@ -33,8 +41,12 @@ struct UserSignInResp: Decodable{
     var email: String
 }
 
+struct UserProfileUpdateResp  : Decodable{}
+struct UploadImageResp  : Decodable{
+    let path : String
+}
 
-struct UserProfile : Decodable{
+struct Profile : Decodable{
     var id : Int
     var name : String
     var email : String
@@ -49,10 +61,11 @@ struct UserProfile : Decodable{
     var UserGenrePrerences :[MovieGenreTab]? // if no datas ,is a empty list
     
     var UserPhotoURL: URL {
-        return URL(string:"\(avatar ?? "")" )!
+        return URL(string:"\(SERVER_HOST)/resources\(avatar ?? "")" )!
+    }
+    var UserBackGroundURL: URL {
+        return URL(string:"\(SERVER_HOST)/resources\(cover ?? "")" )!
     }
     
-    var UserBackGroundURL: URL {
-        return URL(string:"\(cover ?? "")" )!
-    }
+    
 }

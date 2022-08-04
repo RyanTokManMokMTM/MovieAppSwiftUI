@@ -15,6 +15,7 @@ struct FlowLayoutView< T : Identifiable,Content : View> : View where T : Hashabl
     var content : (T) -> Content
     var HSpacing : CGFloat
     var VSpacing : CGFloat
+    
     private func customList() -> [[T]] {
         var curIndx = 0
         var gridList : [[T]] = Array(repeating: [], count: self.colums)

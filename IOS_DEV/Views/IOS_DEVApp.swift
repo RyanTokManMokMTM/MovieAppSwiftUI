@@ -14,6 +14,7 @@ import DynamicOverlay
 import Drawer
 import BottomSheet
 import MapKit
+import Combine
 
 @main
 struct IOS_DEVApp: App {
@@ -26,336 +27,23 @@ struct IOS_DEVApp: App {
     }
 }
 
-
-////////
-struct SheetViewTest : View {
-    @State private var isToggle : Bool = false
-    var body: some View {
-        NavigationView{
-            Button(action:{
-                withAnimation(){
-                    self.isToggle.toggle()
-                }
-            }){
-                Text("SHOW SHEET")
-            }.navigationTitle("SheetTesting")
-                .halfSheet(showShate: $isToggle){
-                    Text("Hello")
-                } onEnded: {
-                    print("ended")
-                }
-        }
-    }
-}
-
-extension View {
-    func halfSheet<SheetView : View>(showShate : Binding<Bool>, @ViewBuilder sheetView: @escaping () -> SheetView,onEnded: @escaping ()->())-> some View{
-        return self
-            .background(
-                UIHalfSheetView(sheetView: sheetView(), isShow: showShate, onEnded: onEnded)
-            )
-    }
-}
-
-struct UIHalfSheetView<SheetView : View> : UIViewControllerRepresentable {
-    var sheetView : SheetView
-    @Binding var isShow : Bool
-    var onEnded : () -> ()
-
-    let controller = UIViewController()
-    func makeCoordinator() -> Coordinator {
-        return Coordinator(parent: self)
-    }
-    func makeUIViewController(context: Context) -> some UIViewController {
-        controller.view.backgroundColor = .clear
-        return controller
-    }
-
-    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {
-        if isShow {
-            let sheetController = CustomHostingController(rootView:  sheetView)
-            sheetController.presentationController?.delegate = context.coordinator
-            uiViewController.present(sheetController, animated: true)
-        }else {
-            uiViewController.dismiss(animated: true)
-        }
-    }
-
-    class Coordinator: NSObject, UISheetPresentationControllerDelegate {
-        var parent : UIHalfSheetView
-        init (parent : UIHalfSheetView){
-            self.parent = parent
-        }
-
-        func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
-            parent.onEnded()
-        }
-    }
-}
-
-class CustomHostingController<Content : View>: UIHostingController<Content> {
-    override func viewDidLoad() {
-        if let presentationController = presentationController as?  UISheetPresentationController {
-            presentationController.detents = [
-                .medium(),
-//                .large()
-            ]
-
-            presentationController.prefersGrabberVisible = true
-        }
-    }
-}
-
-struct ScrollingHStackModifier: ViewModifier {
-    
-    @State private var scrollOffset: CGFloat
-    @State private var dragOffset: CGFloat
-    @Binding private var index : Int
-    var items: Int
-    var itemWidth: CGFloat
-    var itemSpacing: CGFloat
-    
-    init(index : Binding<Int> ,items: Int, itemWidth: CGFloat, itemSpacing: CGFloat) {
-        self.items = items
-        self.itemWidth = itemWidth
-        self.itemSpacing = itemSpacing
-        self._index = index
-        // Calculate Total Content Width
-        let contentWidth: CGFloat = CGFloat(items) * itemWidth + CGFloat(items - 1) * itemSpacing
-        let screenWidth = UIScreen.main.bounds.width
-        
-        // Set Initial Offset to first Item
-        let initialOffset = (contentWidth/2.0) - (screenWidth/2.0) + ((screenWidth - itemWidth) / 2.0)
-        
-        self._scrollOffset = State(initialValue: initialOffset)
-        self._dragOffset = State(initialValue: 0)
-    }
-    
-    func body(content: Content) -> some View {
-        content
-            .offset(x: scrollOffset + dragOffset, y: 0)
-            .gesture(DragGesture()
-                .onChanged({ event in
-                    dragOffset = event.translation.width
-                })
-                .onEnded({ event in
-                    // Scroll to where user dragged
-                    scrollOffset += event.translation.width
-                    dragOffset = 0
-                    
-                    // Now calculate which item to snap to
-                    let contentWidth: CGFloat = CGFloat(items) * itemWidth + CGFloat(items - 1) * itemSpacing
-                    let screenWidth = UIScreen.main.bounds.width
-                    
-                    // Center position of current offset
-                    let center = scrollOffset + (screenWidth / 2.0) + (contentWidth / 2.0)
-                    
-                    // Calculate which item we are closest to using the defined size
-                    var Calindex = (center - (screenWidth / 2.0)) / (itemWidth + itemSpacing)
-                    
-                    // Should we stay at current index or are we closer to the next item...
-                    if Calindex.remainder(dividingBy: 1) > 0.5 {
-                        Calindex += 1
-                    } else {
-                        Calindex = CGFloat(Int(Calindex))
-                    }
-                    
-                    // Protect from scrolling out of bounds
-                    Calindex = min(Calindex, CGFloat(items) - 1)
-                    Calindex = max(Calindex, 0)
-                    
-                    // Set final offset (snapping to item)
-                    let newOffset = Calindex * itemWidth + (Calindex - 1) * itemSpacing - (contentWidth / 2.0) + (screenWidth / 2.0) - ((screenWidth - itemWidth) / 2.0) + itemSpacing
-                    
-
-                    
-                    // Animate snapping
-                    withAnimation {
-                        index = (items - 1) - Int(Calindex)
-                        scrollOffset = newOffset
-                    }
-                    
-                })
-            )
-    }
-}
-
-struct GenrePost : Identifiable {
-    let id : Int
-    let image : String
-    let genreName : String
-}
-
-var postTempGenre : [GenrePost] = [
-    GenrePost(id: 1, image: "testMovie1",genreName:"動作"),
-    GenrePost(id: 2, image: "testMovie2",genreName:"冒險"),
-    GenrePost(id: 3, image: "testMovie3",genreName:"動畫"),
-    GenrePost(id: 4, image: "testMovie4",genreName:"喜劇"),
-    GenrePost(id: 5, image: "testMovie5",genreName:"犯罪"),
-    GenrePost(id: 6, image: "testMovie6",genreName:"紀錄"),
-    GenrePost(id: 7, image: "testMovie7",genreName:"奇幻"),
-]
-
-struct TestCardView: View {
-    @State private var index : Int = 0;
-    var images :[GenrePost] = postTempGenre
-    var body: some View {
-        HStack(alignment: .center, spacing: 30) {
-            ForEach(0..<images.count) { i in
-                
-                ZStack(alignment:.bottomLeading){
-                    Image(images[i].image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 250)
-                        .cornerRadius(10)
-                        .scaleEffect(self.index == i ? 1.1 : 0.8)
-                        .overlay(
-                            LinearGradient(colors: [
-                                Color("PersonCellColor").opacity(0.3),
-                                Color("PersonCellColor").opacity(0.6),
-                                Color("PersonCellColor").opacity(0.8),
-                            ], startPoint: .center, endPoint: .bottom)
-                                .cornerRadius(10)
-                                .scaleEffect(self.index == i ? 1.1 : 0.8)
-                        )
-                    
-
-                    HStack (alignment:.bottom){
-                        VStack(alignment:.leading){
-                            Text("電影類別")
-                                .font(.system(size:18))
-                            Text("**\(images[i].genreName)**")
-                                .font(.system(size:16))
-                        }
-                        
-                        Spacer()
-                        
-                        Text("點擊進入")
-                            .font(.system(size:14))
-                    }
-                    
-                    .opacity(self.index == i ? 1 : 0)
-                    
-                }
-
+struct SheetTest : View {
+    @State private var testSheet : Bool = false
+    var body : some View{
+        Button(action:{
+            withAnimation{
+                self.testSheet.toggle()
             }
-        }.modifier(ScrollingHStackModifier(index:$index,items: images.count, itemWidth: 250, itemSpacing: 30))
+        }){
+            Text("Show")
+        }
+        .halfSheet(showShate: $testSheet) {
+            Text("???")
+        } onEnded : {
+            print("abc")
+        }
     }
 }
-
-//
-//struct WordSearchView: View {
-//    var body: some View {
-//        ZStack {
-//
-//            ScrollView {
-//                //...
-//                Text("???")
-//            }
-//
-//            Drawer{
-//                Color.blue
-//            }.edgesIgnoringSafeArea(.vertical)
-//        }
-//
-//    }
-//}
-
-
-//struct MyView: View {
-//    @State var index = 0;
-//     var body: some View {
-//          GeometryReader { proxy in
-//               ScrollView {
-//                  Image("dr6")
-//                       .resizable()
-//                       .aspectRatio(contentMode: .fit)
-//                       .frame(maxWidth:.infinity)
-////                       .background(Color.red)
-//                   TabView(selection:$index) {
-//                       ForEach(0..<3) { _ in
-//                               Text("testing data")
-//
-//
-//                       }
-//
-//                    }
-//                   .background(.blue)
-//                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-//                    .frame(height: proxy.size.height)
-//                }
-//            }
-//
-//        }
-//}
-
-//struct TestMulti: View {
-//    static var test:String = ""
-//    static var testBinding = Binding<String>(get: { test }, set: { test = $0 } )
-//    var body: some View {
-//        NavigationView {
-//            VStack(alignment: .leading) {
-//                Text("Enter Review Comments:")
-//                MultilineTextField("Type here", text: TestMulti.testBinding, onCommit: {
-//                    print("Final text: \(TestMulti.test)")
-//                })
-//                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.gray))
-//                Button(action: {
-//                    print("send Clicked")
-//                }) {
-//                    Text("send")
-//                }
-//                Spacer()
-//            }
-//            .padding()
-//            .navigationBarTitle(Text("SwiftUI"))
-//        }
-//
-//    }
-//}
-//
-//
-//struct MultilineTextField: View {
-//
-//    private var placeholder: String
-//    private var onCommit: (() -> Void)?
-//    @State private var viewHeight: CGFloat = 40 //start with one line
-//    @State private var shouldShowPlaceholder = false
-//    @Binding private var text: String
-//
-//    private var internalText: Binding<String> {
-//        Binding<String>(get: { self.text } ) {
-//            self.text = $0
-//            self.shouldShowPlaceholder = $0.isEmpty
-//        }
-//    }
-//
-//    var body: some View {
-//        UITextViewWrapper(text: self.internalText, calculatedHeight: $viewHeight, onDone: onCommit)
-//            .frame(minHeight: viewHeight, maxHeight: viewHeight)
-//            .background(placeholderView, alignment: .topLeading)
-//    }
-//
-//    var placeholderView: some View {
-//        Group {
-//            if shouldShowPlaceholder {
-//                Text(placeholder).foregroundColor(.gray)
-//                    .padding(.leading, 4)
-//                    .padding(.top, 8)
-//            }
-//        }
-//    }
-//
-//    init (_ placeholder: String = "", text: Binding<String>, onCommit: (() -> Void)? = nil) {
-//        self.placeholder = placeholder
-//        self.onCommit = onCommit
-//        self._text = text
-//        self._shouldShowPlaceholder = State<Bool>(initialValue: self.text.isEmpty)
-//    }
-//
-//}
-
 
 private struct UITextViewWrapper: UIViewRepresentable {
     typealias UIViewType = UITextView
@@ -433,27 +121,27 @@ private struct UITextViewWrapper: UIViewRepresentable {
 
 }
 
-struct imagePickerTestView : View{
-    @State private var isShowPicker : Bool = false
-    @State private var image : UIImage = UIImage(named: "image")!
-    var body : some View{
-        VStack{
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFill()
-                .frame(width: 150, height: 150, alignment: .center)
-                .clipShape(Circle())
-                .padding()
-                .onTapGesture {
-                    withAnimation(){
-                        self.isShowPicker.toggle()
-                    }
-                }
-        }.fullScreenCover(isPresented: $isShowPicker){
-            EditableImagePickerView(sourceType: .photoLibrary)
-        }
-    }
-}
+//struct imagePickerTestView : View{
+//    @State private var isShowPicker : Bool = false
+//    @State private var image : UIImage = UIImage(named: "image")!
+//    var body : some View{
+//        VStack{
+//            Image(uiImage: image)
+//                .resizable()
+//                .scaledToFill()
+//                .frame(width: 150, height: 150, alignment: .center)
+//                .clipShape(Circle())
+//                .padding()
+//                .onTapGesture {
+//                    withAnimation(){
+//                        self.isShowPicker.toggle()
+//                    }
+//                }
+//        }.fullScreenCover(isPresented: $isShowPicker){
+//            EditableImagePickerView(sourceType: .photoLibrary)
+//        }
+//    }
+//}
 
 //struct TestContent: View {
 //    var originalImage = UIImage(named: "image")

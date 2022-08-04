@@ -46,7 +46,7 @@ struct PosterOwner : Identifiable,Decodable {
     let avatar : String?
     
     var UserPhotoURL: URL {
-        return URL(string:"\(avatar ?? "")" )!
+        return URL(string:"\(SERVER_HOST)/resources\(avatar ?? "")" )!
     }
 }
 

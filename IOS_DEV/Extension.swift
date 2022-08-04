@@ -80,6 +80,11 @@ extension Font{
     static func setConcertOneRegular(size : CGFloat) -> Font{
         Font.custom("ConcertOne-Regular", size: size)
     }
+
+    static func setLeckerliOneRegular(size : CGFloat) -> Font{
+        Font.custom("LeckerliOne-Regular", size: size)
+    }
+    
 }
 //
 struct setConcertOneRegularFont : ViewModifier{
@@ -141,6 +146,13 @@ struct setsetOswaldSemiBoldFont : ViewModifier{
 }
 
 
+struct setLeckerliOneRegularFont : ViewModifier{
+    var size : CGFloat
+    func body(content: Content) -> some View {
+        return content.font(.setLeckerliOneRegular(size: size))
+    }
+}
+
 
 extension View{
     func CourgetteRegularFont(size:CGFloat = 18)-> some View{
@@ -174,6 +186,10 @@ extension View{
     
     func ConcertOneRegularFont(size : CGFloat = 18) -> some View{
         ModifiedContent(content: self, modifier: setConcertOneRegularFont(size: size))
+    }
+    
+    func LeckerliOneRegularFont(size : CGFloat = 18) -> some View{
+        ModifiedContent(content: self, modifier: setLeckerliOneRegularFont(size: size))
     }
 }
 

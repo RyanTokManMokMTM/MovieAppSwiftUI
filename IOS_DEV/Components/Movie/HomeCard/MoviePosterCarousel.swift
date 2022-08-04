@@ -12,9 +12,12 @@ struct MoviePosterCarousel: View {
     
     let title: String
     @EnvironmentObject var State : MovieListState
+    @EnvironmentObject var postVM : PostVM
     @State private var isCardSelectedMovie:Bool = false
     @State private var isAction : Bool = false
+    @State private var selectedMovieID : Int = -1
     
+    @State private var isShowAll : Bool = false
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack{
@@ -26,9 +29,11 @@ struct MoviePosterCarousel: View {
                 Spacer()
                 
                 Button(action:{
-                    print("View More\(title) movies")
+                    withAnimation{
+                        isShowAll.toggle()
+                    }
                 }){
-                    Text("顯示更多")
+                    Text("顯示全部")
                         .font(.system(size: 14,weight: .semibold))
                         .foregroundColor(Color(uiColor: UIColor.darkGray))
                 }.buttonStyle(PlainButtonStyle())
@@ -39,22 +44,34 @@ struct MoviePosterCarousel: View {
             }else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack(alignment: .top, spacing: 16) {
-                        ForEach(0..<self.State.movies!.count) { i in
-                            NavigationLink(destination:
-                                            MovieDetailView(movieId: self.State.movies![i].id, isShowDetail: $isAction)
-//                                            .navigationBarTitle("")
-//                                            .navigationBarHidden(true)
-//                                            .navigationTitle("")
-//                                            .navigationBarBackButtonHidden(true)
-                                           ,isActive:$isAction
-                            ) {
+                        ForEach(0..<(self.State.movies!.count < 10 ? self.State.movies!.count : 10)) { i in
+                            Button(action:{
+                                self.selectedMovieID = self.State.movies![i].id
+                                self.isAction.toggle()
+                            }){
                                 MoviePosterCard(movie: self.State.movies![i])
-                 
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
                     }
                 }
+                .background(
+           
+                    NavigationLink(destination:
+                                    MovieDetailView(movieId: self.selectedMovieID, isShowDetail: $isAction)
+                                    .environmentObject(postVM)
+                                   ,isActive:$isAction
+                                  ){EmptyView()}
+                )
+                .background(
+                
+                    NavigationLink(destination:
+                                    ShowMoreStateMovieView(stateTitle: title, stateMovies: self.State.movies!, isShowAll: self.$isShowAll)
+                                    .environmentObject(postVM)
+                                    ,isActive: self.$isShowAll
+                                  ){EmptyView()}
+                
+                )
             }
           
         }

@@ -20,7 +20,7 @@ struct GenreTypeRef : Identifiable {
 }
 
 var GenreRefsAll : [GenreTypeRef] = [
-    GenreTypeRef(id : 28,ref_path : "/g7Ahst6SCjWVijGwJYNEjxmSMRy.jpg",genre_name:"動作",genre_type: .Action), // done
+    GenreTypeRef(id : 28,ref_path : "/hb6HJLxQThNkvFu82oBaEer7B8w.jpg",genre_name:"動作",genre_type: .Action), // done
     GenreTypeRef(id : 12,ref_path : "/pgmcRSfzFlNRgwnXLTHfWLISuiM.jpg",genre_name:"冒險",genre_type: .Adventure),
     GenreTypeRef(id : 16,ref_path : "/z5uxyimSIYitt7QSopEaUheiY0H.jpg",genre_name:"動畫",genre_type: .Animation),
     GenreTypeRef(id : 35,ref_path : "/fXPmd5LRljSEHU2ld2HNA01EKUV.jpg",genre_name:"喜劇",genre_type: .Comedy),
@@ -87,6 +87,71 @@ class SearchMovieVM : ObservableObject {
     }
 }
 
+enum HomeTabItem : String{
+    case TV = "TV"
+    case Moive = "電影"
+    case Trailer = "預告"
+}
+
+struct HomeNavTabView : View {
+    @Binding var index : HomeTabItem
+    @State private var isSelectMovie : Bool = false
+    var body: some View {
+        HStack{
+            Spacer()
+            
+            Button(action:{
+                //MAY BE A NAVIGATION LINK
+            }){
+                Image(systemName:"magnifyingglass")
+                    .imageScale(.medium)
+                    .foregroundColor(.white)
+            }
+        }.overlay(
+            HStack(spacing:20){
+//                Spacer()
+                Text("Movie GO")
+                    .LeckerliOneRegularFont(size:22)
+                Spacer()
+//                HomeTabButton(index: $index,tab: .TV) //TODO: NOT AVAILABLE YET
+//                HomeTabButton(index: $index,tab: .Moive)
+//                HomeTabButton(index: $index,tab: .Trailer) //TODO: NOT AVAILABLE YET
+            }
+//                .animation(.easeInOut, value: 0.3)
+//                .transition(.slide)
+                .padding(.horizontal)
+        )
+            .padding(.horizontal)
+            .frame(width: UIScreen.main.bounds.width, height: 40)
+            .background(Color("DarkMode2"))
+        
+
+    }
+
+}
+
+struct HomeTabButton : View {
+    @Binding var index : HomeTabItem
+    var tab : HomeTabItem
+    var body: some View {
+        Button(action:{
+            withAnimation{
+                self.index = tab
+            }
+        }){
+            Text(tab.rawValue)
+                .font(.system(size: 16, weight: self.index == tab ? .bold : .medium ))
+                .foregroundColor(Color.white.opacity(self.index == tab ? 0.7 : 0.3))
+//                .scaleEffect(self.index == tab ? 1.1 : 1)
+                .padding(.horizontal,15)
+            
+        }
+        
+        
+    }
+}
+
+
 struct MovieListView: View {
     //Manager this in a class
     @EnvironmentObject var userVM : UserViewModel
@@ -97,13 +162,53 @@ struct MovieListView: View {
     @Binding var mainPageHeight : CGFloat
     @State private var isCardSelected : Bool = false
     @State private var index : Int = 0
-
+    @State private var tabIndex : HomeTabItem = .Moive
+    
     @State private var showMovieDetail : Bool = false
     var body: some View {
+        
+//        GeometryReader{ proxy in
+            //                ZStack(alignment:.top){
+            VStack(spacing:0){
+                VStack(spacing:0){
+                    HomeNavTabView(index: $tabIndex)
+                    Divider()
+                    
+                }
+                MoviePage()
+            }
+            .background(Color("DarkMode2"))
+                
+                
+//                .frame(maxWidth:.infinity)
+//
+//                ScrollView(.horizontal, showsIndicators: false){
+////                    TabView(selection: $tabIndex){
+////                        MoviePage()
+////                            .tag(HomeTabItem.Moive)
+////                    }
+////                    //                        .animation(.easeOut(duration: 0.2), value: self.postVM.index)
+////                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+//                    MoviePage()
+//                    .frame(width: proxy.size.width)
+//
+//                }
+//                .frame(alignment: .top)
+                //                            .ignoresSafeArea()
+//            }
+            
+//        }
+        .background(Color("DarkMode2"))
+//        .navigationBarHidden(true)
+//        .navigationBarBackButtonHidden(true)
+        
+    }
+    
+    @ViewBuilder
+    func MoviePage() -> some View {
         ScrollView(.vertical,showsIndicators: false){
             VStack(alignment:.leading){
                 TabView(selection: $index){
-                    
                     ForEach(GenreRefsAll) { ref in
                         GeometryReader{proxy in
                             let minX = proxy.frame(in: .global).minX
@@ -116,7 +221,6 @@ struct MovieListView: View {
                                         self.isCardSelected.toggle()
                                     }
                                 }
-                            
                         }
                     }
                 }
@@ -125,14 +229,14 @@ struct MovieListView: View {
                 
                 MoviesStateList()
             }
-            
+
         }
     }
     
     @ViewBuilder
     func MoviesStateList() -> some View {
         
-        VStack{
+        VStack(spacing:15){
             ForEach(MovieLists){ listInfo in
                 MovieStateView(info: listInfo)
                     .padding(.vertical,8)
@@ -224,7 +328,7 @@ struct MovieGenreCardSelectionView : View{
                             .font(.system(size:14))
                     }
                 }
-                    .padding()
+                    .padding(5)
                
 
             )

@@ -96,13 +96,12 @@ struct StaticButtonStyle : ButtonStyle{
 
 struct TrailerMainPage:View{
     @Binding var showHomePage : Bool
-    @Binding var isLogOut : Bool
     @Binding var mainPageHeight : CGFloat
-    @StateObject var SearchVM = SearchMovieVM()
+//    @StateObject var SearchVM = SearchMovieVM()
     var body:some View{
         MovieListView(showHomePage: $showHomePage,mainPageHeight:$mainPageHeight)
             .environment(\.horizontalSizeClass, .compact)
-
+        
     }
 }
 

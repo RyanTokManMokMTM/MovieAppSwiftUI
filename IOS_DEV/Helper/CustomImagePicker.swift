@@ -36,7 +36,7 @@ extension UIView {
     }
 }
  
-struct ImagePicker: UIViewControllerRepresentable {
+struct CustomImagePicker: UIViewControllerRepresentable {
  
     @Environment(\.presentationMode)
     var presentationMode
@@ -71,14 +71,14 @@ struct ImagePicker: UIViewControllerRepresentable {
         return Coordinator(presentationMode: presentationMode, image: $image)
     }
  
-    func makeUIViewController(context: UIViewControllerRepresentableContext<ImagePicker>) -> UIImagePickerController {
+    func makeUIViewController(context: UIViewControllerRepresentableContext<CustomImagePicker>) -> UIImagePickerController {
         let picker = UIImagePickerController()
         picker.delegate = context.coordinator
         return picker
     }
  
     func updateUIViewController(_ uiViewController: UIImagePickerController,
-                                context: UIViewControllerRepresentableContext<ImagePicker>) {
+                                context: UIViewControllerRepresentableContext<CustomImagePicker>) {
  
     }
  

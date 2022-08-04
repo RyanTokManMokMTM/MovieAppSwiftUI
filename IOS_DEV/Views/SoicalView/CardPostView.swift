@@ -19,11 +19,14 @@ struct CardPostView: View {
             
             Group {
                 WebImage(url: postData.post_movie_info.PosterURL)
+                    .placeholder(Image(systemName: "photo")) //
                     .resizable()
+                    .indicator(.activity)
+                    .transition(.fade(duration: 0.5))
                     .aspectRatio(contentMode: .fit)
-                    .matchedGeometryEffect(id: postData.id, in: namespace)
-                    .transition(.move(edge: .bottom))
                     .clipShape(CustomeConer(width: 5, height: 5, coners: [.topLeft,.topRight]))
+//                    .matchedGeometryEffect(id: postData.id.description, in: namespace)
+                    
                     
                 Text(postData.post_title)
                     .font(.system(size: 14, weight: .semibold))
@@ -39,23 +42,15 @@ struct CardPostView: View {
             }
 
             Group{
-////                Title of the post
-//                Text("#\(postData.movie_info.movie_name)")
-//                    .font(.system(size: 14))
-//                    .foregroundColor(.blue)
-//
-                
-                
+
                 HStack{
                     WebImage(url: postData.user_info.UserPhotoURL)
                         .resizable()
                         .frame(width: 20, height: 20)
                         .clipShape(Circle())
-//                        .matchedGeometryEffect(id: postData.user_info.user_avatar, in: namespace)
-                    
+
                     Text(postData.user_info.name)
                         .font(.system(size: 12, weight: .semibold))
-//                        .matchedGeometryEffect(id: postData.user_info.id, in: namespace)
                         .foregroundColor(.gray)
                         .lineLimit(1)
                     

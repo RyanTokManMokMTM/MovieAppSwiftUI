@@ -12,6 +12,7 @@ struct HomePage: View {
     @State private var ServerInternalError : Bool = false //for checking server connected
     @ObservedObject private var networkingService = NetworkingService.shared
     @AppStorage("userToken") private var userToken : String = ""
+//    @AppStorage("isLoggedIn") private var bool : String = true
     @State private var isLoggedIn : Bool = false
     @State private var isLoading : Bool = false
     
@@ -26,12 +27,13 @@ struct HomePage: View {
     }
     
     var body: some View {
+        
         ZStack{
             BackGroundView()
             HomeInfo()
             
             if isLoggedIn {
-                MovieHomePage(isLogOut: self.$isLoggedIn,index: 0)
+                MovieHomePage(isLogOut: self.$isLoggedIn)
                     .environmentObject(UserVM)
                     .onAppear(perform: {
                         UIScrollView.appearance().bounces = true
@@ -39,8 +41,8 @@ struct HomePage: View {
                     .onDisappear(perform: {
                         UIScrollView.appearance().bounces = false
                     })
+                    .environment(\.colorScheme, .dark)
             }
-            
         }
         .fullScreenCover(isPresented: $isStarted){
             SignInView(backToHome: $isStarted,isLoggedIn: $isLoggedIn)
@@ -63,13 +65,15 @@ struct HomePage: View {
                     DispatchQueue.main.async{
                         self.ServerInternalError.toggle()
                     }
-
+                    
                 }
                 self.isLoading = false
-
-
+                
+                
             }
+            
         }
+
 
     }
     

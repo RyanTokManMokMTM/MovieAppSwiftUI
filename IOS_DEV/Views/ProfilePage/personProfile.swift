@@ -20,36 +20,8 @@ struct PersonProfileView : View{
             personProfile(topEdge: topEdge,namespace:namespace)
                 .ignoresSafeArea(.all, edges: .top)
         }
-
-        
     }
 }
-
-struct PostCard : Identifiable,Codable{
-    var id : String = UUID().uuidString
-    let imgURL : String
-    let postDesc : String
-}
-//
-let postCardTemp : [PostCard] = [
-    PostCard(imgURL: "https://www.themoviedb.org/t/p/original/aaczVLsEYSHQzHUYr69bTMRA4CI.jpg", postDesc: "Disney 動畫電影!"),
-    PostCard(imgURL: "https://www.themoviedb.org/t/p/original/vFQXJ7BH052XXoJBs03oAZBwCIu.jpg", postDesc: "我最愛的科幻片💗"),
-    PostCard(imgURL: "https://www.themoviedb.org/t/p/original/bmLG7qATNsaYVfCWq1NMWpnQy8b.jpg", postDesc: "厲陰宅宇宙"),
-    PostCard(imgURL: "https://www.themoviedb.org/t/p/original/clEQH8l0azd1QFEwiOJo4KIjkBY.jpg", postDesc: "恐怖電影系列"),
-    PostCard(imgURL: "https://www.themoviedb.org/t/p/original/4p3vfEM17VTweLOKRGBV0XdBHMN.jpg", postDesc: "Marval Universe"),
-]
-
-let postCardTemp3 : [PostCard] = [
-    PostCard(imgURL: "https://www.themoviedb.org/t/p/original/9RKpfJIEM88AaFevGZBm5bRsy7Y.jpg", postDesc: "高校十八禁"),
-    PostCard(imgURL: "https://www.themoviedb.org/t/p/original/gWod0mgMkSQBF7kcdmfviD8vrxl.jpg", postDesc: "黃蜂"),
-    PostCard(imgURL: "https://www.themoviedb.org/t/p/original/bmLG7qATNsaYVfCWq1NMWpnQy8b.jpg", postDesc: "銀翼殺手：黑蓮花"),
-    PostCard(imgURL: "https://www.themoviedb.org/t/p/original/eoF44SOZre7ATLAy5GHPzJ54iyA.jpg", postDesc: "蜘蛛人：無家日"),
-    PostCard(imgURL: "https://www.themoviedb.org/t/p/original/tuOu8C02KULf75hehYS6Eowen4a.jpg", postDesc: "霍爾的移動城堡"),
-    PostCard(imgURL: "https://www.themoviedb.org/t/p/original/eoF44SOZre7ATLAy5GHPzJ54iyA.jpg", postDesc: "蜘蛛人：無家日"),
-    PostCard(imgURL: "https://www.themoviedb.org/t/p/original/6R4RAEFG39l5m40Lyv2XLAq4th6.jpg", postDesc: "永恆族"),
-    PostCard(imgURL: "https://www.themoviedb.org/t/p/original/x4IpU9xSyG1TR9kf0w2vyS6zlmr.jpg", postDesc: "尚氣與十環傳奇"),
-    PostCard(imgURL: "https://www.themoviedb.org/t/p/original/uD0evJ6OWbEQHZtYdzkp5U29KgQ.jpg", postDesc: "逃出異境"),
-]
 
 struct MovieGenreTab : Identifiable ,Codable{
     let id : Int
@@ -335,11 +307,11 @@ enum EditType {
     case Name
 }
 
-struct EditTextView : View {
+struct EditUserName : View {
     @EnvironmentObject var userVM : UserViewModel
     var editType : EditType
     var settingHeader : String = "設定"
-    var placeHolder : String = "Enter the text"
+    var placeHolder : String = "請輸入您的暱稱"
     var maxSize : Int
     var warningMessage : String = ""
     var defaultValue : String
@@ -350,75 +322,82 @@ struct EditTextView : View {
     @State private var tempEditStr : String = ""
     var body : some View{
         
-        GeometryReader{proxy in
-            VStack(alignment:.leading){
-                VStack{
-                    HStack(){
-                        Button(action:{
-                            withAnimation(){
-                                self.isCancel.toggle()
+        GeometryReader{ proxy in
+            ZStack{
+                VStack(alignment:.leading){
+                    VStack{
+                        HStack(){
+                            Button(action:{
+                                withAnimation(){
+                                    self.isCancel.toggle()
+                                }
+                            }){
+                                Text("取消")
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 14))
                             }
-                        }){
-                            Text("取消")
-                                .foregroundColor(.white)
+                            Spacer()
+                            Text(settingHeader)
                                 .font(.system(size: 14))
-                        }
-                        Spacer()
-                        Text(settingHeader)
-                            .font(.system(size: 14))
-                        Spacer()
-                        
-                        Button(action:{
-                            withAnimation(){
-                                self.isSave.toggle()
-                                updateValue()
-                                self.isCancel.toggle()
-                                //send
+                            Spacer()
+                            
+                            Button(action:{
+                                self.isSave = true
+                                self.userVM.UpdateUserProfile(name: self.tempEditStr)
+
+                            }){
+                                Text("完成")
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 14))
+                                    
                             }
-                        }){
-                            Text("完成")
-                                .foregroundColor(.white)
-                                .font(.system(size: 14))
-                                
+                            .opacity(self.tempEditStr != self.defaultValue && !self.checkIsEmpty() ? 1 : 0 )
                         }
-                        .opacity(self.tempEditStr != self.defaultValue && !self.checkIsEmpty() ? 1 : 0 )
+                        .font(.system(size: 14))
+                        .padding(.horizontal,10)
+                        .padding(.bottom,10)
                     }
-                    .font(.system(size: 14))
-                    .padding(.horizontal,10)
-                    .padding(.bottom,10)
-                }
-                .frame(width: UIScreen.main.bounds.width, height: proxy.safeAreaInsets.top + 30,alignment: .bottom)
-                Divider()
-                
-                HStack{
-                    CustomTextView(focuse:$isFocus,text: $tempEditStr, maxSize: maxSize,placeholder: placeHolder, keybooardType: .default, returnKeytype: .default, tag: 1)
-                        .frame(height: 20)
-                     
-                    Spacer()
-                    Text("\(updateTextCount())/\(maxSize)")
+                    .frame(width: UIScreen.main.bounds.width, height: proxy.safeAreaInsets.top + 30,alignment: .bottom)
+                    Divider()
+                    
+                    HStack{
+                        CustomTextView(focuse:$isFocus,text: $tempEditStr, maxSize: maxSize,placeholder: placeHolder, keybooardType: .default, returnKeytype: .default, tag: 1)
+                            .frame(height: 20)
+                         
+                        Spacer()
+                        Text("\(updateTextCount())/\(maxSize)")
+                            .foregroundColor(.gray)
+                            .font(.system(size: 13))
+                    }
+                    .padding()
+                    .background(Color("appleDark"))
+                    .cornerRadius(10)
+                    .padding(.horizontal)
+                    .onTapGesture {
+                        self.isFocus = [false,true]
+                    }
+                    
+                    Text(warningMessage)
                         .foregroundColor(.gray)
-                        .font(.system(size: 13))
+                        .font(.footnote)
+                        .padding(.horizontal,15)
+                        .padding(.top,5)
                 }
-                .padding()
-                .background(Color("appleDark"))
-                .cornerRadius(10)
-                .padding(.horizontal)
-                .onTapGesture {
-                    self.isFocus = [false,true]
+                .edgesIgnoringSafeArea(.all)
+                .onAppear(){
+                    self.tempEditStr = defaultValue
                 }
                 
-                Text(warningMessage)
-                    .foregroundColor(.gray)
-                    .font(.footnote)
-                    .padding(.horizontal,15)
-                    .padding(.top,5)
-            }
-            .edgesIgnoringSafeArea(.all)
-            .onAppear(){
-                self.tempEditStr = defaultValue
+                if self.userVM.IsUpdating{
+                    LoadingView(isLoading: self.userVM.IsUpdating, error: self.userVM.UpdateError as NSError?){
+                        self.userVM.UpdateUserProfile(name: tempEditStr)
+                    }
+                    .frame(maxWidth:.infinity,maxHeight: .infinity)
+                    .background(Color.black.opacity(0.5).edgesIgnoringSafeArea(.all))
+                }
+                
             }
         }
-        
     }
     
     func checkIsEmpty() -> Bool{
@@ -434,8 +413,6 @@ struct EditTextView : View {
         switch editType{
         case .Name:
             self.userVM.profile!.name = tempEditStr
-        default:
-            break
         }
     }
     
@@ -592,10 +569,10 @@ struct profileCardCell : View {
                 .resizable()
                 .indicator(.activity)
                 .transition(.fade(duration: 0.5))
-                .aspectRatio(contentMode: .fill)
-                .matchedGeometryEffect(id: post.id, in: namespace)
-                .frame(height:230)
+                .aspectRatio(contentMode: .fit)
                 .clipShape(CustomeConer(width: 5, height: 5, coners: [.topLeft,.topRight]))
+                .matchedGeometryEffect(id: post.id, in: namespace)
+//                .frame(height:230)
                 
                 
 
@@ -658,8 +635,9 @@ struct profileCardCell : View {
 }
 
 struct PersonPostCardGridView : View{
-    let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
+//    let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
     @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var postVM : PostVM
     var namespace: Namespace.ID
     var body: some View{
         if userVM.profile!.UserCollection == nil {
@@ -668,22 +646,42 @@ struct PersonPostCardGridView : View{
                     self.userVM.getUserPosts()
                 }
             }
-        } else if userVM.profile!.UserCollection!.isEmpty{
-            VStack{
-                Spacer()
-                Text("Not Post yet")
-                    .font(.system(size:15))
-                    .foregroundColor(.gray)
-                Spacer()
-            }
-            .frame(height:UIScreen.main.bounds.height / 2)
-            
-        }else{
-            LazyVGrid(columns: gridItem){
-                ForEach(userVM.profile!.UserCollection!,id:\.id){post in
-                    profileCardCell(post: post,namespace:namespace)
+        } else if userVM.profile!.UserCollection != nil{
+            if userVM.profile!.UserCollection!.isEmpty{
+                VStack{
+                    Spacer()
+                    Text("Not Post yet")
+                        .font(.system(size:15))
+                        .foregroundColor(.gray)
+                    Spacer()
                 }
+                .frame(height:UIScreen.main.bounds.height / 2)
+            }else{
+                FlowLayoutView(list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10){ info in
+                
+                    profileCardCell(post: info,namespace:namespace)
+                        .onTapGesture {
+                            withAnimation{
+                                postVM.selectedPost = info
+                                postVM.isShowPostDetail = true
+                            }
+                        }
+                }
+                .background(
+                    NavigationLink(destination:   PostDetailView(namespace: namespace)
+                                    .navigationBarTitle("")
+                                    .navigationTitle("")
+                                    .navigationBarBackButtonHidden(true)
+                                    .navigationBarHidden(true)
+                                    .environmentObject(postVM), isActive: self.$postVM.isShowPostDetail){
+                        EmptyView()
+                        
+                    }
+                )
+
+                
             }
+            
         }
     }
         
@@ -703,7 +701,7 @@ struct LikedMovieCard : Identifiable ,Codable{
 
 }
 
-struct LikedPostCardGridView : View{
+struct LikedPostCardGridView : View {
     @EnvironmentObject var userVM : UserViewModel
     @State private var isShowMovieDetail : Bool = false
     let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
@@ -785,6 +783,7 @@ struct LikedCardCell : View {
                                 .font(.system(size:18))
                                 .bold()
                                 .padding(.bottom,5)
+                                .lineLimit(1)
                             
                             HStack(spacing:5){
                                 ForEach(0..<5){i in
@@ -796,13 +795,13 @@ struct LikedCardCell : View {
                             }
                             
                             Spacer()
-                            Button(action:{
-                                //TODO: REMOVE THE MOVIE FROM LIST
-                            }){
-                                Image(systemName: "heart.fill")
-                                    .imageScale(.small)
-                                    .foregroundColor(.red)
-                            }
+//                            Button(action:{
+//                                //TODO: REMOVE THE MOVIE FROM LIST
+//                            }){
+//                                Image(systemName: "heart.fill")
+//                                    .imageScale(.small)
+//                                    .foregroundColor(.red)
+//                            }
                             
                         }
                     
@@ -818,174 +817,196 @@ struct LikedCardCell : View {
     }
 }
 
-struct CreateNewListView : View {
-    @State private var listTitle : String = ""
-    @Binding var isAddingList : Bool
-    @EnvironmentObject var userModel : UserViewModel
-    @State private var isLoading = false
-    @State private var err : Error?
-    var body : some View {
-        ZStack{
-            VStack(alignment:.leading){
-                Text("Create a new list")
-                    .bold()
-                    .font(.system(size:35))
-                    .padding(.leading)
-                    
-                
-                List(){
-                    Section("LIST INFORMATION"){
-                        HStack{
-                            Text("Title:")
-                            TextField("List Title", text: $listTitle)
-                        }
-                    }
-                    
-                    Button(action:{
-                        //Create a list
-                        CreateNewList()
-                    }){
-                        Text("Create")
-                    }
-                    
-                    Button(action:{
-                        //do nothing and back to the page
-                        withAnimation{
-                            self.isAddingList = false
-                        }
-                    }){
-                        Text("Cancel")
-                    }
-                    
-                }
-            }
-            .padding(.top,30)
-            
-            if isLoading || self.err != nil {
-                LoadingView(isLoading: isLoading, error: err as NSError?){
-                    CreateNewList()
-                }
-                .background(BlurView().frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height))
-            }
-
-        }
-    }
-    
-    func CreateNewList() {
-        if listTitle.isEmpty{
-            return
-        }
-        
-        let newList = CreateNewCustomListReq(title: listTitle)
-        self.isLoading = true
-        APIService.shared.CreateCustomList(req: newList){ (result) in
-            self.isLoading = false
-            switch result{
-            case .success(let data):
-                let listInfo = CustomListInfo(id: data.id, title: data.title, movie_list: [])
-                userModel.profile!.UserCustomList!.append(listInfo)
-                self.err = nil
-                withAnimation(){
-                    self.isAddingList = false
-                }
-            case .failure(let err):
-                print(err.localizedDescription)
-                self.err = err
-            }
-        }
-    }
-}
+//struct CreateNewListView : View {
+//    @State private var listTitle : String = ""
+//    @Binding var isAddingList : Bool
+//    @EnvironmentObject var userModel : UserViewModel
+//    @State private var isLoading = false
+//    @State private var err : Error?
+//    var body : some View {
+//        ZStack{
+//            VStack(alignment:.leading){
+//                Text("Create a new list")
+//                    .bold()
+//                    .font(.system(size:35))
+//                    .padding(.leading)
+//
+//
+//                List(){
+//                    Section("LIST INFORMATION"){
+//                        HStack{
+//                            Text("Title:")
+//                            TextField("List Title", text: $listTitle)
+//                        }
+//                    }
+//
+//                    Button(action:{
+//                        //Create a list
+//                        CreateNewList()
+//                    }){
+//                        Text("Create")
+//                    }
+//
+//                    Button(action:{
+//                        //do nothing and back to the page
+//                        withAnimation{
+//                            self.isAddingList = false
+//                        }
+//                    }){
+//                        Text("Cancel")
+//                    }
+//
+//                }
+//            }
+//            .padding(.top,30)
+//
+//            if isLoading || self.err != nil {
+//                LoadingView(isLoading: isLoading, error: err as NSError?){
+//                    CreateNewList()
+//                }
+//                .background(BlurView().frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height))
+//            }
+//
+//        }
+//    }
+//
+//    func CreateNewList() {
+//        if listTitle.isEmpty{
+//            return
+//        }
+//
+//        let newList = CreateNewCustomListReq(title: listTitle)
+//        self.isLoading = true
+//        APIService.shared.CreateCustomList(req: newList){ (result) in
+//            self.isLoading = false
+//            switch result{
+//            case .success(let data):
+//                let listInfo = CustomListInfo(id: data.id, title: data.title, movie_list: [])
+//                userModel.profile!.UserCustomList!.append(listInfo)
+//                self.err = nil
+//                withAnimation(){
+//                    self.isAddingList = false
+//                }
+//            case .failure(let err):
+//                print(err.localizedDescription)
+//                self.err = err
+//            }
+//        }
+//    }
+//}
 
 struct CustomListView : View{
     @Binding var addList : Bool
+    @Binding var isViewMovieList : Bool
+    @Binding var listIndex : Int
     @EnvironmentObject var userVM : UserViewModel
 //    let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
     var body: some View{
-        VStack(){
-            Button(action:{
-                //Create Own List
-                withAnimation(){
-                    self.addList.toggle()
-                }
-            }){
-                HStack(spacing:5){
-                    Group{
-                        Text("Create A New List")
-                            .bold()
-                            .font(.body)
-                        Spacer()
-                        Image(systemName: "plus")
+        VStack(alignment:.leading){
+            NavigationLink(destination: CreateMovieList(isCreateList: $addList)
+                            .navigationBarTitle("")
+                            .navigationTitle("")
+                            .navigationBarHidden(true)
+                            .navigationBarBackButtonHidden(true)
+                            .environmentObject(userVM)
+                           ,isActive: $addList){
+                Button(action:{
+                    //Create Own List
+                    withAnimation(){
+                        self.addList.toggle()
                     }
-                    .padding(.horizontal,5)
-                }
-                .frame(height: 50)
-                .background(Color("Gray"))
-                .cornerRadius(10)
-            }.buttonStyle(PlainButtonStyle())
-            
-            Divider()
-                .background(.gray)
-            
-            
-            //If there is not any list data
-            //If data is loding
+                }){
+                    HStack(spacing:5){
+                        Group{
+                            Text("建立新專輯")
+                                .font(.system(size:14,weight:.semibold))
+                            Spacer()
+                                Image(systemName: "chevron.right")
+                                .imageScale(.medium)
+                        }
+                        .padding(.horizontal,5)
+                    }
+                    .frame(height: 40)
+                    .background(Color("appleDark"))
+                    .cornerRadius(8)
+                }.buttonStyle(PlainButtonStyle())
+            }
+
             if userVM.IsListLoading || userVM.ListError != nil{
                 LoadingView(isLoading: userVM.IsListLoading, error: userVM.ListError as NSError?){
                     userVM.getUserLikedMovie()
                 }
             }else if self.userVM.profile!.UserCustomList != nil{
-                ForEach(self.userVM.profile!.UserCustomList!,id:\.id){ info in
-                    Button(action:{
-                        //Open the list view
-                    }){
-                        HStack{
-//                                Image("defaultAvatar")
-//                                    .resizable()
-//                                    .frame(width: 25, height: 25)
-//                                    .cornerRadius(5)
-//                                    .padding(.leading,10)
-                  
-                            VStack(alignment:.leading){
-                                Text(info.title)
-                                    .foregroundColor(.white)
-                                if info.movie_list == nil{
-                                    Text("Empty")
-                                        .italic()
-                                        .font(.caption)
-                                }else {
-                                    HStack(spacing:5){
-                                        ForEach(0..<(info.movie_list!.count)){ i in
-                                            WebImage(url: info.movie_list![i].posterURL)
-                                                .resizable()
-                                                .indicator(.activity)
-                                                .aspectRatio(contentMode: .fit)
-                                                .frame(width: 50)
-                                                .cornerRadius(10)
-                                        }
-                                    }
-                                }
-                                
-                            }
-                            .foregroundColor(.gray)
-                            .padding(5)
-                            
-                            
-
-                            Spacer()
-                            
-                                Image(systemName: "chevron.right")
-                                    .padding(.horizontal,10)
-                        }
-                        .frame(height: info.movie_list == nil ? 50 : 100)
-                        .background(Color("MoviePostColor"))
-                        .cornerRadius(10)
-                    }
-                }
+              
+                ListInfo()
             }
 
             
         }
-        .padding(5)
+        .padding(8)
+    }
+    
+    @ViewBuilder
+    func ListInfo() -> some View {
+        ForEach(0..<self.userVM.profile!.UserCustomList!.count){ i in
+            Button(action:{
+//                //Open the list view
+                withAnimation{
+                    self.isViewMovieList.toggle()
+                    self.listIndex = i
+                }
+            }){
+                HStack{
+                    
+                    VStack(alignment:.leading,spacing:5){
+                        Text(self.userVM.profile!.UserCustomList![i].title)
+                            .font(.system(size:16,weight:.semibold))
+                        
+                        Text("收藏電影: \(self.userVM.profile!.UserCustomList![i].movie_list == nil ? 0 :  self.userVM.profile!.UserCustomList![i].movie_list!.count)")
+                            .font(.system(size:12,weight:.semibold))
+                            .foregroundColor(Color(UIColor.darkGray))
+                        
+                        if self.userVM.profile!.UserCustomList![i].movie_list == nil{
+                            HStack(spacing:5){
+                                ForEach(0..<4){ _ in
+                                    PlaceHoldRect(color: Color("DarkMode2"))
+                                }
+                            }
+                        }else{
+                            HStack(spacing:5){
+                                ForEach(0..<4){ movieIndex in
+                                    if movieIndex <  self.userVM.profile!.UserCustomList![i].movie_list!.count{
+                                        WebImage(url: self.userVM.profile!.UserCustomList![i].movie_list![movieIndex].posterURL)
+                                            .resizable()
+                                            .indicator(.activity)
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: 85)
+                                    }else {
+                                        PlaceHoldRect(color: Color("DarkMode2"))
+                                    }
+                                }
+                            }
+                        }
+                        
+                    }
+                    .foregroundColor(.gray)
+                    .padding(5)
+                }
+                .frame(maxWidth:.infinity,alignment:.leading)
+                .background(Color("MoviePostColor"))
+                .cornerRadius(10)
+            }
+        }
+
+
+    }
+    
+    @ViewBuilder
+    func PlaceHoldRect(color: Color) -> some View {
+        Rectangle()
+            .fill(color)
+            .frame(width: 85,height:85 * 1.5)
+            .cornerRadius(10)
     }
 }
 
@@ -993,8 +1014,8 @@ struct EditProfile : View{
     @EnvironmentObject var userVM : UserViewModel
     @Binding var isEditProfile : Bool
     @State private var sourceType: UIImagePickerController.SourceType = .photoLibrary
-//    @State private var userIcon : UIImage = UIImage(named: "image")!
-//    @State private var BackGoundImg : UIImage = UIImage(named: "bg")!
+//    @State private var userIcon : UIImage?
+//    @State private var BackGoundImg : UIImage?
     
     @State private var userIconPicker : Bool = false
     @State private var BackGoundImgPicker : Bool = false
@@ -1006,117 +1027,129 @@ struct EditProfile : View{
     
 
     var body : some View{
-        GeometryReader{proxy in
-            let top = proxy.safeAreaInsets.top
-            VStack(spacing : 0){
-                ZStack(){
-                    Text("Edit Profiles")
-                        .bold()
-                        .font(.system(size: 14))
-                        .padding(.bottom)
+        GeometryReader{ proxy in
+            ZStack{
+                let top = proxy.safeAreaInsets.top
+                VStack(spacing : 0){
+                    ZStack(){
+                        Text("編輯資料")
+                            .bold()
+                            .font(.system(size: 14))
+                            .padding(.bottom)
 
-                    HStack(alignment: .bottom){
-                        Button(action:{
-                            withAnimation(){
-                                self.isEditProfile.toggle()
+                        HStack(alignment: .bottom){
+                            Button(action:{
+                                withAnimation(){
+                                    self.isEditProfile.toggle()
+                                }
+                            }){
+                                Image(systemName: "chevron.left")
+                                    .foregroundColor(.white)
+                                    .font(.title2)
+                                    .imageScale(.small)
                             }
-                        }){
-                            Image(systemName: "chevron.left")
-                                .foregroundColor(.white)
-                                .font(.title2)
-                                .imageScale(.small)
+                            .padding(.horizontal)
+                            .padding(.bottom)
+                            Spacer()
                         }
-                        .padding(.horizontal)
-                        .padding(.bottom)
-                        Spacer()
+                    }
+                    .padding(.top,top + 10)
+                    .ignoresSafeArea(.all, edges: .top)
+    //                .background(Color.red)
+
+                    List(){
+                        HStack{
+                            Spacer()
+                            WebImage(url: self.userVM.profile!.UserPhotoURL)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 80, height: 80, alignment: .center)
+                                .clipShape(Circle())
+                                .overlay(
+                                    Circle()
+                                        .stroke(lineWidth: 2)
+                                        .foregroundColor(.white)
+                                )
+                                .overlay(
+                                    HStack{
+                                        Image(systemName: "camera")
+                                            .imageScale(.small)
+                                            .foregroundColor(.black)
+                                    }
+                                        .frame(width: 25, height: 25)
+                                        .background(Color.white)
+                                        .clipShape(Circle())
+                                    ,alignment: .bottomTrailing
+                                )
+                                .onTapGesture {
+                                    //TO CHANGE PHOTO
+                                    print("Change")
+                                    withAnimation(){
+                                        self.userIconPicker.toggle()
+                                    }
+                                }
+                            Spacer()
+                        }
+                        .padding(.vertical)
+
+                        fieldCellButton(fieldName: "名字", fieldData: userVM.profile!.name,action: {
+                            withAnimation(){
+                                self.userVM.isEditName.toggle()
+                            }
+                        })
+                        
+                        fieldCellButton(fieldName: "背景圖片",  fieldData: self.userVM.profile!.UserBackGroundURL,isImageType: true,action:{
+                            withAnimation(){
+                                self.BackGoundImgPicker.toggle()
+                            }
+                        })
+                        
+                        fieldCellButton(fieldName: "電影喜好", fieldData: "",action:{
+                            withAnimation(){
+                                self.isPreference.toggle()
+                            }
+                        })
+        
                     }
                 }
-                .padding(.top,top + 10)
                 .ignoresSafeArea(.all, edges: .top)
-//                .background(Color.red)
-
-                List(){
+                .navigationTitle("")
+                .navigationBarTitle("")
+                .navigationBarHidden(true)
+                .navigationBarBackButtonHidden(true)
+                .edgesIgnoringSafeArea(.all)
+                
+                if self.userVM.IsUploading{
                     HStack{
-                        Spacer()
-                        WebImage(url: self.userVM.profile!.UserPhotoURL)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 80, height: 80, alignment: .center)
-                            .clipShape(Circle())
-                            .overlay(
-                                Circle()
-                                    .stroke(lineWidth: 2)
-                                    .foregroundColor(.white)
-                            )
-                            .overlay(
-                                HStack{
-                                    Image(systemName: "camera")
-                                        .imageScale(.small)
-                                        .foregroundColor(.black)
-                                }
-                                    .frame(width: 25, height: 25)
-                                    .background(Color.white)
-                                    .clipShape(Circle())
-                                ,alignment: .bottomTrailing
-                            )
-                            .onTapGesture {
-                                //TO CHANGE PHOTO
-                                print("Change")
-                                withAnimation(){
-                                    self.userIconPicker.toggle()
-                                }
-                            }
-                        Spacer()
+                        ActivityIndicatorView()
+                        Text("Uploading...")
+                            .font(.system(size:14))
                     }
-                    .padding(.vertical)
-
-                    fieldCellButton(fieldName: "名字", fieldData: userVM.profile!.name,action: {
-                        withAnimation(){
-                            self.isEditName.toggle()
-                        }
-                    })
-                    
-                    fieldCellButton(fieldName: "背景圖片",  fieldData: self.userVM.profile!.UserBackGroundURL,isImageType: true,action:{
-                        withAnimation(){
-                            self.BackGoundImgPicker.toggle()
-                        }
-                    })
-                    
-                    fieldCellButton(fieldName: "電影喜好", fieldData: "",action:{
-                        withAnimation(){
-                            self.isPreference.toggle()
-                        }
-                    })
-    
+                    .frame(maxWidth:.infinity,maxHeight:.infinity)
+                        .background(Color.black.opacity(0.5).edgesIgnoringSafeArea(.all))
                 }
             }
-            .ignoresSafeArea(.all, edges: .top)
-            .navigationTitle("")
-            .navigationBarTitle("")
-            .navigationBarHidden(true)
-            .navigationBarBackButtonHidden(true)
-            .edgesIgnoringSafeArea(.all)
-
         }
         .onAppear { UITableView.appearance().isScrollEnabled = false }
         .onDisappear{ UITableView.appearance().isScrollEnabled = true }
-        .fullScreenCover(isPresented: $isEditName){
-            EditTextView(
+        .fullScreenCover(isPresented: self.$userVM.isEditName){
+            EditUserName(
                 editType: .Name,
                 settingHeader: "設置名字",
-                placeHolder: "Enter your name",
+                placeHolder: "輸入名字",
                 maxSize: 20,
                 warningMessage: "設置長度為2-24個字符，不包含非法字符",
                 defaultValue: self.userVM.profile!.name,
-                isCancel: self.$isEditName)
+                isCancel: self.$userVM.isEditName)
         }
+        
         .fullScreenCover(isPresented: $userIconPicker){
-            EditableImagePickerView(sourceType: .photoLibrary)
+            EditableImagePickerView(sourceType: .photoLibrary, imageUploadType: .Avatar)
                 .edgesIgnoringSafeArea(.all)
         }
         .fullScreenCover(isPresented: $BackGoundImgPicker){
 
-            EditableImagePickerView(sourceType: .photoLibrary)
+            EditableImagePickerView(sourceType: .photoLibrary, imageUploadType: .Cover)
                 .edgesIgnoringSafeArea(.all)
         }
         .fullScreenCover(isPresented: $isPreference){
@@ -1171,9 +1204,9 @@ struct EditProfile : View{
 
 
 enum ProfileTab : String {
-    case Posts = "Posts"
-    case Likes = "Likes"
-    case MyLists = "Lists"
+    case Posts = "文章"
+    case Likes = "喜歡"
+    case MyLists = "收藏"
 }
 
 struct ProfileViewTab : Identifiable{
@@ -1250,8 +1283,9 @@ struct personProfile: View {
     @State private var tabBarOffset = UIScreen.main.bounds.width
     @State private var tabOffset : CGFloat = 0.0
     @State private var tabIndex : Int = 0
+    @State private var listIndex : Int = 0
+    @State private var isViewMovieList : Bool = false
     
-
     var body: some View {
         ZStack(alignment:.top){
             ZStack{
@@ -1304,6 +1338,7 @@ struct personProfile: View {
                                     .resizable()
                                     .aspectRatio( contentMode: .fill)
                                     .frame(width: UIScreen.main.bounds.width, height: offset > 0 ? offset + max + 20 : getHeaderHigth() + 20, alignment: .bottom)
+                                    .scaleEffect(offset > 0 ? (offset / 500) + 1 : 1)
                                     .overlay(
                                         LinearGradient(colors: [
                                             Color("PersonCellColor").opacity(0.3),
@@ -1312,7 +1347,9 @@ struct personProfile: View {
                                             Color("PersonCellColor"),
                                             Color.black
                                         ], startPoint: .top, endPoint: .bottom).frame(width: UIScreen.main.bounds.width, height: offset > 0 ? offset + max + 20 : getHeaderHigth() + 20, alignment: .bottom)
+                                            .scaleEffect(offset > 0 ? (offset / 500) + 1 : 1)
                                     )
+                                  
                                     .zIndex(0)
                                 
                                 
@@ -1342,7 +1379,7 @@ struct personProfile: View {
                                         }
                                     }
                             case 2:
-                                CustomListView(addList: $isAddingList)
+                                CustomListView(addList: $isAddingList,isViewMovieList:$isViewMovieList, listIndex:$listIndex)
                                     .environmentObject(userVM)
                                     .padding(.vertical,3)
                                     .onAppear{
@@ -1353,51 +1390,7 @@ struct personProfile: View {
                             default:
                                 EmptyView()
                             }
-                            
-//                            TabView(selection:$tabIndex){
-//                                VStack{
-//
-//                                    PersonPostCardGridView()
-//                                        .padding(.vertical,3)
-//                                            .environmentObject(userVM)
-//
-//                                    Spacer()
-//                                }
-//                                .tag(0)
-//
-//
-//                                VStack{
-//                                    LikedPostCardGridView()
-//                                        .environmentObject(userVM)
-//                                        .padding(.vertical,3)
-//                                        .onAppear{
-//                                            if userVM.profile!.UserLikedMovies == nil{
-//                                                userVM.getUserLikedMovie()
-//                                            }
-//                                        }
-//
-//                                    Spacer()
-//                                }
-//                                .tag(1)
-//
-//                                VStack{
-//                                    CustomListView(addList: $isAddingList)
-//                                        .environmentObject(userVM)
-//                                        .padding(.vertical,3)
-//                                        .onAppear{
-//                                            if userVM.profile!.UserCustomList == nil{
-//                                                userVM.getUserList()
-//                                            }
-//                                        }
-//                                    Spacer()
-//                                }
-//                                    .tag(2)
-//
-//                            }
-//                            .animation(.default)
-//                            .transition(.slide)
-//                            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-//                            .frame(height:proxy.size.height, alignment: .top)
+                        
             
                         } header: {
                             VStack(spacing:0){
@@ -1433,10 +1426,18 @@ struct personProfile: View {
             }
             
         }
-        .sheet(isPresented: self.$isAddingList) {
-            CreateNewListView(isAddingList: $isAddingList)
-                .environmentObject(userVM)
-        }
+        .background(
+            NavigationLink(destination:ViewMovieList(index: listIndex, isViewList: $isViewMovieList)
+                            .navigationBarTitle("")
+                            .navigationTitle("")
+                            .navigationBarHidden(true)
+                            .navigationBarBackButtonHidden(true)
+                            .environmentObject(userVM)
+                           ,isActive:$isViewMovieList){
+                               EmptyView()
+                           }
+        )
+        
         
     }
     
@@ -1550,7 +1551,7 @@ struct personProfile: View {
                     NavigationLink(destination:
                                     EditProfile(isEditProfile: $isEditProfile)
                                    , isActive: $isEditProfile){
-                        Text("Edit Profile")
+                        Text("編輯資料")
                             .navigationBarBackButtonHidden(true)
                             .padding(8)
                             .background(BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))

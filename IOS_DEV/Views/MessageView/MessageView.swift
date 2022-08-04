@@ -362,6 +362,7 @@ struct MessageView: View {
                                 .buttonStyle(PlainButtonStyle())
                                 .frame(width: 0)
                             }
+                            .listRowBackground(Color("DarkMode2"))
                             
                             //                                .swipeActions(edge: .leading,allowsFullSwipe: true){
                             //                                    Button(action:{
@@ -383,6 +384,7 @@ struct MessageView: View {
                     }
                     .listStyle(.plain)
                     
+                    
                     .padding(.top)
                 }
                 //        }
@@ -391,9 +393,7 @@ struct MessageView: View {
             
         }
         .accentColor(.white)
-
-//        .navigationBarHidden(true)
-//        .navigationBarBackButtonHidden(true)
+        .background(Color("DarkMode2").edgesIgnoringSafeArea(.all))
     }
 }
 

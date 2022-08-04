@@ -53,7 +53,8 @@ struct CameraImagePickerView : UIViewControllerRepresentable{
 
 struct EditableImagePickerView : UIViewControllerRepresentable{
     var sourceType:UIImagePickerController.SourceType
-    @State private var selectedImage : UIImage? = nil
+    var imageUploadType : UploadImageType
+//    @Binding var selectedImage : UIImage? 
     @EnvironmentObject var UserVM : UserViewModel
     func makeCoordinator() -> Coordinator {
         return Coordinator(picker: self)
@@ -86,11 +87,17 @@ struct EditableImagePickerView : UIViewControllerRepresentable{
             guard let selectedImage = info[.originalImage] as? UIImage else { //is the original image is UIImage
                 return
             }
-            self.picker.selectedImage = selectedImage
+
             //update user profile
             //update view model and send the http request
+            if self.picker.imageUploadType == .Avatar{
+                self.picker.UserVM.UploadUserAvatar(uiImage: selectedImage)
+            } else  {
+                print("update cover?")
+                self.picker.UserVM.UploadUserCover(uiImage: selectedImage)
+            }
+            
             picker.dismiss(animated: true)
-
         }
     }
 }

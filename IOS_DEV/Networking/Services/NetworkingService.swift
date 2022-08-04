@@ -24,7 +24,7 @@ class NetworkingService: ObservableObject {
     //login
     func requestLogin(endpoint: String,
                  loginObject: UserLoginReq,
-                 completion: @escaping (Result<UserProfile, Error>) -> Void) {
+                 completion: @escaping (Result<Profile, Error>) -> Void) {
         
         guard let url = URL(string: baseUrl + endpoint) else {
             completion(.failure(NetworkingError.badUrl))
@@ -81,7 +81,7 @@ class NetworkingService: ObservableObject {
     }
     
     //驗證token,辨識user
-    func AuthUser(token:String, completion: @escaping (Result<UserProfile, Error>) -> Void){
+    func AuthUser(token:String, completion: @escaping (Result<Profile, Error>) -> Void){
         let url = URL(string: baseUrl+"/api/v1/user/profile")
         
         var request = URLRequest(url: url!)
@@ -95,7 +95,7 @@ class NetworkingService: ObservableObject {
                 return
             }
             do {
-                if let user = try? JSONDecoder().decode(UserProfile.self, from: gotData) {
+                if let user = try? JSONDecoder().decode(Profile.self, from: gotData) {
                     //get all the user datas
                     print(user)
                     UserDefaults.standard.set(token, forKey: "userToken")

@@ -8,6 +8,7 @@
 
 import Foundation
 import SwiftUI
+import BottomSheet
 
 class MovieStore: MovieService {
     static let shared = MovieStore()
@@ -253,8 +254,8 @@ class APIService : ServerAPIServerServiceInterface{
     
     @AppStorage("userToken") var token : String = ""
     
-    private let API_SERVER_HOST = "http://127.0.0.1:8000/api/v1"
-    private let HOST = "http://127.0.0.1:8080/"
+    private let API_SERVER_HOST = "http://0.0.0.0:8000/api/v1"
+    private let HOST = "http://0.0.0.0:8080/"
 //    private let API_SERVER_HOST = "http://127.0.0.1:8080/api"
     private let Client = URLSession.shared
     private let Decoder = JSONDecoder()
@@ -280,7 +281,7 @@ class APIService : ServerAPIServerServiceInterface{
     
     
     //MARK: --USER
-    func GetUserProfile(token : String, completion: @escaping (Result<UserProfile, Error>) -> ()) {
+    func GetUserProfile(token : String, completion: @escaping (Result<Profile, Error>) -> ()) {
         
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.UserProfile.apiUri) else{
             completion(.failure(APIError.badUrl))
@@ -339,6 +340,66 @@ class APIService : ServerAPIServerServiceInterface{
         
         PostAndDecode(req: request, completion: completion)
     }
+    
+    func UpdateUserProfile(req : UserProfileUpdateReq, completion: @escaping (Result<UserProfileUpdateResp,Error>) ->()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.UserUpdateProfile.apiUri) else{
+            completion(.failure(APIError.badUrl))
+            return
+        }
+
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        do{
+            let bodyData = try Encoder.encode(req)
+            request.httpBody = bodyData
+        } catch {
+            completion(.failure(APIError.badEncoding))
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+        
+    }
+    func UploadImage(imgData : Data,uploadType: UploadImageType, completion: @escaping (Result<UploadImageResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + uploadType.uploadURI) else{
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var formFieldKey : String = ""
+        switch uploadType {
+        case .Avatar:
+            formFieldKey = "uploadAvatar"
+        case .Cover:
+            formFieldKey = "uploadCover"
+        }
+        
+        //generate boundary string
+        let boundary = UUID().uuidString
+        let httpBody = NSMutableData()
+        httpBody.append(convertFileData(fieldName: formFieldKey,
+                                        fileName: "\(UUID().uuidString).jpeg",
+                                        mimeType: "image/jpeg",
+                                        fileData: imgData,
+                                        using: boundary))
+        
+        httpBody.appendString("--\(boundary)--")
+        
+        
+        var request = URLRequest(url: url)
+        
+        request.httpMethod = "PATCH"
+        request.addValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.httpBody = httpBody as Data
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+
     
     //MARK: --LIKED MOVIE
     func PostLikedMovie(req : NewUserLikeMoviedReq,completion : @escaping (Result<CreateUserLikedMovieResp,Error>) -> ()) {
@@ -671,6 +732,42 @@ class APIService : ServerAPIServerServiceInterface{
         }.resume()
     }
     
+    private func UploadTask<ResponseType : Decodable>(req : URLRequest,data :Data,completion : @escaping (Result<ResponseType,Error>)->()) {
+        
+        Client.uploadTask(with: req, from: data) { (data,response,error) in
+            guard error == nil else{
+                completion(.failure(error!))
+                return
+            }
+            guard let statusCode = response as? HTTPURLResponse,200..<300 ~= statusCode.statusCode else{
+                //Decode datas message???
+                DispatchQueue.main.async {
+//                    print((response as? HTTPURLResponse)?.statusCode)
+                    completion(.failure(APIError.badResponse))
+                }
+                return
+            }
+            
+            if let data = data {
+                do {
+                    if let decideData = try? self.Decoder.decode(ResponseType.self, from: data){
+                        completion(.success(decideData))
+                    }else{
+                        let errResp = try self.Decoder.decode(ErrorResp.self, from: data)
+                        print(errResp)
+                        completion(.failure(errResp))
+                    }
+                    
+                }catch{
+                    completion(.failure(error))
+                }
+            }
+
+        }.resume()
+
+    }
+    
+    
     //MARK: ---UNUSE API
     //getactors?page
     func fetchActors(page : Int = 1,completion: @escaping (Result<PersonInfoResponse, Error>) -> ()) {
@@ -841,3 +938,25 @@ struct ServerStatus : Decodable{
     let status : String
     let code : Int
 }
+
+
+func convertFileData(fieldName: String, fileName: String, mimeType: String, fileData: Data, using boundary: String) -> Data {
+  let data = NSMutableData()
+
+  data.appendString("--\(boundary)\r\n")
+  data.appendString("Content-Disposition: form-data; name=\"\(fieldName)\"; filename=\"\(fileName)\"\r\n")
+  data.appendString("Content-Type: \(mimeType)\r\n\r\n")
+  data.append(fileData)
+  data.appendString("\r\n")
+
+  return data as Data
+}
+
+extension NSMutableData {
+  func appendString(_ string: String) {
+    if let data = string.data(using: .utf8) {
+      self.append(data)
+    }
+  }
+}
+

@@ -16,8 +16,8 @@ class PostVM : ObservableObject {
     @Published var isShowPostDetail : Bool = false
     @Published var selectedPost : Post?
 //    
-    @Published var isReadComment : Bool = false
-    @Published var selectedMoreData : Post? = nil
+    @Published var isReadMorePostInfo : Bool = false
+    @Published var selectedReadMorePost : Post? = nil
     
     @Published var isLoading : Bool = false
     @Published var err : Error?
@@ -33,7 +33,7 @@ class PostVM : ObservableObject {
 //        self.GetFollowUserPost()
     }
 
-    func CreatePost(title : String, desc : String,movie: Movie,user: UserProfile){
+    func CreatePost(title : String, desc : String,movie: Movie,user: Profile){
         let req = CreatePostReq(post_title: title, post_desc: desc, movie_id: movie.id)
         self.isLoading = true
         self.err = nil

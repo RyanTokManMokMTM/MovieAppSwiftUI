@@ -217,7 +217,7 @@ struct AccountSettingView: View {
                     
                 }
                 .sheet(isPresented: $showImagePicker, content: {
-                    ImagePicker(image: self.$selectedImage)
+                    CustomImagePicker(image: self.$selectedImage)
                 })
                 
                 Spacer(minLength: 0)

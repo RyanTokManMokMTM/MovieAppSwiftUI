@@ -13,46 +13,85 @@ struct PostDetailView: View {
     @EnvironmentObject var postVM : PostVM
     var namespace : Namespace.ID
     @State private var value : CGSize = .zero
+    @State private var message : String = ""
+    @FocusState private var isFocues : Bool
     
     var body: some View {
-        ZStack(alignment: .top){
-            VStack(spacing:0){
-                PostDetailViewTopBar()
-//                    .background(Color.red)
-                
-                //Image tab view
-                ScrollView(.vertical, showsIndicators: false){
-                    PostDetailDescView(namespace: namespace)
-                        
-                }
-//                .frame(maxHeight:.infinity,alignment:.top)
-            }
-        }
-//        .frame(maxHeight:.infinity,alignment: .top)/
-        .background(Color("appleDark").edgesIgnoringSafeArea(.all))
-        .contentShape(Rectangle())
-        .offset(x : self.value.width)
-//        .scaleEffect(self.value.width > (self.value.width / 2) ? self.value.width / -500 + 1 : 1)
-        .gesture(
-            DragGesture()
-                .onChanged{ value in
-                    guard value.translation.width > 0 else {return }
+        
+        if postVM.selectedPost == nil {
+            Text("????")
+        }else {
+            ZStack(alignment: .top){
+                VStack(spacing:0){
+                    PostDetailViewTopBar()
 
-                    //left only
-//                    if value.translation.width < 100 {
-                        self.value = value.translation
-//                    }
-                }
-                .onEnded{ value in
-                    withAnimation(.spring()){
-                        if value.translation.width > 80 {
-                            self.postVM.isShowPostDetail.toggle()
-                        }else {
-                            self.value = .zero
-                        }
+                    //Image tab view
+                    ScrollView(.vertical, showsIndicators: false){
+                        PostDetailDescView(namespace: namespace)
+                            
                     }
+    //                .frame(maxHeight:.infinity,alignment:.top)
+                    CommentArea()
                 }
-        )
+            }
+    //        .frame(maxHeight:.infinity,alignment: .top)/
+            .background(Color("appleDark").edgesIgnoringSafeArea(.all))
+            .contentShape(Rectangle())
+        }
+    
+//        .onDisappear{
+//            if !self.postVM.isShowPostDetail {
+//                self.postVM.selectedPost = nil
+//            }
+//        }
+//        .offset(x : self.value.width)
+////        .scaleEffect(self.value.width > (self.value.width / 2) ? self.value.width / -500 + 1 : 1)
+//        .gesture(
+//            DragGesture()
+//                .onChanged{ value in
+//                    guard value.translation.width > 0 else {return }
+//
+//                    //left only
+////                    if value.translation.width < 100 {
+//                        self.value = value.translation
+////                    }
+//                }
+//                .onEnded{ value in
+//                    withAnimation(.spring()){
+//                        if value.translation.width > 80 {
+//                            self.postVM.isShowPostDetail.toggle()
+//                        }else {
+//                            self.value = .zero
+//                        }
+//                    }
+//                }
+//        )
+        
+    }
+    @ViewBuilder
+    func CommentArea() -> some View {
+        VStack{
+            //                Spacer()
+            Divider()
+            HStack{
+                TextField("留下點什麼~",text:$message)
+                    .font(.system(size:14))
+                    .padding(.horizontal)
+                    .frame(height:35)
+                    .background(BlurView())
+                    .clipShape(RoundedRectangle(cornerRadius: 13))
+                    .focused($isFocues)
+                    .submitLabel(.send)
+                    .onSubmit({
+                        //TODO: SEND THE COMMENT
+                    })
+                    .accentColor(.white)
+            }
+            .padding(.horizontal)
+            .frame(height: 35)
+        }
+        .padding(5)
+        
         
     }
 }
@@ -109,14 +148,14 @@ struct PostDetailViewTopBar : View {
                 Button(action:{
                     //TODO: MODIFY THE POST
                 }){
-                    Image(systemName: "line.3.horizontal")
+                    Image(systemName: "ellipsis")
                         .foregroundColor(.white)
-                        .imageScale(.medium)
+                        .imageScale(.large)
                 }
             }
 
         }
-        .edgesIgnoringSafeArea(.all)
+//        .edgesIgnoringSafeArea(.all)
         .padding(.horizontal,5)
         .frame(width:UIScreen.main.bounds.width,height:50)
         .background(Color("appleDark").edgesIgnoringSafeArea(.all))
@@ -128,20 +167,18 @@ struct PostDetailDescView : View {
     @EnvironmentObject var postVM : PostVM
     var namespace : Namespace.ID
     @State private var index = 0
-    @State private var commentText : String = ""
     @State private var isShowMoreDetail : Bool = false
     var body: some View {
         VStack(spacing:5){
             ZStack(alignment:.topTrailing){
                 //                TabView(selection:$index){
                 WebImage(url: self.postVM.selectedPost!.post_movie_info.PosterURL)
+                    .placeholder(Image(systemName: "photo")) //
                     .resizable()
+                    .indicator(.activity)
+                    .transition(.fade(duration: 0.5))
                     .aspectRatio(contentMode: .fit)
-                    .matchedGeometryEffect(id: self.postVM.selectedPost!.id, in: namespace)
-                //                }
-                //                .tabViewStyle(.page(indexDisplayMode: .never))
-                
-                    .matchedGeometryEffect(id: self.postVM.selectedPost!.post_movie_info.id, in: namespace)
+//                    .matchedGeometryEffect(id: self.postVM.selectedPost!.id.description, in: namespace)
                     .frame(width: UIScreen.main.bounds.width)
                 //maxinum image is 10
                 Text("\(index + 1)/1")
@@ -173,15 +210,21 @@ struct PostDetailDescView : View {
             }
             .padding(.horizontal)
             .padding(.top)
+
         }
 //        .edgesIgnoringSafeArea(.all)
     }
+    
+    
+ 
     
     @ViewBuilder
     func PostContent() -> some View{
    
             //Jump to the detail view
-        NavigationLink(destination: MovieDetailView(movieId: self.postVM.selectedPost!.post_movie_info.id, isShowDetail: $isShowMoreDetail),isActive: $isShowMoreDetail){
+        NavigationLink(destination: MovieDetailView(movieId: self.postVM.selectedPost!.post_movie_info.id, isShowDetail: $isShowMoreDetail)
+                        .environmentObject(postVM)
+                       ,isActive: $isShowMoreDetail){
             Text("#\(self.postVM.selectedPost!.post_movie_info.title)")
                 .font(.system(size: 15))
                 .foregroundColor(.red)
@@ -224,24 +267,24 @@ struct PostDetailDescView : View {
             .font(.system(size: 14,weight: .medium))
         
         //This Maybe change ~~
-        HStack{
-            WebImage(url: userVM.profile!.UserPhotoURL)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 35, height: 35)
-                .clipShape(Circle())
-            
-            HStack{
-                TextField("留下您寶貴的評論", text: $commentText)
-                    .font(.system(size: 14))
-                    .padding(.horizontal)
-                    .submitLabel(.done)
-            }
-            .padding(8)
-            .background(.ultraThinMaterial)
-            .clipShape(CustomeConer(width: 20, height: 20, coners: [.allCorners]))
-        }
-        .padding(.top)
+//        HStack{
+//            WebImage(url: userVM.profile!.UserPhotoURL)
+//                .resizable()
+//                .aspectRatio(contentMode: .fill)
+//                .frame(width: 35, height: 35)
+//                .clipShape(Circle())
+//
+//            HStack{
+//                TextField("留下您寶貴的評論", text: $commentText)
+//                    .font(.system(size: 14))
+//                    .padding(.horizontal)
+//                    .submitLabel(.done)
+//            }
+//            .padding(8)
+//            .background(.ultraThinMaterial)
+//            .clipShape(CustomeConer(width: 20, height: 20, coners: [.allCorners]))
+//        }
+//        .padding(.top)
         
         
         //All Comment

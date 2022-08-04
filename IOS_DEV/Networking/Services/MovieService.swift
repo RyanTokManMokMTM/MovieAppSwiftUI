@@ -7,6 +7,7 @@
 // Interface, endpoint, error
 
 import Foundation
+import UIKit
 
 protocol MovieService {
     //User Service
@@ -34,7 +35,9 @@ protocol ServerAPIServerServiceInterface {
     //TODO: USER
     func UserLogin(req : UserLoginReq,completion: @escaping (Result<UserLoginResp,Error>)->())
     func UserSignUp(req : UserSignInReq,completion : @escaping (Result<UserSignInResp,Error>)->())
-    func GetUserProfile(token : String,completion : @escaping (Result<UserProfile,Error>) -> ())
+    func GetUserProfile(token : String,completion : @escaping (Result<Profile,Error>) -> ())
+    func UpdateUserProfile(req : UserProfileUpdateReq, completion: @escaping (Result<UserProfileUpdateResp,Error>) -> ())
+    func UploadImage(imgData : Data,uploadType: UploadImageType, completion: @escaping (Result<UploadImageResp,Error>) -> ())
     //Conennection check
     
     //TODO: LIKED MOVIE
@@ -106,6 +109,19 @@ enum MovieListEndpoint: String, CaseIterable, Identifiable {
     }
 }
 
+enum UploadImageType : String,CaseIterable,Identifiable {
+    var id : String { rawValue }
+    case Avatar
+    case Cover
+    
+    var uploadURI: String {
+        switch self{
+        case .Avatar: return "/user/avatar"
+        case .Cover: return "/user/cover"
+        }
+    }
+}
+
 //Get API URI
 enum APIEndPoint : String,CaseIterable, Identifiable{
     var id : String { rawValue }
@@ -115,6 +131,7 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     case UserSignup //Done
     case UserProfile //Done
     case UserInfo //Haven't test yet
+    case UserUpdateProfile
     
     //MARK: LIKED MOVIE API
     case CreateLikedMovie
@@ -159,6 +176,7 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
         case .UserSignup: return "/user/signup"
         case .UserProfile: return "/user/profile"
         case .UserInfo: return ""
+        case .UserUpdateProfile: return "/user/profile"
             
         case .GetMoviesInfoByGenre: return "/movies/list/"
         case .GetMovieGenrensByMovieID: return "/movies/genres/"

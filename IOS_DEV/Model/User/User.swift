@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 
 struct User: Decodable{
@@ -26,19 +27,30 @@ struct User: Decodable{
 
 class UserViewModel : ObservableObject{
     @Published var user : Me?//???
-    @Published var profile : UserProfile?
+    @Published var profile : Profile?
     @Published var IsPostLoading : Bool = false
     @Published var IsLikedMovieLoading : Bool = false
     @Published var IsListLoading : Bool = false
+    @Published var IsUpdating : Bool = false
+    @Published var IsUploading : Bool = false
     
     @Published var ListError : Error?
     @Published var PostError : Error?
     @Published var LikedError : Error?
+    @Published var UpdateError : Error?
+    @Published var UploadError : Error?
+    
+    @Published var isEditName : Bool = false
+    @Published var isEditAvarar : Bool = false
+    @Published var isEditCover : Bool = false
+    
+    
+
     init(){
     }
 
     //set The UserInfo
-    func setUserInfo(info userInfo : UserProfile){
+    func setUserInfo(info userInfo : Profile){
         DispatchQueue.main.async {
             self.profile = userInfo
             self.profile!.UserGenrePrerences = []
@@ -56,7 +68,11 @@ class UserViewModel : ObservableObject{
                 switch result{
                 case .success(let data):
                     self.profile!.UserCollection = []
-                    for var info in data.post_info{
+                    guard let posts = data.post_info else {
+                        return
+                    }
+                   
+                    for var info in posts{
                         info.comments = []
                         self.profile!.UserCollection!.append(info)
                     }
@@ -92,23 +108,92 @@ class UserViewModel : ObservableObject{
 
     func getUserList() {
         self.IsListLoading = true
+        self.ListError = nil
         APIService.shared.GetAllCustomLists(userID: profile!.id){ (result) in
-            self.IsListLoading = false
-            switch result{
-            case .success(let data):
-                if data.lists == nil{
-                    self.profile!.UserCustomList = []
-                }else{
-                    self.profile!.UserCustomList = data.lists!
+            DispatchQueue.main.async {
+                self.IsListLoading = false
+                switch result{
+                case .success(let data):
+                    if data.lists == nil{
+                        self.profile!.UserCustomList = []
+                    }else{
+                        self.profile!.UserCustomList = data.lists!
+                    }
+                case .failure(let err):
+                    print(err.localizedDescription)
+                    self.ListError = err
                 }
-            case .failure(let err):
-                print(err.localizedDescription)
-                self.ListError = err
             }
         }
     }
     
-
+    func UpdateUserProfile(name : String) {
+        let req = UserProfileUpdateReq(name: name)
+        self.IsUpdating = true
+        self.UpdateError = nil
+        APIService.shared.UpdateUserProfile(req: req){ (result) in
+            DispatchQueue.main.async {
+                self.IsUpdating = false
+                
+                switch result{
+                case .success( _):
+                    self.profile!.name = name
+                    withAnimation{
+                        self.isEditName = false
+                    }
+                case .failure(let err):
+                    print(err.localizedDescription)
+                    self.UpdateError = err
+                }
+            }
+        }
+        
+    }
+    func UploadUserAvatar(uiImage : UIImage) {
+        guard let imgData = uiImage.jpegData(compressionQuality: 0.5) else {
+            print("image to jpegData failed")
+            return
+        }
+        
+        self.IsUploading = true
+        self.UpdateError = nil
+        
+        APIService.shared.UploadImage(imgData: imgData, uploadType: .Avatar){ result in
+            self.IsUploading = false
+            DispatchQueue.main.async {
+                switch result{
+                case .success(let data):
+                    self.profile!.avatar = data.path
+                case .failure(let err):
+                    print(err.localizedDescription)
+                    self.UploadError = err
+                }
+            }
+        }
+    }
+    
+    func UploadUserCover(uiImage : UIImage) {
+        guard let imgData = uiImage.jpegData(compressionQuality: 0.5) else {
+            print("image to jpegData failed")
+            return
+        }
+        
+        self.IsUploading = true
+        self.UpdateError = nil
+        
+        APIService.shared.UploadImage(imgData: imgData, uploadType: .Cover){ result in
+            self.IsUploading = false
+            DispatchQueue.main.async {
+                switch result{
+                case .success(let data):
+                    self.profile!.cover = data.path
+                case .failure(let err):
+                    print(err.localizedDescription)
+                    self.UploadError = err
+                }
+            }
+        }
+    }
 }
 
 
