@@ -46,7 +46,10 @@ struct CardPostView: View {
                 HStack{
                     WebImage(url: postData.user_info.UserPhotoURL)
                         .resizable()
-                        .frame(width: 20, height: 20)
+                        .indicator(.activity)
+                        .transition(.fade(duration: 0.5))
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 20)
                         .clipShape(Circle())
 
                     Text(postData.user_info.name)

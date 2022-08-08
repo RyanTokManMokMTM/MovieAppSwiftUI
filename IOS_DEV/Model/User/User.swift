@@ -119,6 +119,7 @@ class UserViewModel : ObservableObject{
                     }else{
                         self.profile!.UserCustomList = data.lists!
                     }
+                    
                 case .failure(let err):
                     print(err.localizedDescription)
                     self.ListError = err

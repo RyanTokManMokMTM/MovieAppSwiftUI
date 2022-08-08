@@ -10,6 +10,12 @@ import SDWebImageSwiftUI
 
 struct FollowUserPostView: View {
     @EnvironmentObject var postVM : PostVM
+    @EnvironmentObject var userVM : UserViewModel
+    @State private var isShowMovieDetail = false
+    @State private var movieId = -1
+    
+    @State private var isShowMorePostDetail : Bool = false
+    @State private var postData : Post? = nil
     var body: some View {
         ScrollView(.vertical, showsIndicators: false){
             
@@ -22,16 +28,31 @@ struct FollowUserPostView: View {
                 .padding(.vertical)
             }else {
                 ForEach(self.postVM.followingData){ info in
-                    FollowPostCell(info: info)
+                    FollowPostCell(isShowMovieDetail: $isShowMovieDetail, movieId: $movieId,info: info, isShowMorePostDetail:self.$isShowMorePostDetail, postData: self.$postData)
                         .padding(.bottom,10)
                 }
 //                .padding(.bottom,UIApplication.shared.windows.first?.safeAreaInsets.bottom )
 
             }
         }
+        .SheetWithDetents(isPresented:  self.$isShowMorePostDetail, detents: [.medium(),.large()]){
+            self.isShowMorePostDetail = false
+            self.postData = nil
+        } content : {
+            PostBottomSheet(isShowMorePostDetail: $isShowMorePostDetail, postData: $postData)
+                .environmentObject(postVM)
+        }
         .frame(maxWidth:.infinity)
         .background(Color("DarkMode2"))
+        .background(
+            NavigationLink(destination: MovieDetailView(movieId: movieId, isShowDetail: $isShowMovieDetail)
+                            .environmentObject(postVM)
+                            .environmentObject(userVM)
 
+                           , isActive: $isShowMovieDetail){
+                EmptyView()
+            }
+        )
 
     }
 }
@@ -42,8 +63,13 @@ struct FollowPostCell : View {
     @EnvironmentObject var userVM : UserViewModel
     @State private var commentText : String = ""
     
-    @State private var isShowMovieDetail : Bool = false
+    @Binding var isShowMovieDetail : Bool
+    @Binding var movieId : Int
+    
     var info : Post
+    @Binding var isShowMorePostDetail : Bool
+    @Binding var postData : Post?
+    
     @State private var moreText : Bool = false
     var body: some View{
         VStack(spacing:10){
@@ -52,6 +78,7 @@ struct FollowPostCell : View {
         }
         .padding(.vertical,5)
         .frame(width: UIScreen.main.bounds.width)
+
     }
     
     @ViewBuilder
@@ -96,10 +123,12 @@ struct FollowPostCell : View {
 //            PostButton()
             
             HStack{
-                NavigationLink(destination: MovieDetailView(movieId: info.post_movie_info.id, isShowDetail: $isShowMovieDetail)
-                               
-                                .environmentObject(postVM)
-                               ,isActive: $isShowMovieDetail){
+                Button(action:{
+                    withAnimation{
+                        self.isShowMovieDetail = true
+                    }
+                    self.movieId = info.post_movie_info.id
+                }){
                     Text("#\(info.post_movie_info.title)")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.red)
@@ -136,12 +165,12 @@ struct FollowPostCell : View {
                 if moreText{
                     Button(action:{
                         //TODO: A BOTTON SHEET SHOW COMMENT LIST AND INFO
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1){
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
                             withAnimation{
-                                self.postVM.isReadMorePostInfo = true
+                                self.isShowMorePostDetail = true
                             }
                             
-                            self.postVM.selectedReadMorePost = info
+                            self.postData = info
                         }
                     }){
                         Text("顯示全部")
@@ -205,12 +234,12 @@ struct FollowPostCell : View {
                 }
                 
                 Button(action:{
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15){
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
                         withAnimation{
-                            self.postVM.isReadMorePostInfo = true
+                            self.isShowMorePostDetail = true
                         }
                         
-                        self.postVM.selectedReadMorePost = info
+                        self.postData = info
                     }
                 }){
                     HStack(spacing:5){

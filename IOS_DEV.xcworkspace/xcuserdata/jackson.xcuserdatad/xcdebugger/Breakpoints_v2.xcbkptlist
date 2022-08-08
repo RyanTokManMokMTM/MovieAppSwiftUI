@@ -36,5 +36,85 @@
             landmarkType = "24">
          </BreakpointContent>
       </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "4224F095-CF50-47CF-A731-BF70F61A471E"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "IOS_DEV/Views/MainPage/WelcomePage.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "49"
+            endingLineNumber = "49"
+            landmarkName = "body"
+            landmarkType = "24">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "F0424530-C788-4836-B6BA-B42A4464DF98"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "IOS_DEV/Views/MainPage/WelcomePage.swift"
+            startingColumnNumber = "17"
+            endingColumnNumber = "30"
+            startingLineNumber = "34"
+            endingLineNumber = "34"
+            landmarkName = "body"
+            landmarkType = "24">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "F4347574-37DC-4B0E-BCBF-BD842A336B35"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "IOS_DEV/Views/MovieHomePage.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "50"
+            endingLineNumber = "50"
+            landmarkName = "MovieHomePage"
+            landmarkType = "14">
+            <Locations>
+               <Location
+                  uuid = "F4347574-37DC-4B0E-BCBF-BD842A336B35 - dcfcac225aa762d5"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "property wrapper backing initializer of IOS_DEV.MovieHomePage.message : Swift.String"
+                  moduleName = "IOS_DEV"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/jackson/Desktop/MovieAppSwiftUI/IOS_DEV/Views/MovieHomePage.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "50"
+                  endingLineNumber = "50"
+                  offsetFromSymbolStart = "38">
+               </Location>
+               <Location
+                  uuid = "F4347574-37DC-4B0E-BCBF-BD842A336B35 - a40530bacd484cb4"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "IOS_DEV.MovieHomePage.init(userVM: SwiftUI.EnvironmentObject&lt;IOS_DEV.UserViewModel&gt;, previewModel: @autoclosure () -&gt; IOS_DEV.PreviewModel, StateManager: @autoclosure () -&gt; IOS_DEV.SeachingViewStateManager, DragAndDropPreview: @autoclosure () -&gt; IOS_DEV.DragSearchModel, postVM: @autoclosure () -&gt; IOS_DEV.PostVM, userController: IOS_DEV.UserController, SearchVM: @autoclosure () -&gt; IOS_DEV.SearchMovieVM, isLogOut: SwiftUI.Binding&lt;Swift.Bool&gt;, namespace: SwiftUI.Namespace) -&gt; IOS_DEV.MovieHomePage"
+                  moduleName = "IOS_DEV"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/jackson/Desktop/MovieAppSwiftUI/IOS_DEV/Views/MovieHomePage.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "50"
+                  endingLineNumber = "50"
+                  offsetFromSymbolStart = "452">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
    </Breakpoints>
 </Bucket>

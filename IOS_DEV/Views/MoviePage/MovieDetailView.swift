@@ -18,15 +18,21 @@ struct MovieDetailView: View {
     @StateObject private var movieImagesState = MovieImagesState()
     @Binding var isShowDetail : Bool
     @State private var isShowCustomList = false
-    
+    @State private var isAddToUserList = false
     
     @EnvironmentObject var userVM : UserViewModel
     var body: some View {
         VStack {
             if movieDetailState.movie != nil && self.movieImagesState.movieImage != nil{
                 GeometryReader{ proxy in
-                    NewDetailView(movie: self.movieDetailState.movie!,movieImages: self.movieImagesState.movieImage!,isShow: $isShowDetail ,topEdge: proxy.safeAreaInsets.top, isShowCustomList: $isShowCustomList)
+                    NewDetailView(movie: self.movieDetailState.movie!,movieImages: self.movieImagesState.movieImage!,isShow: $isShowDetail ,isShowCustomList: $isShowCustomList,isAddToList: $isAddToUserList,topEdge: proxy.safeAreaInsets.top)
                         .ignoresSafeArea(.all, edges: .top)
+                        .SheetWithDetents(isPresented: self.$isShowCustomList, detents: [.medium()]){
+                            self.isShowCustomList = false
+                        } content :{
+                            UserListView(movieId: movieId, isShowCustomList: self.$isShowCustomList, isAddToUserList: self.$isAddToUserList)
+                                .environmentObject(userVM)
+                        }
                 }
                 
             }else {
@@ -37,22 +43,14 @@ struct MovieDetailView: View {
                 
             }
         }
-        .halfSheet(showShate: self.$isShowCustomList){
-            UserListView(isShowCustomList: $isShowCustomList)
-                .environmentObject(userVM)
-        } onEnded:{
-            self.isShowCustomList = false
-            
-        }
         .navigationBarTitle("")
         .navigationBarHidden(true)
         .navigationTitle("")
         .navigationBarBackButtonHidden(true)
         .onAppear {
-            //TODO : Ignore it now......
-//            print(movieId)
             self.movieDetailState.loadMovie(id: self.movieId)
             self.movieImagesState.loadMovieImage(id: self.movieId)
+            
         }
         
     }
@@ -60,7 +58,10 @@ struct MovieDetailView: View {
 
 struct UserListView : View {
     @EnvironmentObject var userVM : UserViewModel
-    @Binding var isShowCustomList : Bool
+    
+    var movieId : Int
+    @Binding  var isShowCustomList : Bool
+    @Binding  var isAddToUserList : Bool
     var body: some View {
         VStack(spacing:0){
             Text("加入專輯")
@@ -70,9 +71,13 @@ struct UserListView : View {
                     HStack{
                         Spacer()
                         Button(action: {
-                            withAnimation{
-                                self.isShowCustomList = false
+                            
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { // or even shorter
+                                withAnimation{
+                                    self.isShowCustomList = false
+                                }
                             }
+                            
                         }){
                             Image(systemName: "xmark")
                                 .imageScale(.large)
@@ -84,7 +89,6 @@ struct UserListView : View {
                 )
                 .padding(.vertical,8)
                 .padding(5)
-//                Divider()
             VStack(spacing:0){
                 if userVM.IsListLoading || userVM.ListError != nil {
                     HStack{
@@ -103,7 +107,22 @@ struct UserListView : View {
                         List(userVM.profile!.UserCustomList!,id:\.id){  listInfo  in
                             Button(action:{
                                 //TODO: ADD TO THE LIST
-                                print("Add to list")
+//
+                                APIService.shared.InsertMovieToList(movieID: self.movieId, listID: listInfo.id){ result in
+                                    switch result {
+                                    case .success(_ ):
+                                        print("success")
+                                        withAnimation{
+                                            self.isAddToUserList = true
+                                            self.isShowCustomList = false
+                                        }
+                                    case .failure(let err):
+                                        print(err.localizedDescription)
+                                        withAnimation{
+                                            self.isShowCustomList  = false
+                                        }
+                                    }
+                                }
                             }){
                                 HStack{
                                     if listInfo.movie_list != nil {
@@ -281,10 +300,13 @@ enum MovieDetailTabItem : String,CaseIterable {
 struct NewDetailView: View {
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
+//    @EnvironmentObject var movieDetailManager : MovieDetailManager
     
     var movie: Movie
     let movieImages: MovieImages
     @Binding var isShow : Bool
+    @Binding var isShowCustomList : Bool
+    @Binding var isAddToList : Bool
     private let max = UIScreen.main.bounds.height / 2.5
     var topEdge : CGFloat
     @State private var offset:CGFloat = 0.0
@@ -297,7 +319,6 @@ struct NewDetailView: View {
     
     @State private var testLike : Bool = false // Need to remove after implement the like function
     
-    @Binding  var isShowCustomList : Bool
     @Namespace var namespace
     
     @Environment(\.dismiss) private var dissmiss
@@ -307,9 +328,6 @@ struct NewDetailView: View {
                 HStack{
                     Button(action:{
                         print("is active again??")
-//                        withAnimation{
-//                            self.isShow = false
-//                        }
                         dissmiss()
                     }){
                         Image(systemName: "chevron.left")
@@ -406,15 +424,16 @@ struct NewDetailView: View {
                                 }
                             }
                             Spacer()
-                            circleButton(systemImg: "star.fill", imageScale: .medium,background: .yellow , buttonColor: .white,width:40,height:40){
+                            circleButton(systemImg:self.isAddToList ? "star.fill" : "star", imageScale: .large,background: .clear , buttonColor: self.isAddToList  ? .yellow : .white,width:40,height:40){
                                 //TODO: ADD TO LIST OF REMOVE
-//                                withAnimation{
-
+                                //                                withAnimation{
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
+                                    self.isShowCustomList.toggle()
                                     userVM.getUserList()
-                                    self.isShowCustomList = true
-//                                }
+                                }
+                                //                                }
                             }
-                            circleButton(systemImg: "heart.fill",imageScale: .medium, background: self.testLike ? .white : .red , buttonColor: self.testLike ? .red : .white,width:40,height:40){
+                            circleButton(systemImg: self.testLike ? "heart.fill" : "heart",imageScale: .large, background: .clear , buttonColor: self.testLike ? .red : .white,width:40,height:40){
                                 //TODO: ADD TO LIST OF REMOVE
                                 withAnimation{
                                     self.testLike.toggle()
@@ -487,6 +506,10 @@ struct NewDetailView: View {
             }
             
         }
+
+//            self..movidId = movie.id
+//        }
+        
     }
     
     @ViewBuilder

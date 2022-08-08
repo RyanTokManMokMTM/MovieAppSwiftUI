@@ -12,10 +12,12 @@ struct PostBottomSheet : View{
     @State var offset: CGFloat = 0.0
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
-    var info : Post
     @State private var cardOffset:CGFloat = 0
     @State private var message : String = ""
     @FocusState var isFocues: Bool
+    
+    @Binding var isShowMorePostDetail : Bool
+    @Binding var postData : Post?
     var body : some View{
         VStack(spacing:0){
             Text("內容&評論")
@@ -26,8 +28,9 @@ struct PostBottomSheet : View{
                         Spacer()
                         Button(action: {
                             withAnimation{
-                                self.postVM.isReadMorePostInfo.toggle()
+                                self.isShowMorePostDetail = false
                             }
+                            self.postData = nil
                         }){
                             Image(systemName: "xmark")
                                 .imageScale(.large)
@@ -38,10 +41,18 @@ struct PostBottomSheet : View{
                         .frame(width: UIScreen.main.bounds.width)
                 )
                 .padding(.vertical,8)
+            Divider()
             
-            
-            PostInfoView(info: info)
-
+            Spacer()
+            if self.postData == nil{
+                HStack{
+                    ActivityIndicatorView()
+                    Text("Loading...")
+                }
+            }else {
+                PostInfoView(info: self.postData!)
+            }
+            Spacer()
             CommentArea()
         }
         .frame(alignment: .top)
@@ -57,6 +68,8 @@ struct PostBottomSheet : View{
             Divider()
             HStack{
                 TextField("留下點什麼~",text:$message)
+                    .font(.system(size:14,weight:.semibold))
+                    .accentColor(.white)
                     .padding(.horizontal)
                     .frame(height:30)
                     .background(BlurView())
@@ -66,6 +79,7 @@ struct PostBottomSheet : View{
                     .onSubmit({
                         //TODO: SEND THE COMMENT
                     })
+                    .padding(.vertical,8)
             }
             .frame(height: 30)
         }

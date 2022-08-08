@@ -546,7 +546,19 @@ class APIService : ServerAPIServerServiceInterface{
         FetchAndDecode(request: request, completion: completion)
     }
     
-    func InsertMovieToList(){}
+    func InsertMovieToList(movieID : Int, listID : Int, completion : @escaping (Result<InsertMovieToListResp,Error>)->()){
+        guard let url = URL(string: "\(API_SERVER_HOST + APIEndPoint.AddMovieToList.apiUri)\(listID)/movie/\(movieID)") else{
+            completion(.failure(APIError.apiError))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        PostAndDecode(req: request, completion: completion)
+    }
     
     func RemoveMOvieFromList(){}
     

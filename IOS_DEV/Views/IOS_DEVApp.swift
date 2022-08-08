@@ -27,23 +27,44 @@ struct IOS_DEVApp: App {
     }
 }
 
-struct SheetTest : View {
-    @State private var testSheet : Bool = false
-    var body : some View{
-        Button(action:{
-            withAnimation{
-                self.testSheet.toggle()
+struct SheetModifier: View {
+    @State var isPresented: Bool = false
+    var body: some View {
+        ZStack {
+            Color.pink
+                .ignoresSafeArea()
+            Button {
+                isPresented.toggle()
+            } label: {
+                Text("Tap me!")
+                    .padding()
+                    .background(Color.white)
+                    .cornerRadius(20)
             }
-        }){
-            Text("Show")
         }
-        .halfSheet(showShate: $testSheet) {
-            Text("???")
-        } onEnded : {
-            print("abc")
+        .SheetWithDetents(
+            isPresented: $isPresented,
+            detents: [.medium()]
+        ) {
+            print("The sheet has been dismissed")
+        } content: {
+            Group {
+                Text("Create")
+                    .bold()
+                +
+                Text("with")
+                +
+                Text("Swift")
+                    .bold()
+            }
+            .font(.title)
         }
     }
 }
+
+
+
+
 
 private struct UITextViewWrapper: UIViewRepresentable {
     typealias UIViewType = UITextView

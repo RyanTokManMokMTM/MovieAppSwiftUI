@@ -24,12 +24,21 @@ extension UIApplication {
     }
 }
 
+class MovieDetailManager : ObservableObject {
+    @Published var isShowCustomList = false
+    @Published  var isAddToUserList = false
+    @Published  var movidId = -1
+    init(){}
+}
+
 
 struct MovieHomePage: View {
+    @EnvironmentObject var userVM : UserViewModel
     @StateObject var previewModel = PreviewModel()
     @StateObject var StateManager  = SeachingViewStateManager()
     @StateObject var DragAndDropPreview = DragSearchModel()
     @StateObject var postVM = PostVM()
+    
     @ObservedObject  var userController = UserController() //Image Update
     @StateObject var SearchVM = SearchMovieVM()
     
@@ -104,7 +113,7 @@ struct MovieHomePage: View {
                                     .tag(2)
                                 
                                 
-                                PersonProfileView(namespace: namespace)
+                                PersonProfileView()
                                     .navigationTitle("")
                                     .navigationBarTitle("")
                                     .navigationBarHidden(true)
@@ -125,7 +134,7 @@ struct MovieHomePage: View {
                             }
                             .accentColor(.white)
                             .background(Color("DarkMode2"))
-                            
+        
         
                         //                if !isHiddenNav { //Show this when lock portrait
                         //                    NavItemButton(index: self.$index ,GroupSelect: self.$GroupSelect)
@@ -149,11 +158,13 @@ struct MovieHomePage: View {
                     UITabBar.appearance().isTranslucent = false
                     UITabBar.appearance().backgroundColor = UIColor(named:"DarkMode2")
              }
-          
+
+            
+
 
 
         }
-//
+        .navigationViewStyle(.stack)
 //            .onRotate { newOrientation in
 //                if Appdelegate.orientationLock == .landscape {
 //                    withAnimation(){

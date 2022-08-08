@@ -12,7 +12,6 @@ struct HomePage: View {
     @State private var ServerInternalError : Bool = false //for checking server connected
     @ObservedObject private var networkingService = NetworkingService.shared
     @AppStorage("userToken") private var userToken : String = ""
-//    @AppStorage("isLoggedIn") private var bool : String = true
     @State private var isLoggedIn : Bool = false
     @State private var isLoading : Bool = false
     
@@ -20,7 +19,6 @@ struct HomePage: View {
     @State private var currentBG = 0
     @State private var isStarted = false
 
-    
     private let screen  = UIScreen.main.bounds
     init(){
         UIScrollView.appearance().bounces = false
@@ -74,6 +72,7 @@ struct HomePage: View {
             
         }
 
+        
 
     }
     

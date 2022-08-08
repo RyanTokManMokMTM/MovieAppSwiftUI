@@ -10,6 +10,7 @@ import SDWebImageSwiftUI
 
 struct ViewMovieList: View {
     @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var postVM : PostVM
     var listIndex : Int
     @Binding var isViewList : Bool
     @State var isShowMovieDetail : Bool = false
@@ -121,7 +122,10 @@ struct ViewMovieList: View {
             .edgesIgnoringSafeArea(.all)
         }
         .background(
-            NavigationLink(destination: MovieDetailView(movieId: self.movieID, isShowDetail: $isShowMovieDetail),isActive: $isShowMovieDetail){
+            NavigationLink(destination: MovieDetailView(movieId: self.movieID, isShowDetail: $isShowMovieDetail)
+                            .environmentObject(postVM)
+                            .environmentObject(userVM)
+                           ,isActive: $isShowMovieDetail){
                 EmptyView()
             }
         )

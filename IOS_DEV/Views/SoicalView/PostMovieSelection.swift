@@ -61,6 +61,7 @@ struct PostMovieSelection : View{
             ZStack(alignment:.bottom){
                 ZStack(alignment:.topTrailing){
                     //background iamge using a tab View with page style
+                    
                     HStack{
                         Button(action:{
                             //TODO: BACK TO THE PAGE
@@ -72,7 +73,7 @@ struct PostMovieSelection : View{
                                 .imageScale(.large)
                                 .foregroundColor(.white)
                         }
-
+                        
                         Spacer()
                         HStack{
                             if self.PostMovieVM.isSearching{
@@ -81,8 +82,10 @@ struct PostMovieSelection : View{
                                     .foregroundColor(.white)
                                     .matchedGeometryEffect(id: "search", in: namespace)
                                 
+                                
                                 TextField("搜尋文章連結電影...", text: self.$PostMovieVM.query)
                                     .submitLabel(.done)
+                                    .accentColor(.white)
                                 
                                 Button(action:{
                                     withAnimation{
@@ -100,7 +103,7 @@ struct PostMovieSelection : View{
                                     
                                 }
                             } else {
-    //                            Spacer()
+                                //                            Spacer()
                                 Button(action:{
                                     withAnimation{
                                         self.PostMovieVM.isSearching.toggle()
@@ -120,7 +123,7 @@ struct PostMovieSelection : View{
                     }
                     .zIndex(1)
                     .padding(.horizontal)
-        
+                    .ignoresSafeArea(.keyboard, edges: .bottom)
                     
                     if self.PostMovieVM.query.isEmpty && self.PostMovieVM.searchMovieList.isEmpty {
                         VStack{
@@ -149,6 +152,7 @@ struct PostMovieSelection : View{
                             Spacer()
                         }
                         .frame(width: UIScreen.main.bounds.width)
+                        .ignoresSafeArea(.keyboard, edges: .bottom)
                     } else { TabView(selection:$currentIndex){
                             ForEach(self.PostMovieVM.searchMovieList.indices,id:\.self){ i in
                                 GeometryReader{proxy in
@@ -165,6 +169,7 @@ struct PostMovieSelection : View{
                                 }
                                 .ignoresSafeArea()
                                 .offset(y:-100)
+                                .ignoresSafeArea(.keyboard, edges: .bottom)
                             }
 
                         }
@@ -195,7 +200,7 @@ struct PostMovieSelection : View{
    
 
                 }
-                
+                .ignoresSafeArea(.keyboard, edges: .bottom)
                 //TODO: AFTER SELECTED THE MOVIE
                 //TODO: GO TO NEXT STEP
                 if self.PostMovieVM.selectedMovie != nil{
@@ -232,6 +237,7 @@ struct PostMovieSelection : View{
             }
             .background(Color("appleDark").edgesIgnoringSafeArea(.all))
             .ignoresSafeArea(.keyboard, edges: .bottom)
+//            .ignoresSafeArea(.keyboard, edges: .top)
 //            .navigationTitle("")
 //            .navigationBarTitle("")
 //            .navigationBarTitleDisplayMode(.inline)

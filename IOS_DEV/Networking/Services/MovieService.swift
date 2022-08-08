@@ -51,7 +51,7 @@ protocol ServerAPIServerServiceInterface {
     func DeleteCustomList(req : DeleteCustomListReq, completion : @escaping (Result<DeleteCustomListResp,Error>) -> ())
     func GetAllCustomLists(userID : Int,completion : @escaping (Result<AllUserListResp,Error>) -> ())
     func GetUserList(listID : Int , completion : @escaping (Result<UserListResp,Error> ) -> ())
-    func InsertMovieToList()
+    func InsertMovieToList(movieID : Int, listID : Int, completion : @escaping (Result<InsertMovieToListResp,Error>)->())
     func RemoveMOvieFromList()
     
     //TODO: POST

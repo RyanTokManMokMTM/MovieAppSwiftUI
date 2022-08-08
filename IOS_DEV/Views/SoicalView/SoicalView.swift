@@ -29,21 +29,14 @@ struct SoicalView: View {
                             .tag(TabItem.Explore)
                         FollowUserPostView()
                             .tag(TabItem.Follow)
+       
+
                     }
 //                    .animation(.easeOut(duration: 0.2), value: self.postVM.index)
                     .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                     .frame(width: proxy.size.width)
                 }
                 .frame(alignment: .top)
-                .halfSheetForComment(showShate: self.$postVM.isReadMorePostInfo, isSelectedData: self.$postVM.selectedReadMorePost){
-                    if self.postVM.selectedReadMorePost != nil{
-                        PostBottomSheet(info: self.postVM.selectedReadMorePost!)
-                            .environmentObject(postVM)
-                    }
-                } onEnded: {
-                    self.postVM.isReadMorePostInfo = false
-                    self.postVM.selectedReadMorePost = nil
-                }
             }
             .environmentObject(postVM)
             
@@ -52,6 +45,7 @@ struct SoicalView: View {
             self.postVM.GetAllUserPost()
             self.postVM.GetFollowUserPost()
         }
+
     }
 }
 
@@ -65,6 +59,7 @@ struct NavTabView : View{
         HStack{
             NavigationLink(destination:
                             PostMovieSelection(isSelectMovie: $isSelectMovie)
+                            .ignoresSafeArea(.keyboard)
                             .navigationBarTitle("")
                             .navigationTitle("")
                             .navigationBarHidden(true)

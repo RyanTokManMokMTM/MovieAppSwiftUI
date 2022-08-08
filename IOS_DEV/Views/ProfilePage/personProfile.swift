@@ -12,12 +12,11 @@ import Kingfisher
 import Combine //used to add a pulisher to a state variable
 
 struct PersonProfileView : View{
-    var namespace: Namespace.ID
     var body: some View{
         
         GeometryReader{proxy in
             let topEdge = proxy.safeAreaInsets.top
-            personProfile(topEdge: topEdge,namespace:namespace)
+            personProfile(topEdge: topEdge)
                 .ignoresSafeArea(.all, edges: .top)
         }
     }
@@ -561,7 +560,7 @@ struct profileCardCell : View {
     var post : Post
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var postVM : PostVM
-    var namespace: Namespace.ID
+
     var body: some View{
         VStack(alignment:.center){
             WebImage(url: post.post_movie_info.PosterURL)
@@ -571,7 +570,7 @@ struct profileCardCell : View {
                 .transition(.fade(duration: 0.5))
                 .aspectRatio(contentMode: .fit)
                 .clipShape(CustomeConer(width: 5, height: 5, coners: [.topLeft,.topRight]))
-                .matchedGeometryEffect(id: post.id, in: namespace)
+//                .matchedGeometryEffect(id: post.id, in: namespace)
 //                .frame(height:230)
                 
                 
@@ -638,7 +637,6 @@ struct PersonPostCardGridView : View{
 //    let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var postVM : PostVM
-    var namespace: Namespace.ID
     var body: some View{
         if userVM.profile!.UserCollection == nil {
             if self.userVM.IsPostLoading {
@@ -659,7 +657,7 @@ struct PersonPostCardGridView : View{
             }else{
                 FlowLayoutView(list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10){ info in
                 
-                    profileCardCell(post: info,namespace:namespace)
+                    profileCardCell(post: info)
                         .onTapGesture {
                             withAnimation{
                                 postVM.selectedPost = info
@@ -678,6 +676,7 @@ struct PersonPostCardGridView : View{
                         
                     }
                 )
+                
 
                 
             }
@@ -703,7 +702,10 @@ struct LikedMovieCard : Identifiable ,Codable{
 
 struct LikedPostCardGridView : View {
     @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var postVM : PostVM
     @State private var isShowMovieDetail : Bool = false
+    @State private var movieId : Int = -1
+    
     let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
     var body: some View{
         VStack{
@@ -725,19 +727,32 @@ struct LikedPostCardGridView : View {
                 }else{
                     LazyVGrid(columns: gridItem){
                         ForEach(userVM.profile!.UserLikedMovies!,id:\.id){info in
-                            
-                            NavigationLink(destination: MovieDetailView(movieId: info.id, isShowDetail: $isShowMovieDetail) ,isActive: $isShowMovieDetail){
+                            Button(action:{
+                                self.movieId = info.id
+                                withAnimation{
+                                    self.isShowMovieDetail = true
+                                }
+                            }){
                                 LikedCardCell(movieInfo: info)
                             }
-                            .navigationBarTitle("")
-                            .navigationTitle("")
-                            .navigationBarHidden(true)
                         }
                         
                     }
                 }
             }
         }
+        .background(
+        
+            NavigationLink(destination: MovieDetailView(movieId: self.movieId, isShowDetail: $isShowMovieDetail)
+                            .environmentObject(userVM)
+                            .environmentObject(postVM)
+                            .navigationBarTitle("")
+                            .navigationTitle("")
+                            .navigationBarHidden(true)
+                           ,isActive: $isShowMovieDetail){
+                EmptyView()
+            }
+        )
     }
 }
 
@@ -1270,13 +1285,14 @@ struct PersonPostTabBar : View{
 
 struct personProfile: View {
     @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var postVM : PostVM
     @State private var isEditProfile : Bool = false
     @State private var isSetting : Bool = false
     @State private var isAddingList : Bool = false
     
     private let max = UIScreen.main.bounds.height / 2.5
     var topEdge : CGFloat
-    var namespace: Namespace.ID
+
     @State private var offset:CGFloat = 0.0
     @State private var menuOffset:CGFloat = 0.0
     @State private var isShowIcon : Bool = false
@@ -1285,6 +1301,8 @@ struct personProfile: View {
     @State private var tabIndex : Int = 0
     @State private var listIndex : Int = 0
     @State private var isViewMovieList : Bool = false
+    
+
     
     var body: some View {
         ZStack(alignment:.top){
@@ -1366,7 +1384,7 @@ struct personProfile: View {
                         Section {
                             switch tabIndex{
                             case 0:
-                                PersonPostCardGridView(namespace:namespace)
+                                PersonPostCardGridView()
                                     .padding(.vertical,3)
                                         .environmentObject(userVM)
                             case 1:
@@ -1428,11 +1446,12 @@ struct personProfile: View {
         }
         .background(
             NavigationLink(destination:ViewMovieList(index: listIndex, isViewList: $isViewMovieList)
-                            .navigationBarTitle("")
+                            .environmentObject(userVM)
+                            .environmentObject(postVM)
                             .navigationTitle("")
+                            .navigationBarTitle("")
                             .navigationBarHidden(true)
                             .navigationBarBackButtonHidden(true)
-                            .environmentObject(userVM)
                            ,isActive:$isViewMovieList){
                                EmptyView()
                            }
@@ -1525,19 +1544,19 @@ struct personProfile: View {
                 VStack{
                     Text("0")
                         .bold()
-                    Text("Likes")
+                    Text("文章")
                 }
                 
                 VStack{
                     Text("0")
                         .bold()
-                    Text("Following")
+                    Text("關注")
                 }
                 
                 VStack{
                     Text("0")
                         .bold()
-                    Text("Follower")
+                    Text("粉絲")
                 }
 
                 Spacer()

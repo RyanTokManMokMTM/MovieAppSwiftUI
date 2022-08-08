@@ -68,3 +68,7 @@ struct MovieInfo : Decodable,Identifiable,Hashable {
 
 struct UpdateCustomListResp : Decodable {}
 struct DeleteCustomListResp : Decodable {}
+
+struct InsertMovieToListResp : Decodable {
+    
+}

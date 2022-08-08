@@ -335,6 +335,7 @@ struct MovieGenreCardSelectionView : View{
         .fullScreenCover(isPresented: $isCardSelectedMovie, content: {
             MovieCardGesture(movies:self.State.genreMovies,currentMovie: State.genreMovies.last, backHomePage: $isCardSelectedMovie,name: genreRef.genre_name)
                 .environmentObject(State)
+             
         })
         .onAppear{
             self.State.getGenreCard(genreType: genreRef.genre_type)
