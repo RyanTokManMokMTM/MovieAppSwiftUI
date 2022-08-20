@@ -666,7 +666,7 @@ struct PersonPostCardGridView : View{
                         }
                 }
                 .background(
-                    NavigationLink(destination:   PostDetailView(namespace: namespace)
+                    NavigationLink(destination:   PostDetailView()
                                     .navigationBarTitle("")
                                     .navigationTitle("")
                                     .navigationBarBackButtonHidden(true)
@@ -792,7 +792,7 @@ struct LikedCardCell : View {
                     
                     VStack(alignment:.leading){
                         //Movie Full Name
-                        HStack{
+   
                             Text(movieInfo.movie_name)
                                 .foregroundColor(.white)
                                 .font(.system(size:18))
@@ -807,16 +807,7 @@ struct LikedCardCell : View {
                                         .foregroundColor(i < Int(movieInfo.vote_average / 2) ? Color.yellow : Color.gray)
                                         .font(.system(size:12))
                                 }
-                            }
-                            
-                            Spacer()
-//                            Button(action:{
-//                                //TODO: REMOVE THE MOVIE FROM LIST
-//                            }){
-//                                Image(systemName: "heart.fill")
-//                                    .imageScale(.small)
-//                                    .foregroundColor(.red)
-//                            }
+
                             
                         }
                     
@@ -963,7 +954,7 @@ struct CustomListView : View{
     
     @ViewBuilder
     func ListInfo() -> some View {
-        ForEach(0..<self.userVM.profile!.UserCustomList!.count){ i in
+        ForEach(0..<self.userVM.profile!.UserCustomList!.count,id:\.self){ i in
             Button(action:{
 //                //Open the list view
                 withAnimation{
@@ -1302,7 +1293,9 @@ struct personProfile: View {
     @State private var listIndex : Int = 0
     @State private var isViewMovieList : Bool = false
     
-
+    @State private var follower : Int = 0
+    @State private var following : Int = 0
+    @State private var posts : Int = 0
     
     var body: some View {
         ZStack(alignment:.top){
@@ -1386,24 +1379,25 @@ struct personProfile: View {
                             case 0:
                                 PersonPostCardGridView()
                                     .padding(.vertical,3)
-                                        .environmentObject(userVM)
+                                    .environmentObject(userVM)
                             case 1:
                                 LikedPostCardGridView()
                                     .environmentObject(userVM)
                                     .padding(.vertical,3)
                                     .onAppear{
-                                        if userVM.profile!.UserLikedMovies == nil{
-                                            userVM.getUserLikedMovie()
-                                        }
+                                        //TODO: NEED TO BE FIXED
+                                        
+                                        userVM.getUserLikedMovie()
+                                        
                                     }
                             case 2:
                                 CustomListView(addList: $isAddingList,isViewMovieList:$isViewMovieList, listIndex:$listIndex)
                                     .environmentObject(userVM)
                                     .padding(.vertical,3)
                                     .onAppear{
-                                        if userVM.profile!.UserCustomList == nil{
-                                            userVM.getUserList()
-                                        }
+                                        //TODO: NEED TO BE FIXED
+                                        userVM.getUserList()
+                                        
                                     }
                             default:
                                 EmptyView()
@@ -1528,33 +1522,22 @@ struct personProfile: View {
             
             
             HStack{
-//                VStack{
-//                    Text("\(userVM.user.Following)")
-//                        .bold()
-//                    Text("Following")
-//                }
-//
-//                VStack{
-//                    Text("\(userVM.user.Followers)")
-//                        .bold()
-//                    Text("Followers")
-//                }
 
                 
                 VStack{
-                    Text("0")
+                    Text(self.posts.description)
                         .bold()
                     Text("文章")
                 }
                 
                 VStack{
-                    Text("0")
+                    Text(self.following.description)
                         .bold()
                     Text("關注")
                 }
                 
                 VStack{
-                    Text("0")
+                    Text(self.follower.description)
                         .bold()
                     Text("粉絲")
                 }
@@ -1599,9 +1582,53 @@ struct personProfile: View {
         
         }
         .padding(.horizontal)
+        .onAppear{
+            getFollowing()
+            getFollower()
+            getPostCount()
+        }
        
     }
-
+    
+    private func getPostCount(){
+        let req = CountUserPostReq(user_id: self.userVM.profile!.id)
+        APIService.shared.CountUserPosts(req: req) { result in
+            switch result{
+            case .success(let data):
+                self.posts = data.total_posts
+            case .failure(let err):
+                print(err.localizedDescription)
+            }
+            
+        }
+    }
+    
+    private func getFollower(){
+        let req = CountFollowedReq(user_id: self.userVM.profile!.id)
+        APIService.shared.CountFollowedUser(req: req) { result in
+            switch result{
+            case .success(let data):
+                print(data.total)
+                self.follower = data.total
+            case .failure(let err):
+                print(err.localizedDescription)
+            }
+            
+        }
+    }
+    private func getFollowing(){
+            let req = CountFollowingReq(user_id: self.userVM.profile!.id)
+            APIService.shared.CountFollowingUser(req: req) { result in
+                switch result{
+                case .success(let data):
+                    print(data.total)
+                    self.following = data.total
+                case .failure(let err):
+                    print(err.localizedDescription)
+                }
+                
+            }
+    }
     
     private func getHeaderHigth() -> CGFloat{
         //setting the height of the header

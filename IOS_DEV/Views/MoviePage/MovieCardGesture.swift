@@ -21,16 +21,15 @@ struct MovieCardGesture :View{
     
 
     
-    @State private var isMovieDetail : Bool = false
-    @State private var previewMovieId : Int?
-    
+    @State private var isShowMovieDetail : Bool = false
+    @State private var movieID : Int = -1
+
     let genreData = DataLoader().genreData
     let name : String
     
     var body: some View {
         NavigationView{
             ZStack{
-        
                 ZStack(){
                     if movies.isEmpty {
                         VStack{
@@ -93,13 +92,6 @@ struct MovieCardGesture :View{
                                 .font(.title3)
                             
                             HStack{
-                                //                                ForEach(genreData, id:\.id){ genre in
-                                //                                    if genre.id == self.genreID {
-                                //                                        Text(genre.name)
-                                //                                            .bold()
-                                //                                            .font(.subheadline)
-                                //                                    }
-                                //                                }
                                 Text(name)
                                     .bold()
                                     .font(.subheadline)
@@ -119,18 +111,17 @@ struct MovieCardGesture :View{
                 }
                 .background(FullMovieCoverBackground(urlPath: self.currentMovie?.poster ?? "/ocUrMYbdjknu2TwzMHKT9PBBQRw.jpg").blur(radius: 50))
                 
-                
-
-                if previewMovieId != nil{
-                    NavigationLink(destination: MovieDetailView(movieId:self.previewMovieId!, isShowDetail: .constant(false)), isActive: self.$isMovieDetail){
-                        EmptyView()
-                    }
-                }
             }
             .navigationViewStyle(DoubleColumnNavigationViewStyle())
 //            .navigationTitle(self.isActive ? "Back" : "")
             .navigationBarTitle("")
             .navigationBarHidden(true)
+            .background(
+                NavigationLink(destination:MovieDetailView(movieId: self.movieID, isShowDetail: $isShowMovieDetail),isActive:$isShowMovieDetail){
+                    EmptyView()
+                }
+            
+            )
         }
         
     }
@@ -275,10 +266,11 @@ struct MovieCardGesture :View{
             _ = self.movies.popLast()
 
                 if direction == .right{
-//                    withAnimation(){
-//                        self.previewMovieId = currentMovie!.id
-//                    }
-//                    self.isMovieDetail.toggle()
+                    self.movieID = self.movies.last!.id
+                    withAnimation{
+                        self.isShowMovieDetail = true
+                        
+                    }
                 }
                 
                 if direction == .left{

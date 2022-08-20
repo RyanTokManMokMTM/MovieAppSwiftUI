@@ -20,6 +20,10 @@ struct UpdatePostReq : Encodable {
     let post_desc : String
 }
 
+struct CountUserPostReq {
+    let user_id : Int
+}
+
 /// RESPONSE
 
 //Post
@@ -43,4 +47,8 @@ struct UserPostResp : Decodable {
 
 struct PostInfoReq : Decodable {
     let post_info : Post
+}
+
+struct CountUserPostResp : Decodable {
+    let total_posts : Int
 }

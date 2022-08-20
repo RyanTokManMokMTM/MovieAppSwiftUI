@@ -96,12 +96,19 @@ enum HomeTabItem : String{
 struct HomeNavTabView : View {
     @Binding var index : HomeTabItem
     @State private var isSelectMovie : Bool = false
+    @State private var isSearching : Bool = false
+    
+    @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var postVM : PostVM
     var body: some View {
         HStack{
             Spacer()
             
             Button(action:{
                 //MAY BE A NAVIGATION LINK
+                withAnimation{
+                    self.isSearching.toggle()
+                }
             }){
                 Image(systemName:"magnifyingglass")
                     .imageScale(.medium)
@@ -124,6 +131,15 @@ struct HomeNavTabView : View {
             .padding(.horizontal)
             .frame(width: UIScreen.main.bounds.width, height: 40)
             .background(Color("DarkMode2"))
+            .background(
+                NavigationLink(destination: MovieMainSearchView(isSeacrhing: $isSearching)
+                                .environmentObject(userVM)
+                                .environmentObject(postVM)
+                               , isActive: $isSearching){
+                    EmptyView()
+                }
+            
+            )
         
 
     }
@@ -155,9 +171,10 @@ struct HomeTabButton : View {
 struct MovieListView: View {
     //Manager this in a class
     @EnvironmentObject var userVM : UserViewModel
-    @StateObject var TrailerModel = TrailerVideoVM()
-
+    @EnvironmentObject var postVM : PostVM
     
+//    @StateObject var TrailerModel = TrailerVideoVM()
+
     @Binding var showHomePage:Bool
     @Binding var mainPageHeight : CGFloat
     @State private var isCardSelected : Bool = false
@@ -166,9 +183,6 @@ struct MovieListView: View {
     
     @State private var showMovieDetail : Bool = false
     var body: some View {
-        
-//        GeometryReader{ proxy in
-            //                ZStack(alignment:.top){
             VStack(spacing:0){
                 VStack(spacing:0){
                     HomeNavTabView(index: $tabIndex)
@@ -178,30 +192,6 @@ struct MovieListView: View {
                 MoviePage()
             }
             .background(Color("DarkMode2"))
-                
-                
-//                .frame(maxWidth:.infinity)
-//
-//                ScrollView(.horizontal, showsIndicators: false){
-////                    TabView(selection: $tabIndex){
-////                        MoviePage()
-////                            .tag(HomeTabItem.Moive)
-////                    }
-////                    //                        .animation(.easeOut(duration: 0.2), value: self.postVM.index)
-////                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-//                    MoviePage()
-//                    .frame(width: proxy.size.width)
-//
-//                }
-//                .frame(alignment: .top)
-                //                            .ignoresSafeArea()
-//            }
-            
-//        }
-        .background(Color("DarkMode2"))
-//        .navigationBarHidden(true)
-//        .navigationBarBackButtonHidden(true)
-        
     }
     
     @ViewBuilder

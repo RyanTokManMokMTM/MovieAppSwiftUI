@@ -7,6 +7,20 @@
 
 import Foundation
 
+struct CountMovieLikesReq : Encodable {
+    let movie_id : Int
+}
+struct CountMovieCollectedReq : Encodable {
+    let movie_id : Int
+}
+
+struct CountMovieLikesResp : Decodable {
+    let total_liked : Int
+}
+struct CountMovieCollectedResp : Decodable {
+    let total_collected : Int
+}
+
 struct MoviePageListByGenreResp : Decodable {
     let movie_infos : [MovieCardInfo]
 }
@@ -36,3 +50,5 @@ struct MovieCardInfo : Identifiable,Decodable{
         return ratingText
     }
 }
+
+

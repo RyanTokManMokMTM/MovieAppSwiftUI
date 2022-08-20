@@ -24,6 +24,7 @@ struct CardPostView: View {
                     .indicator(.activity)
                     .transition(.fade(duration: 0.5))
                     .aspectRatio(contentMode: .fit)
+                    
                     .clipShape(CustomeConer(width: 5, height: 5, coners: [.topLeft,.topRight]))
 //                    .matchedGeometryEffect(id: postData.id.description, in: namespace)
                     

@@ -19,20 +19,33 @@ struct MovieDetailView: View {
     @Binding var isShowDetail : Bool
     @State private var isShowCustomList = false
     @State private var isAddToUserList = false
+    @State private var isCreateNewMoiveList = false
+    
+    @State private var isUserLiked :  Bool = false
+    @State private var collectedListId : Int = 0
+    @State private var movieLikes : Int = 0
+    @State private var movieCollectes : Int = 0
     
     @EnvironmentObject var userVM : UserViewModel
     var body: some View {
         VStack {
             if movieDetailState.movie != nil && self.movieImagesState.movieImage != nil{
                 GeometryReader{ proxy in
-                    NewDetailView(movie: self.movieDetailState.movie!,movieImages: self.movieImagesState.movieImage!,isShow: $isShowDetail ,isShowCustomList: $isShowCustomList,isAddToList: $isAddToUserList,topEdge: proxy.safeAreaInsets.top)
-                        .ignoresSafeArea(.all, edges: .top)
+                    NewDetailView(movie: self.movieDetailState.movie!,movieImages: self.movieImagesState.movieImage!,isShow: $isShowDetail ,isShowCustomList: $isShowCustomList,isAddToList: $isAddToUserList,isUserLiked: $isUserLiked,collectedListId: $collectedListId,movieLikes: $movieLikes,movieCollected: $movieCollectes,topEdge: proxy.safeAreaInsets.top)
                         .SheetWithDetents(isPresented: self.$isShowCustomList, detents: [.medium()]){
                             self.isShowCustomList = false
+                            self.isAddToUserList = false
                         } content :{
-                            UserListView(movieId: movieId, isShowCustomList: self.$isShowCustomList, isAddToUserList: self.$isAddToUserList)
-                                .environmentObject(userVM)
+                            VStack{
+                                if isCreateNewMoiveList {
+                                    AddNewUserListView(movie: self.movieDetailState.movie!, isShowCustomList: $isShowCustomList, isAddToUserList: $isAddToUserList, isCreateNewMoiveList: $isCreateNewMoiveList,movieCollected:$movieCollectes)
+                                }else{
+                                    UserListView(movieId: movieId, isShowCustomList: self.$isShowCustomList, isCreateNewMoiveList: self.$isCreateNewMoiveList, isAddToUserList: $isAddToUserList,movieCollected:$movieCollectes)
+                                        .environmentObject(userVM)
+                                }
+                            }
                         }
+                        .ignoresSafeArea(.all, edges: .top)
                 }
                 
             }else {
@@ -50,9 +63,71 @@ struct MovieDetailView: View {
         .onAppear {
             self.movieDetailState.loadMovie(id: self.movieId)
             self.movieImagesState.loadMovieImage(id: self.movieId)
+            self.IsUserLiked()
+            self.IsUserCollected()
+            self.CountMovieCollected()
+            self.CountMovieLiked()
             
         }
         
+    }
+    
+    func IsUserLiked(){
+        let req = IsLikedMovieReq(movie_id: self.movieId)
+        APIService.shared.IsLikedMovie(req: req){ result in
+            switch result {
+            case .success(let data):
+                print("user liked movie \(data.is_liked_movie)")
+                self.isUserLiked = data.is_liked_movie
+            case .failure(let err):
+                print(err.localizedDescription)
+                
+            }
+        }
+    }
+    
+    func IsUserCollected(){
+        let req = GetOneMovieFromUserListReq(movie_id: self.movieId)
+        APIService.shared.GetOneMovieFromUserList(req: req){ result in
+            switch result {
+            case .success(let data):
+                print("user collected info \(data.is_movie_in_list)")
+                self.isAddToUserList = data.is_movie_in_list
+                if data.is_movie_in_list {
+                    self.collectedListId = data.list_id
+                }
+            case .failure(let err):
+                print("GET MOVIE COLLECTED INFO ERROR")
+                print(err.localizedDescription)
+                
+            }
+        }
+    }
+    
+    func CountMovieLiked(){
+        let req = CountMovieLikesReq(movie_id: self.movieId)
+        APIService.shared.GetMovieLikedCount(req: req){ result in
+            switch result{
+            case .success(let data):
+                print("movies likes\(data.total_liked)")
+                self.movieLikes = data.total_liked
+            case .failure(let err):
+                print("get likes err \(err.localizedDescription)")
+            }
+        }
+    }
+    
+    func CountMovieCollected(){
+        let req = CountMovieCollectedReq(movie_id: self.movieId)
+        APIService.shared.GetMovieCollectedCount(req: req){ result in
+            switch result{
+            case .success(let data):
+                print("movies collected \(data.total_collected)")
+                self.movieCollectes = data.total_collected
+            case .failure(let err):
+                print("get collects err \(err.localizedDescription)")
+            }
+        }
     }
 }
 
@@ -61,7 +136,9 @@ struct UserListView : View {
     
     var movieId : Int
     @Binding  var isShowCustomList : Bool
-    @Binding  var isAddToUserList : Bool
+    @Binding  var isCreateNewMoiveList : Bool
+    @Binding var isAddToUserList : Bool
+    @Binding var movieCollected : Int
     var body: some View {
         VStack(spacing:0){
             Text("加入專輯")
@@ -112,6 +189,7 @@ struct UserListView : View {
                                     switch result {
                                     case .success(_ ):
                                         print("success")
+                                        self.movieCollected = self.movieCollected + 1
                                         withAnimation{
                                             self.isAddToUserList = true
                                             self.isShowCustomList = false
@@ -166,9 +244,128 @@ struct UserListView : View {
             HStack{
                 Text("新增專輯")
                     .font(.system(size:16,weight:.semibold))
+                    .onTapGesture{
+                        DispatchQueue.main.async{
+                            self.isShowCustomList = false
+                        }
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
+                            self.isShowCustomList = true
+                            self.isCreateNewMoiveList = true
+                        }
+                        
+                    }
 //                        .padding(.bottom)
             }
             .padding()
+        }
+
+    }
+
+}
+
+struct AddNewUserListView : View {
+    @EnvironmentObject var userVM : UserViewModel
+    var movie : Movie
+    
+    @Binding var isShowCustomList : Bool
+    @Binding var isAddToUserList : Bool
+    @Binding var isCreateNewMoiveList : Bool
+    @Binding var movieCollected : Int
+    @State private var listTitle : String  = ""
+    @FocusState private var isFocus : Bool
+    var body: some View {
+        VStack(spacing:0){
+            Text("加入專輯")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(Color(uiColor: UIColor.lightText))
+                .overlay(
+                    HStack{
+                        if !listTitle.isEmpty {
+                            Button(action: {
+                                CreateNewList()
+                            }){
+                                Text("完成")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                            
+                        }
+                        
+                        Spacer()
+                        Button(action: {
+                            withAnimation{
+                                self.isAddToUserList = false
+                                self.isShowCustomList = false
+                                self.isCreateNewMoiveList = false
+                            }
+                        }){
+                            Image(systemName: "xmark")
+                                .imageScale(.large)
+                                .foregroundColor(.white)
+                        }
+                    }
+                        .padding(.horizontal,10)
+                        .frame(width: UIScreen.main.bounds.width)
+                )
+                .padding(.vertical,8)
+                .padding(5)
+            VStack(spacing:0){
+                HStack{
+                    WebImage(url: movie.posterURL)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 40)
+                        .cornerRadius(8)
+                    
+                    VStack{
+                        TextField("為您的專輯建立名稱", text: $listTitle)
+                            .submitLabel(.done)
+                            .accentColor(.white)
+                            .ignoresSafeArea(.keyboard)
+//                            .focused($isFocus)
+                            .font(.system(size:14))
+                        
+                        Divider()
+                    }
+                    .padding(.horizontal,8)
+                }
+            }
+            .padding(5)
+        }
+        .frame(maxHeight:.infinity,alignment:.top)
+        .ignoresSafeArea(.keyboard, edges: .bottom)
+    }
+    
+    private func CreateNewList(){
+        if listTitle.isEmpty { return }
+        
+        let req = CreateNewCustomListReq(title: self.listTitle, intro: "")
+        APIService.shared.CreateCustomList(req: req){ result in
+            switch result {
+            case .success(let data):
+                print("created")
+                InsertToList(listID: data.id)
+            case .failure(let err):
+                print(err.localizedDescription)
+            }
+        }
+    }
+    
+    private func InsertToList(listID : Int){
+        APIService.shared.InsertMovieToList(movieID: self.movie.id, listID: listID){ result in
+            switch result {
+            case .success(_):
+                print("inserted")
+                self.movieCollected = self.movieCollected + 1
+                withAnimation{
+                    self.isAddToUserList = true
+                    self.isShowCustomList = false
+                    self.isCreateNewMoiveList = false
+                }
+            case .failure(let err):
+                print(err.localizedDescription)
+            }
         }
     }
 }
@@ -307,8 +504,16 @@ struct NewDetailView: View {
     @Binding var isShow : Bool
     @Binding var isShowCustomList : Bool
     @Binding var isAddToList : Bool
+    @Binding var isUserLiked :  Bool
+    @Binding var collectedListId : Int
+    @Binding var movieLikes : Int
+    @Binding var movieCollected : Int
+    
+//    @Binding var isUserCollected : Bool
     private let max = UIScreen.main.bounds.height / 2.5
     var topEdge : CGFloat
+    
+    
     @State private var offset:CGFloat = 0.0
     @State private var isShowIcon : Bool = false
     @State private var tabIndex : MovieDetailTabItem = .More
@@ -316,9 +521,9 @@ struct NewDetailView: View {
     
     @State private var isAddPost : Bool = false
     @State private var isShowMore : Bool = false
+
     
-    @State private var testLike : Bool = false // Need to remove after implement the like function
-    
+
     @Namespace var namespace
     
     @Environment(\.dismiss) private var dissmiss
@@ -327,7 +532,6 @@ struct NewDetailView: View {
             ZStack{
                 HStack{
                     Button(action:{
-                        print("is active again??")
                         dissmiss()
                     }){
                         Image(systemName: "chevron.left")
@@ -424,22 +628,53 @@ struct NewDetailView: View {
                                 }
                             }
                             Spacer()
-                            circleButton(systemImg:self.isAddToList ? "star.fill" : "star", imageScale: .large,background: .clear , buttonColor: self.isAddToList  ? .yellow : .white,width:40,height:40){
-                                //TODO: ADD TO LIST OF REMOVE
-                                //                                withAnimation{
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
-                                    self.isShowCustomList.toggle()
-                                    userVM.getUserList()
+                            
+                            HStack(spacing:3){
+                                circleButton(systemImg:self.isAddToList ? "star.fill" : "star", imageScale: .large,background: .clear , buttonColor: self.isAddToList  ? .yellow : .white,width:40,height:40){
+                                    //TODO: ADD TO LIST OF REMOVE
+                                    //                                withAnimation{
+                                    
+                                    if isAddToList{
+                                        //Remove From List
+                                        withAnimation{
+                                            self.isAddToList.toggle()
+                                            self.movieCollected = self.movieCollected - 1
+                                        }
+                                        
+                                        self.RemoveMovieFromList()
+                                    } else {
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
+                                            self.isShowCustomList.toggle()
+                                            userVM.getUserList()
+                                        }
+                                    }
+                                    //                                }
                                 }
-                                //                                }
-                            }
-                            circleButton(systemImg: self.testLike ? "heart.fill" : "heart",imageScale: .large, background: .clear , buttonColor: self.testLike ? .red : .white,width:40,height:40){
-                                //TODO: ADD TO LIST OF REMOVE
-                                withAnimation{
-                                    self.testLike.toggle()
-                                }
+                                
+                                Text(self.movieCollected > 0 ?  self.movieCollected.description : "收藏")
+                                    .font(.system(size: 14,weight:.semibold))
                             }
                             
+                            HStack(spacing:3){
+                                circleButton(systemImg: self.isUserLiked ? "heart.fill" : "heart",imageScale: .large, background: .clear , buttonColor: self.isUserLiked ? .red : .white,width:40,height:40){
+                                    //TODO: ADD TO LIST OF REMOVE
+                                    //                                print(self.isUserLiked)
+                                    withAnimation{
+                                        self.isUserLiked.toggle()
+                                    }
+                                    
+                                    if self.isUserLiked {
+                                        self.movieLikes = self.movieLikes + 1
+                                        AddikedMovie()
+                                    }else {
+                                        self.movieLikes = self.movieLikes - 1
+                                        RemoveLikedMovie()
+                                    }
+                                    
+                                }
+                                Text(self.movieLikes > 0 ?  self.movieLikes.description : "點讚")
+                                    .font(.system(size: 14,weight:.semibold))
+                            }
                             //Share to social page?
                             
                         }
@@ -509,7 +744,6 @@ struct NewDetailView: View {
 
 //            self..movidId = movie.id
 //        }
-        
     }
     
     @ViewBuilder
@@ -522,12 +756,12 @@ struct NewDetailView: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 120, alignment: .center)
                     .cornerRadius(10)
-                    .overlay(
-                        circleButton(systemImg: "play.fill",imageScale: .medium ,background: .red, buttonColor: .white,width: 35,height: 35){
-                            //TODO: play trailer!!
-                        }
-                            .shadow(color: .red, radius: 10, x: 0, y: 0)
-                    )
+//                    .overlay(
+//                        circleButton(systemImg: "play.fill",imageScale: .medium ,background: .red, buttonColor: .white,width: 35,height: 35){
+//                            //TODO: play trailer!!
+//                        }
+//                            .shadow(color: .red, radius: 10, x: 0, y: 0)
+//                    )
 
                 VStack(alignment:.leading){
                     Text(movie.title)
@@ -850,7 +1084,6 @@ struct NewDetailView: View {
         .padding(5)
     }
     
-    
     @ViewBuilder
     func circleButton(systemImg: String,imageScale:Image.Scale,background:Color,buttonColor : Color,width:CGFloat,height:CGFloat,action: @escaping ()->()) -> some View{
         Button(action: action){
@@ -934,7 +1167,57 @@ struct NewDetailView: View {
         let progress = -(offset + 40 ) / 70
         return -offset > 40  ?  progress : 0
     }
-
+    
+    private func AddikedMovie(){
+        let req = NewUserLikeMoviedReq(movie_id: self.movie.id)
+        APIService.shared.PostLikedMovie(req: req){(result ) in
+            switch result {
+            case .success(_):
+                print("LIKED MOVIE")
+            case .failure(let err):
+                print(err.localizedDescription)
+                withAnimation{
+                    self.isUserLiked.toggle()
+                    self.movieLikes  = self.movieLikes - 1
+                }
+            }
+        }
+    }
+    
+    private func RemoveLikedMovie() {
+        let req = DeleteUserLikedMovie(movie_id: self.movie.id)
+        APIService.shared.DeleteLikedMovie(req: req){ (result ) in
+            switch result {
+            case .success(_):
+                print("UNLIKED MOVIE")
+            case .failure(let err):
+                print(err.localizedDescription)
+                withAnimation{
+                    self.isUserLiked.toggle()
+                    self.movieLikes =  self.movieLikes + 1
+                }
+            }
+        }
+    }
+    
+    private func RemoveMovieFromList(){
+        if self.collectedListId == 0 {return}
+        
+        let req = RemoveMovieFromListReq(list_id: self.collectedListId, movie_id: self.movie.id)
+        APIService.shared.RemoveMovieFromList(req: req){ result in
+            switch result {
+            case .success(_):
+                print("Removed movie from list")
+            case .failure(let err):
+                print(err.localizedDescription)
+                withAnimation{
+                    self.isAddToList.toggle()
+                    self.movieCollected = self.movieCollected + 1
+                }
+            }
+        }
+    }
+    
 }
 
 

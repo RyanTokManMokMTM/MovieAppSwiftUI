@@ -23,7 +23,7 @@ struct CardFlowLayout: View {
         .frame(maxWidth:.infinity)
         .background(Color("DarkMode2").frame(maxWidth:.infinity))
         .background(
-            NavigationLink(destination:   PostDetailView(namespace: namespace)
+            NavigationLink(destination:   PostDetailView()
                             .navigationBarTitle("")
                             .navigationTitle("")
                             .navigationBarBackButtonHidden(true)

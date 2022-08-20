@@ -216,6 +216,7 @@ struct PostButton : View {
     var movieInfo : Movie
     @Binding var title : String
     @Binding var desc : String
+    @Environment(\.dismiss) private var dissmiss
     var body : some View {
         Button(action:{
             if title.isEmpty || desc.isEmpty{
@@ -225,10 +226,12 @@ struct PostButton : View {
             postVM.CreatePost(title: title, desc: desc, movie: movieInfo, user: userVM.profile!)
             //TODO: SENDING REQUEST! - IGNORE
             withAnimation{
-                self.isAddPost.toggle()
-                self.isSelectedMovie.toggle()
+                self.isAddPost = false
+                self.isSelectedMovie = false
                 self.postVM.index = .Follow
             }
+            
+            dissmiss()
             
         }){
             HStack{

@@ -11,33 +11,47 @@ import SDWebImageSwiftUI
 
 struct PostDetailView: View {
     @EnvironmentObject var postVM : PostVM
-    var namespace : Namespace.ID
     @State private var value : CGSize = .zero
     @State private var message : String = ""
     @FocusState private var isFocues : Bool
     
+    @State private var isShowUserProfile : Bool = false
+    @State private var shownUserID : Int = 0
+    
+    @State private var isUserFollowing : Bool = false
     var body: some View {
-        
-        if postVM.selectedPost == nil {
-            Text("????")
-        }else {
-            ZStack(alignment: .top){
-                VStack(spacing:0){
-                    PostDetailViewTopBar()
-
-                    //Image tab view
-                    ScrollView(.vertical, showsIndicators: false){
-                        PostDetailDescView(namespace: namespace)
-                            
-                    }
-    //                .frame(maxHeight:.infinity,alignment:.top)
-                    CommentArea()
+        ZStack(alignment: .top){
+            VStack(spacing:0){
+                PostDetailViewTopBar(isShowUserProfile: self.$isShowUserProfile,userID:$shownUserID, isFollowing: $isUserFollowing)
+                
+                //Image tab view
+                ScrollView(.vertical, showsIndicators: false){
+                    PostDetailDescView()
+                    
                 }
+                //                .frame(maxHeight:.infinity,alignment:.top)
+                CommentArea()
             }
-    //        .frame(maxHeight:.infinity,alignment: .top)/
-            .background(Color("appleDark").edgesIgnoringSafeArea(.all))
-            .contentShape(Rectangle())
         }
+        //        .frame(maxHeight:.infinity,alignment: .top)/
+        .background(Color("appleDark").edgesIgnoringSafeArea(.all))
+        .contentShape(Rectangle())
+        .background(
+            NavigationLink(destination:OtherUserProfile(userID: shownUserID)
+                            .navigationTitle("")
+                            .navigationBarHidden(true)
+                            .navigationBarBackButtonHidden(true)
+                           ,isActive: $isShowUserProfile){
+                EmptyView()
+            }
+        
+        
+        )
+        .onAppear{
+            IsUserFollowing()
+        }
+        
+        
     
 //        .onDisappear{
 //            if !self.postVM.isShowPostDetail {
@@ -68,6 +82,7 @@ struct PostDetailView: View {
 //        )
         
     }
+    
     @ViewBuilder
     func CommentArea() -> some View {
         VStack{
@@ -94,14 +109,31 @@ struct PostDetailView: View {
         
         
     }
+    
+    func IsUserFollowing(){
+        let req = GetOneFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
+        APIService.shared.GetOneFriend(req: req){ result in
+            switch result {
+            case .success(let data):
+                self.isUserFollowing = data.is_friend
+                print(self.isUserFollowing)
+            case .failure(let err):
+                print(err.localizedDescription)
+            }
+        }
+    }
 }
 
 struct PostDetailViewTopBar : View {
+    @Binding var isShowUserProfile : Bool
+    @Binding var userID : Int
+    @Binding var isFollowing : Bool
+    
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
 //    var postData : Post
 //    @Binding var isShow : Bool
-    @State private var isFollowing = false
+    
     var body: some View{
         HStack(alignment:.center){
             Button(action:{
@@ -118,31 +150,59 @@ struct PostDetailViewTopBar : View {
             .padding(.horizontal,5)
             
             
-            WebImage(url:self.postVM.selectedPost!.user_info.UserPhotoURL)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 40, height: 40)
-                .clipShape(Circle())
-//                .matchedGeometryEffect(id: postData.user_info.user_avatar, in: namespace)
-            
-            Text(self.postVM.selectedPost!.user_info.name)
-                .font(.system(size: 14, weight: .semibold))
-//                .matchedGeometryEffect(id: postData.user_info.id, in: namespace)
+            Group {
+                WebImage(url:self.postVM.selectedPost!.user_info.UserPhotoURL)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 40, height: 40)
+                    .clipShape(Circle())
+    //                .matchedGeometryEffect(id: postData.user_info.user_avatar, in: namespace)
+                
+                Text(self.postVM.selectedPost!.user_info.name)
+                    .font(.system(size: 14, weight: .semibold))
+    //                .matchedGeometryEffect(id: postData.user_info.id, in: namespace)
+            }
+            .onTapGesture{
+                if postVM.selectedPost!.user_info.id != userVM.userID {
+                    self.userID = self.postVM.selectedPost!.user_info.id
+                    withAnimation{
+                        self.isShowUserProfile = true
+                    }
+                }
+            }
             
             Spacer()
             
             if self.postVM.selectedPost!.user_info.id != userVM.profile!.id{
                 Button(action:{
+//                    withAnimation{
                     withAnimation{
                         self.isFollowing.toggle()
                     }
+                    if self.isFollowing{
+                        followUser()
+                    }else {
+                        UnFollowUser()
+                    }
+                        //TODO: Update following state
+//                    }
                 }){
-                    Text(self.isFollowing ? "Following" : "Follow")
-                        .foregroundColor(self.isFollowing ? Color.white.opacity(0.8) : .red)
+                    Text(self.isFollowing ? "已關注" : "關注")
+                        .foregroundColor(.white)
                         .font(.system(size: 14))
                         .padding(5)
                         .padding(.horizontal,5)
-                        .overlay(RoundedRectangle(cornerRadius: 25).stroke().fill(self.isFollowing ? Color.white.opacity(0.8) : .red))
+                        .background(
+                            ZStack{
+                                if self.isFollowing  {
+                                    BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners))
+                                        .overlay(RoundedRectangle(cornerRadius: 25).stroke().fill(self.isFollowing ? Color.white : Color.clear))
+                                }else {
+                                    Color.red.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners))
+                                }
+                            }
+                        )
+                        
                 }
             }else {
                 Button(action:{
@@ -160,12 +220,42 @@ struct PostDetailViewTopBar : View {
         .frame(width:UIScreen.main.bounds.width,height:50)
         .background(Color("appleDark").edgesIgnoringSafeArea(.all))
     }
+    
+    private func followUser(){
+        let req = CreateNewFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
+        APIService.shared.CreateNewFriend(req: req){ result in
+            switch result{
+            case .success(_):
+                print("User Followed")
+            case .failure(let err):
+                print(err.localizedDescription)
+                withAnimation{
+                    self.isFollowing.toggle()
+                }
+            }
+        }
+    }
+    
+    private func UnFollowUser(){
+        let req = RemoveFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
+        APIService.shared.RemoveFriend(req: req){ result in
+            switch result{
+            case .success(_):
+                print("User UnFollowed")
+                
+            case .failure(let err):
+                print(err.localizedDescription)
+                withAnimation{
+                    self.isFollowing.toggle()
+                }
+            }
+        }
+    }
 }
 
 struct PostDetailDescView : View {
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var postVM : PostVM
-    var namespace : Namespace.ID
     @State private var index = 0
     @State private var isShowMoreDetail : Bool = false
     var body: some View {

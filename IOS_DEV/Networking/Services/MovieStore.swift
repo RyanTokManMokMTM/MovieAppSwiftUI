@@ -247,7 +247,7 @@ class MovieStore: MovieService {
 }
 
 class APIService : ServerAPIServerServiceInterface{
-    
+
     static let shared = APIService()
     private init(){
     } //signleton mode
@@ -294,8 +294,21 @@ class APIService : ServerAPIServerServiceInterface{
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         
-        PostAndDecode(req: request, completion: completion)
+        FetchAndDecode(request: request, completion: completion)
       
+    }
+    
+    func GetUserProfileById(userID : Int,completion : @escaping (Result<Profile,Error>) -> ()){
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.UserInfo.apiUri + userID.description) else{
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        
+        FetchAndDecode(request: request, completion: completion)
+        
     }
     
     func UserLogin(req: UserLoginReq, completion: @escaping (Result<UserLoginResp, Error>) -> ()) {
@@ -363,6 +376,7 @@ class APIService : ServerAPIServerServiceInterface{
         PostAndDecode(req: request, completion: completion)
         
     }
+    
     func UploadImage(imgData : Data,uploadType: UploadImageType, completion: @escaping (Result<UploadImageResp,Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + uploadType.uploadURI) else{
             completion(.failure(APIError.badUrl))
@@ -398,9 +412,33 @@ class APIService : ServerAPIServerServiceInterface{
         
         PostAndDecode(req: request, completion: completion)
     }
-    
 
+    func CountFollowingUser(req: CountFollowingReq, completion: @escaping (Result<CountFollowingResp, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CountFollowingUser.apiUri + req.user_id.description) else{
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+//        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        FetchAndDecode(request: request, completion: completion)
+    }
     
+    func CountFollowedUser(req: CountFollowedReq, completion: @escaping (Result<CountFollowedResp, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CountFollowedUser.apiUri + req.user_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url : url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+//        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        FetchAndDecode(request: request, completion: completion)
+    }
+
     //MARK: --LIKED MOVIE
     func PostLikedMovie(req : NewUserLikeMoviedReq,completion : @escaping (Result<CreateUserLikedMovieResp,Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreateLikedMovie.apiUri) else{
@@ -430,7 +468,7 @@ class APIService : ServerAPIServerServiceInterface{
         }
         
         var request = URLRequest(url: url)
-        request.httpMethod = "DELETE"
+        request.httpMethod = "PATCH"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
@@ -453,6 +491,21 @@ class APIService : ServerAPIServerServiceInterface{
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         FetchAndDecode(request: request, completion: completion)
+    }
+    
+    func IsLikedMovie(req: IsLikedMovieReq, completion: @escaping (Result<IsLikedMovieResp, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.IsLikedMovie.apiUri + req.movie_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url : url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        FetchAndDecode(request: request, completion: completion)
+        
     }
     
     //MARK: --CUSTOM LIST
@@ -560,7 +613,33 @@ class APIService : ServerAPIServerServiceInterface{
         PostAndDecode(req: request, completion: completion)
     }
     
-    func RemoveMOvieFromList(){}
+    func RemoveMovieFromList(req : RemoveMovieFromListReq , completion: @escaping (Result<RemoveMovieFromListResp,Error>)->()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.RemoveMovieFromList.apiUri + req.list_id.description + "/movie/" + req.movie_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    func GetOneMovieFromUserList(req: GetOneMovieFromUserListReq, completion: @escaping (Result<GetOneMovieFromUserListResp, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetOneMovieFromUserList.apiUri + req.movie_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        FetchAndDecode(request: request, completion: completion)
+    }
     
     //MARK: --POST
     func CreatePost(req : CreatePostReq , completion : @escaping (Result<CreatePostResp,Error>) -> ()) {
@@ -624,6 +703,19 @@ class APIService : ServerAPIServerServiceInterface{
         FetchAndDecode(request: request, completion: completion)
     }
     
+    func CountUserPosts(req : CountUserPostReq, completion : @escaping (Result<CountUserPostResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CountUserPosts.apiUri + req.user_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
     //MARK: --MOVIE
     func GetMovieCardInfoByGenre(genre: GenreType, completion :@escaping (Result<MoviePageListByGenreResp, Error>) -> ()) {
         guard let url = URL(string: "\(API_SERVER_HOST)\(APIEndPoint.GetMoviesInfoByGenre.apiUri)/\(genre.rawValue)") else{
@@ -634,6 +726,91 @@ class APIService : ServerAPIServerServiceInterface{
         request.httpMethod = "GET"
         
         FetchAndDecode(request: request,completion: completion)
+    }
+    
+    func GetMovieLikedCount(req: CountMovieLikesReq, completion: @escaping (Result<CountMovieLikesResp, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetMovieLikedCount.apiUri + req.movie_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
+    func GetMovieCollectedCount(req: CountMovieCollectedReq, completion: @escaping (Result<CountMovieCollectedResp, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetMovieCollectedCount.apiUri + req.movie_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
+    //TODO: FRIEND
+    func CreateNewFriend(req: CreateNewFriendReq, completion: @escaping (Result<CreateNewFriendResp, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreateNewFriend.apiUri) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do{
+            let bodyData = try Encoder.encode(req)
+            request.httpBody = bodyData
+        } catch {
+            completion(.failure(APIError.badEncoding))
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+        
+    }
+    
+    func RemoveFriend(req: RemoveFriendReq, completion: @escaping (Result<RemoveFriendResp, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.RemoveFriend.apiUri) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do{
+            let bodyData = try Encoder.encode(req)
+            request.httpBody = bodyData
+        } catch {
+            completion(.failure(APIError.badEncoding))
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    func GetOneFriend(req: GetOneFriendReq, completion: @escaping (Result<GetOneFriendResp, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetOneFriend.apiUri + req.friend_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        FetchAndDecode(request: request, completion: completion)
+        
     }
 
     //MARK: --API HEPLER

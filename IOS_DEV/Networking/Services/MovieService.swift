@@ -36,14 +36,20 @@ protocol ServerAPIServerServiceInterface {
     func UserLogin(req : UserLoginReq,completion: @escaping (Result<UserLoginResp,Error>)->())
     func UserSignUp(req : UserSignInReq,completion : @escaping (Result<UserSignInResp,Error>)->())
     func GetUserProfile(token : String,completion : @escaping (Result<Profile,Error>) -> ())
+    func GetUserProfileById(userID : Int,completion : @escaping (Result<Profile,Error>) -> ())
     func UpdateUserProfile(req : UserProfileUpdateReq, completion: @escaping (Result<UserProfileUpdateResp,Error>) -> ())
     func UploadImage(imgData : Data,uploadType: UploadImageType, completion: @escaping (Result<UploadImageResp,Error>) -> ())
+    
+    func CountFollowingUser(req: CountFollowingReq, completion : @escaping (Result<CountFollowingResp,Error>) -> ())
+    func CountFollowedUser(req : CountFollowedReq, completion : @escaping (Result<CountFollowedResp,Error>) -> ())
     //Conennection check
     
     //TODO: LIKED MOVIE
     func PostLikedMovie(req:NewUserLikeMoviedReq,completion : @escaping (Result<CreateUserLikedMovieResp,Error>) -> ())
     func DeleteLikedMovie(req : DeleteUserLikedMovie,completion : @escaping (Result<DeleteUserLikedMovieResp,Error>) -> ())
     func GetAllUserLikedMoive(userID : Int, completion : @escaping (Result<AllUserLikedMovieResp,Error>) -> ())
+    
+    func IsLikedMovie(req : IsLikedMovieReq , completion: @escaping (Result<IsLikedMovieResp,Error>) -> ())
 
     //TODO: CUSTOM LIST
     func CreateCustomList(req : CreateNewCustomListReq ,completion : @escaping (Result<CreateNewCustomListResp,Error>) -> ())
@@ -52,16 +58,26 @@ protocol ServerAPIServerServiceInterface {
     func GetAllCustomLists(userID : Int,completion : @escaping (Result<AllUserListResp,Error>) -> ())
     func GetUserList(listID : Int , completion : @escaping (Result<UserListResp,Error> ) -> ())
     func InsertMovieToList(movieID : Int, listID : Int, completion : @escaping (Result<InsertMovieToListResp,Error>)->())
-    func RemoveMOvieFromList()
+    func RemoveMovieFromList(req : RemoveMovieFromListReq , completion: @escaping (Result<RemoveMovieFromListResp,Error>)->()) //???
+    func GetOneMovieFromUserList(req : GetOneMovieFromUserListReq, completion : @escaping (Result<GetOneMovieFromUserListResp,Error>) -> ())
     
     //TODO: POST
     func CreatePost(req : CreatePostReq , completion : @escaping (Result<CreatePostResp,Error>) -> ())
     func GetAllUserPost(completion : @escaping (Result <AllUserPostResp,Error>) -> ())
     func GetFollowUserPost(completion : @escaping (Result <FollowingUserPostResp,Error>) -> ())
     func GetUserPostByUserID(userID : Int ,completion : @escaping (Result <UserPostResp,Error>) -> ())
+    func CountUserPosts(req : CountUserPostReq, completion : @escaping (Result<CountUserPostResp,Error>) -> ())
+    
+    //TODO: Friend
+    func CreateNewFriend(req : CreateNewFriendReq, completion: @escaping (Result<CreateNewFriendResp,Error>) -> ())
+    func RemoveFriend(req : RemoveFriendReq, completion: @escaping (Result<RemoveFriendResp,Error>) -> ())
+    func GetOneFriend(req :GetOneFriendReq, completion: @escaping (Result<GetOneFriendResp,Error>) -> ())
     
     //TODO: MOVIE
     func GetMovieCardInfoByGenre(genre: GenreType, completion :@escaping (Result<MoviePageListByGenreResp, Error>) -> ())
+    
+    func GetMovieLikedCount(req : CountMovieLikesReq, completion: @escaping (Result<CountMovieLikesResp,Error>) -> ())
+    func GetMovieCollectedCount(req : CountMovieCollectedReq,completion: @escaping (Result<CountMovieCollectedResp,Error>) -> ())
     
     //Searching and playground
 //    TODO - Person data format
@@ -132,11 +148,14 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     case UserProfile //Done
     case UserInfo //Haven't test yet
     case UserUpdateProfile
+    case CountFollowingUser
+    case CountFollowedUser
     
     //MARK: LIKED MOVIE API
     case CreateLikedMovie
     case DeleteLikedMovie
     case GetAllLikedMovie
+    case IsLikedMovie
     
     //MARK: CustomList API
     case CreateCustomList
@@ -145,7 +164,8 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     case GetAllUserLists
     case GetUserList
     case AddMovieToList
-    case RemoveMovieToList
+    case RemoveMovieFromList
+    case GetOneMovieFromUserList
     
     //MARK: Create post API
     case CreatePost //Done
@@ -154,11 +174,14 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     case GetAllPosts //Done
     case GetFollowingPosts
     case GetUserPosts // Done
+    case CountUserPosts //Done
     
     //Movie API
     case GetMoviesInfoByGenre //Done
     case GetMovieGenrensByMovieID
     case GetMovieDetail
+    case GetMovieLikedCount
+    case GetMovieCollectedCount
     
     //PostComment
     case CreateComment
@@ -166,34 +189,44 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     case DeleteComment
     case GetPostComment
     
-    
-    
+    //Friend API
+    case CreateNewFriend
+    case RemoveFriend
+    case GetOneFriend
     
     var apiUri : String{
         switch self {
         case .HealthCheck: return "/ping"
+            
+        //User Service
         case .UserLogin: return "/user/login"
         case .UserSignup: return "/user/signup"
         case .UserProfile: return "/user/profile"
-        case .UserInfo: return ""
+        case .UserInfo: return "/user/info/" //"/user/info/:id"
         case .UserUpdateProfile: return "/user/profile"
+        case .CountFollowingUser: return "/user/following/" //user_id
+        case .CountFollowedUser: return "/user/followed/" //user_Id
             
         case .GetMoviesInfoByGenre: return "/movies/list/"
         case .GetMovieGenrensByMovieID: return "/movies/genres/"
-        case .GetMovieDetail: return "/movies/"
+        case .GetMovieDetail: return "/movies/" //movie_id
+        case .GetMovieLikedCount: return "/movie/count/liked/" //movie_id
+        case .GetMovieCollectedCount: return "/movie/count/collected/" //movie_id
             
         case .CreateLikedMovie: return "/liked/movie"
         case .DeleteLikedMovie: return "/liked/movie"
-        case .GetAllLikedMovie: return "/liked/movies/"
+        case .GetAllLikedMovie: return "/liked/movies/" //user_id
+        case .IsLikedMovie: return "/liked/movie/" //movie_id
             
-        case .CreateCustomList: return "/lists"
-        case .UpdateCustomList: return "/lists"
-        case .DeleteCustomList: return "/lists"
-        case .GetAllUserLists: return "/lists/"
-        case .GetUserList: return "/list/"
-            
+        case .CreateCustomList: return "/lists" //list/:list_id/movie/:movie_id
+        case .UpdateCustomList: return "/lists" //list/:list_id/movie/:movie_id
+        case .DeleteCustomList: return "/lists" //list/:list_id/movie/:movie_id
+        case .GetAllUserLists: return "/lists/" //user_id
+        case .GetUserList: return "/list/" //list_id
+        case .GetOneMovieFromUserList: return "/list/movie/" //movie_id
+        
         case .AddMovieToList: return "/list/" // listID/movie/:movieID
-        case .RemoveMovieToList: return "/list/" // listID/movie/:movieID
+        case .RemoveMovieFromList: return "/list/" // /list/:list_id/movie/:movie_id
             
         case .CreatePost: return "/posts"
         case .UpdatePost: return "/posts"
@@ -201,12 +234,17 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
         case .GetAllPosts: return "/posts/all"
         case .GetFollowingPosts: return "/posts/follow"
         case .GetUserPosts: return "/posts/" // postID
-            
+        case .CountUserPosts: return "/posts/count/" //:user_id
             
         case .CreateComment: return "/comments/" //postID
         case .UpdateComment: return "/comments/" //postID
         case .DeleteComment: return "/comments/" //postID
         case .GetPostComment: return "/comments/" //postID
+            
+        case .CreateNewFriend: return "/friend"
+        case .RemoveFriend: return "/friend"
+        case .GetOneFriend: return "/friend/" //:friend_id
+
         }
     }
 }

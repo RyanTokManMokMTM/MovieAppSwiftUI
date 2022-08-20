@@ -23,46 +23,81 @@ struct User: Decodable{
 }
 
 
-
-
 class UserViewModel : ObservableObject{
-    @Published var user : Me?//???
+//    @Published var user : Me?//???
     @Published var profile : Profile?
+    @Published var userID : Int?
+    
     @Published var IsPostLoading : Bool = false
     @Published var IsLikedMovieLoading : Bool = false
     @Published var IsListLoading : Bool = false
     @Published var IsUpdating : Bool = false
     @Published var IsUploading : Bool = false
+    @Published var isLoadingProfile : Bool = false
     
     @Published var ListError : Error?
     @Published var PostError : Error?
     @Published var LikedError : Error?
     @Published var UpdateError : Error?
     @Published var UploadError : Error?
+    @Published var fetchProfileError : Error?
     
     @Published var isEditName : Bool = false
     @Published var isEditAvarar : Bool = false
     @Published var isEditCover : Bool = false
     
-    
 
     init(){
+        
     }
-
+    
+    func setUserID(userID : Int){
+        self.userID = userID
+    }
+    
+    //Use for other user
+    func getUserProfile(){
+        if self.userID == nil{
+            return
+        }
+        
+        self.isLoadingProfile = true
+        self.fetchProfileError = nil
+        APIService.shared.GetUserProfileById(userID: self.userID!){ [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .success(let data):
+                print("GET USER PROFILE SUCCEED")
+                self.profile = data
+                self.profile!.UserGenrePrerences = []
+                self.isLoadingProfile = false
+                print(data)
+            case .failure(let err):
+                print("????")
+                self.fetchProfileError = err
+                print(err.localizedDescription)
+            }
+        }
+        
+    }
+    
     //set The UserInfo
     func setUserInfo(info userInfo : Profile){
         DispatchQueue.main.async {
             self.profile = userInfo
+            self.setUserID(userID: self.profile!.id)
             self.profile!.UserGenrePrerences = []
         }
     }
     
     func getUserPosts() {
-//        if self.profile!.UserCollection == nil {
-//            self.profile!.UserCollection = []
-//        }
+        if self.userID == nil{
+            return
+        }
+        
         self.IsPostLoading = true
-        APIService.shared.GetUserPostByUserID(userID: self.profile!.id){ result in
+        APIService.shared.GetUserPostByUserID(userID: self.userID!){ [weak self]  result in
+            guard let self = self else { return }
             DispatchQueue.main.async {
                 self.IsPostLoading = false
                 switch result{
@@ -87,8 +122,12 @@ class UserViewModel : ObservableObject{
     }
     
     func getUserLikedMovie() {
+        if self.userID == nil{
+            return
+        }
         self.IsLikedMovieLoading = true
-        APIService.shared.GetAllUserLikedMoive(userID: self.profile!.id){ (result) in
+        APIService.shared.GetAllUserLikedMoive(userID: self.userID!){ [weak self] (result) in
+            guard let self = self else { return }
             self.IsLikedMovieLoading = false
             switch result{
             case .success(let data):
@@ -107,9 +146,14 @@ class UserViewModel : ObservableObject{
     }
 
     func getUserList() {
+        if self.userID == nil{
+            return
+        }
+        
         self.IsListLoading = true
         self.ListError = nil
-        APIService.shared.GetAllCustomLists(userID: profile!.id){ (result) in
+        APIService.shared.GetAllCustomLists(userID: self.userID!){ [weak self]  (result) in
+            guard let self = self else { return }
             DispatchQueue.main.async {
                 self.IsListLoading = false
                 switch result{
@@ -132,7 +176,8 @@ class UserViewModel : ObservableObject{
         let req = UserProfileUpdateReq(name: name)
         self.IsUpdating = true
         self.UpdateError = nil
-        APIService.shared.UpdateUserProfile(req: req){ (result) in
+        APIService.shared.UpdateUserProfile(req: req){ [weak self] (result) in
+            guard let self = self else { return }
             DispatchQueue.main.async {
                 self.IsUpdating = false
                 
@@ -150,6 +195,7 @@ class UserViewModel : ObservableObject{
         }
         
     }
+    
     func UploadUserAvatar(uiImage : UIImage) {
         guard let imgData = uiImage.jpegData(compressionQuality: 0.5) else {
             print("image to jpegData failed")
@@ -159,7 +205,8 @@ class UserViewModel : ObservableObject{
         self.IsUploading = true
         self.UpdateError = nil
         
-        APIService.shared.UploadImage(imgData: imgData, uploadType: .Avatar){ result in
+        APIService.shared.UploadImage(imgData: imgData, uploadType: .Avatar){ [weak self]result in
+            guard let self = self else { return }
             self.IsUploading = false
             DispatchQueue.main.async {
                 switch result{
@@ -182,7 +229,8 @@ class UserViewModel : ObservableObject{
         self.IsUploading = true
         self.UpdateError = nil
         
-        APIService.shared.UploadImage(imgData: imgData, uploadType: .Cover){ result in
+        APIService.shared.UploadImage(imgData: imgData, uploadType: .Cover){ [weak self] result in
+            guard let self = self else { return }
             self.IsUploading = false
             DispatchQueue.main.async {
                 switch result{
@@ -195,23 +243,8 @@ class UserViewModel : ObservableObject{
             }
         }
     }
+    
+    func IsOwner(userID : Int) -> Bool{
+        return self.userID! == userID
+    }
 }
-
-
-//
-//struct UserInfo : Decodable{
-//    var UID: UUID
-//    var UserName: String
-//    var Email: String
-//    var Password: String
-//    var UserPhoto: String?
-//    var UserBackGround : String?
-////
-//    var UserPhotoURL: URL {
-//        return URL(string:"\(baseUrl)/UserPhoto/\(UserPhoto ?? "")" )!
-//    }
-//
-//    var UserBackGroundURL: URL {
-//        return URL(string:"\(baseUrl)/UserPhoto/\(UserBackGround ?? "")" )!
-//    }
-//}

@@ -29,7 +29,7 @@ class MovieImagesState: ObservableObject {
             case .success(let image):
                 self.movieImage = image
                 
-                print(image)
+//                print(image)
             case .failure(let error):
                 print(error.localizedDescription)
                 self.error = error as NSError
