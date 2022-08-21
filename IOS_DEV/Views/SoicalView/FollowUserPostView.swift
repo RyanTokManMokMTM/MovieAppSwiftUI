@@ -15,7 +15,7 @@ struct FollowUserPostView: View {
     @State private var movieId = -1
     
     @State private var isShowMorePostDetail : Bool = false
-    @State private var postData : Post? = nil
+    @State private var postId : Int = -1
     var body: some View {
         ScrollView(.vertical, showsIndicators: false){
             
@@ -28,7 +28,7 @@ struct FollowUserPostView: View {
                 .padding(.vertical)
             }else {
                 ForEach(self.postVM.followingData){ info in
-                    FollowPostCell(isShowMovieDetail: $isShowMovieDetail, movieId: $movieId,info: info, isShowMorePostDetail:self.$isShowMorePostDetail, postData: self.$postData)
+                    FollowPostCell(isShowMovieDetail: $isShowMovieDetail, movieId: $movieId,info: info, isShowMorePostDetail:self.$isShowMorePostDetail, postId: self.$postId)
                         .padding(.bottom,10)
                 }
 //                .padding(.bottom,UIApplication.shared.windows.first?.safeAreaInsets.bottom )
@@ -37,10 +37,13 @@ struct FollowUserPostView: View {
         }
         .SheetWithDetents(isPresented:  self.$isShowMorePostDetail, detents: [.medium(),.large()]){
             self.isShowMorePostDetail = false
-            self.postData = nil
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
+                self.postId = 0
+            }
         } content : {
-            PostBottomSheet(isShowMorePostDetail: $isShowMorePostDetail, postData: $postData)
+            PostBottomSheet(isShowMorePostDetail: $isShowMorePostDetail,postId:postId)
                 .environmentObject(postVM)
+                .environmentObject(userVM)
         }
         .frame(maxWidth:.infinity)
         .background(Color("DarkMode2"))
@@ -68,9 +71,10 @@ struct FollowPostCell : View {
     
     var info : Post
     @Binding var isShowMorePostDetail : Bool
-    @Binding var postData : Post?
+    @Binding var postId : Int
     
     @State private var moreText : Bool = false
+    @State private var isShowAll = false
     var body: some View{
         VStack(spacing:10){
             UserInfoCell()
@@ -85,9 +89,11 @@ struct FollowPostCell : View {
     func UserInfoCell() -> some View{
         HStack(alignment:.center){
             WebImage(url:info.user_info.UserPhotoURL)
-                .resizable()
-                .frame(width: 35, height: 35)
-                .clipShape(Circle())
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 35, height: 35)
+                    .clipShape(Circle())
+
             HStack(alignment:.center, spacing:10){
                 Text(info.user_info.name)
                     .font(.system(size: 16, weight: .semibold))
@@ -140,7 +146,7 @@ struct FollowPostCell : View {
 
             HStack(alignment:.bottom){
                 Text(info.post_desc)
-                    .lineLimit(1)
+                    .lineLimit(self.isShowAll ? nil : 1)
                     .background(
                         Text(info.post_desc).lineLimit(1)
                             .background(GeometryReader { visibleTextGeometry in
@@ -158,19 +164,22 @@ struct FollowPostCell : View {
                             })
                             .hidden() //keep hidden
                 )
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 16, weight: .semibold))
                     .padding(.top,5)
-                    .foregroundColor(Color(uiColor: UIColor.lightText))
+                    .foregroundColor(Color(uiColor: UIColor.lightGray))
   
-                if moreText{
+                if moreText && !isShowAll{
                     Button(action:{
                         //TODO: A BOTTON SHEET SHOW COMMENT LIST AND INFO
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
-                            withAnimation{
-                                self.isShowMorePostDetail = true
-                            }
-                            
-                            self.postData = info
+//                        self.postId = info.id
+//
+//                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
+//                            withAnimation{
+//                                self.isShowMorePostDetail = true
+//                            }
+//                        }
+                        withAnimation{
+                            self.isShowAll = true
                         }
                     }){
                         Text("顯示全部")
@@ -234,12 +243,11 @@ struct FollowPostCell : View {
                 }
                 
                 Button(action:{
+                    self.postId  = info.id
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
                         withAnimation{
                             self.isShowMorePostDetail = true
                         }
-                        
-                        self.postData = info
                     }
                 }){
                     HStack(spacing:5){

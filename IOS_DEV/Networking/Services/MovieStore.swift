@@ -716,6 +716,78 @@ class APIService : ServerAPIServerServiceInterface{
         FetchAndDecode(request: request, completion: completion)
     }
     
+    //MARK: POST COMMENT
+    func CreatePostComment(postId : Int,req : CreateCommentReq, completion : @escaping (Result<CreateCommentResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreateComment.apiUri + postId.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do{
+            let  bodyData = try Encoder.encode(req)
+            request.httpBody =  bodyData
+        } catch {
+            completion(.failure(APIError.badEncoding))
+            return
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    func UpdatePostComment(commentId : Int, req : UpdateCommentReq, completion : @escaping (Result<UpdateCommentResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.UpdateComment.apiUri + commentId.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do{
+            let  bodyData = try Encoder.encode(req)
+            request.httpBody =  bodyData
+        } catch {
+            completion(.failure(APIError.badEncoding))
+            return
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    func DeletePostComment(commentId : Int, completion : @escaping (Result<DeletePostCommentResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.DeleteComment.apiUri + commentId.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    func GetPostComments(postId : Int, completion : @escaping (Result<GetPostCommentsResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetPostComment.apiUri + postId.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
     //MARK: --MOVIE
     func GetMovieCardInfoByGenre(genre: GenreType, completion :@escaping (Result<MoviePageListByGenreResp, Error>) -> ()) {
         guard let url = URL(string: "\(API_SERVER_HOST)\(APIEndPoint.GetMoviesInfoByGenre.apiUri)/\(genre.rawValue)") else{

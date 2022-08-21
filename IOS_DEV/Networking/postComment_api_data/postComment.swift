@@ -30,6 +30,7 @@ struct GetPostCommentsResp : Decodable{
     let comments : [CommentInfo]
 }
 
+struct DeletePostCommentResp : Decodable {}
 
 //Info Data
 struct CommentInfo : Decodable,Identifiable{
@@ -46,11 +47,10 @@ struct CommentInfo : Decodable,Identifiable{
 
 struct CommentUser : Decodable,Identifiable {
     let id : Int
-    let user_name : String
+    let name : String
     let avatar : String
     
-    var UserPhotoURL : URL {
-        return URL(string: avatar)!
+    var UserPhotoURL: URL {
+        return URL(string:"\(SERVER_HOST)/resources\(avatar)" )!
     }
-    
 }

@@ -69,6 +69,7 @@ class PostVM : ObservableObject {
                     for var info in data.post_info {
                         info.comments = [] //we will fetch the data when user press the comment
                         self.postData.append(info)
+//                        self.followingData[0].post_comment_count = 0
                     }
 //                    self.postData = data.post_info //not fetching!
                 case .failure(let err):
@@ -103,4 +104,17 @@ class PostVM : ObservableObject {
             }
         }
     }
+    
+    func getPostIndexFromFollowList(postId : Int) -> Int {
+        return self.followingData.firstIndex{
+            $0.id == postId
+        } ?? -1
+    }
+    
+    func getPostIndexFromDiscoveryList(postId : Int) -> Int {
+        return self.postData.firstIndex{
+            $0.id == postId
+        } ?? -1
+    }
+
 }

@@ -22,7 +22,7 @@ struct Post : Identifiable,Hashable,Decodable{
     let post_desc : String
     let post_movie_info : PostMovieInfo
     let post_like_count : Int
-    let post_comment_count : Int
+    var post_comment_count : Int
     let create_at : Int
     var comments : [CommentInfo]? // if comment count != to comments.size -> fetching
     
@@ -38,6 +38,7 @@ struct Post : Identifiable,Hashable,Decodable{
         }
         return post_like_count.description
     }
+    
 }
 
 struct PosterOwner : Identifiable,Decodable {

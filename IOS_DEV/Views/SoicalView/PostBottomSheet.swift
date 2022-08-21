@@ -8,6 +8,8 @@
 import SwiftUI
 import SDWebImageSwiftUI
 
+
+
 struct PostBottomSheet : View{
     @State var offset: CGFloat = 0.0
     @EnvironmentObject var postVM : PostVM
@@ -17,10 +19,14 @@ struct PostBottomSheet : View{
     @FocusState var isFocues: Bool
     
     @Binding var isShowMorePostDetail : Bool
-    @Binding var postData : Post?
+    var postId : Int
+    
+    @State private var commentInfos : [CommentInfo] = []
+    @State private var isLoadingComment = false
+//    @Binding var postData : Post?
     var body : some View{
-        VStack(spacing:0){
-            Text("內容&評論")
+        VStack(spacing:3){
+            Text("評論(\(self.commentInfos.count))")
                 .font(.system(size: 16, weight: .bold))
                 .foregroundColor(Color(uiColor: UIColor.lightText))
                 .overlay(
@@ -30,7 +36,10 @@ struct PostBottomSheet : View{
                             withAnimation{
                                 self.isShowMorePostDetail = false
                             }
-                            self.postData = nil
+                            
+//                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
+//                                self.postId = 0
+//                            }
                         }){
                             Image(systemName: "xmark")
                                 .imageScale(.large)
@@ -40,17 +49,46 @@ struct PostBottomSheet : View{
                         .padding(.horizontal,10)
                         .frame(width: UIScreen.main.bounds.width)
                 )
-                .padding(.vertical,8)
+                .padding(.vertical,3)
             Divider()
             
-            Spacer()
-            if self.postData == nil{
+//            Spacer()
+            //                PostInfoView(postId: self.$postId)
+            //Comment View
+            if isLoadingComment {
+                Spacer()
                 HStack{
                     ActivityIndicatorView()
                     Text("Loading...")
+                        .font(.system(size:14))
                 }
+                .frame(maxWidth:.infinity,alignment: .center)
+                
             }else {
-                PostInfoView(info: self.postData!)
+                if self.commentInfos.count == 0 {
+                    HStack{
+                        Spacer()
+                        Image(systemName: "text.bubble")
+                            .imageScale(.medium)
+                            .foregroundColor(.gray)
+                        Text("沒有評論,趕緊霸佔一樓空位!")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.gray)
+                        Spacer()
+                    }
+                    .padding(.vertical,20)
+                }else {
+                    ScrollView(.vertical, showsIndicators: false){
+                        VStack(alignment:.leading,spacing:8){
+                            ForEach(self.commentInfos) { comment in
+                                commentCell(comment: comment)
+                            }
+                        }
+                        .padding(.vertical)
+                    }
+                }
+                
+                
             }
             Spacer()
             CommentArea()
@@ -58,11 +96,13 @@ struct PostBottomSheet : View{
         .frame(alignment: .top)
         .padding(.horizontal)
         .padding(.top)
+        .onAppear{
+            GetPostComments()
+        }
     }
-    
-    
+
     @ViewBuilder
-    func CommentArea() -> some View {
+    private func CommentArea() -> some View {
         VStack{
             //                Spacer()
             Divider()
@@ -78,6 +118,7 @@ struct PostBottomSheet : View{
                     .submitLabel(.send)
                     .onSubmit({
                         //TODO: SEND THE COMMENT
+                        CreatePostComment()
                     })
                     .padding(.vertical,8)
             }
@@ -88,64 +129,31 @@ struct PostBottomSheet : View{
         
     }
     
-}
-
-struct PostInfoView : View {
-//    @Binding var offset: CGFloat
-    var info : Post
-    var body: some View {
-        ScrollView(.vertical, showsIndicators: false){
-            VStack(alignment:.leading,spacing:8){
-                //Content and Comment View
-
-                Text(info.post_title)
-                    .font(.system(size: 18, weight: .bold))
-
-                Text(info.post_desc)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(Color(uiColor: UIColor.lightText))
-                    .multilineTextAlignment(.leading)
-
-                Text(info.post_at.dateDescriptiveString())
-                    .font(.caption2)
-                    .foregroundColor(.gray)
-                    .padding(.vertical,5)
-
-                Divider()
-                    .background(Color(uiColor: UIColor.darkGray))
-                    .padding(.bottom)
-
-                VStack(alignment:.leading){
-                    Text("Comments: \(info.post_comment_count)")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(Color(uiColor: UIColor.lightText))
-
-                    if info.comments != nil && info.comments!.count == 0 {
-                        HStack{
-                            Spacer()
-                            Image(systemName: "text.bubble")
-                                .imageScale(.medium)
-                                .foregroundColor(.gray)
-                            Text("沒有評論,趕緊霸佔一樓空位!")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundColor(.gray)
-                            Spacer()
-                        }
-                        .padding(.vertical,20)
-                    }else {
-                        ForEach(info.comments!) { comment in
-                            commentCell(comment: comment)
-                        }
-                    }
+    private func CreatePostComment(){
+        if message.isEmpty || postId == -1 { return }
+        let req = CreateCommentReq(comment: self.message)
+        APIService.shared.CreatePostComment(postId: postId, req: req){ result in
+            switch result {
+            case .success(let data):
+                let newComment = CommentInfo(id: data.id, user_info:
+                                                CommentUser(id: self.userVM.profile!.id, name: self.userVM.profile!.name, avatar: self.userVM.profile!.avatar ?? ""),
+                                             comment: self.message, update_at: data.create_at)
+                
+                self.commentInfos.insert(newComment, at: 0)
+                DispatchQueue.main.async {
+                    self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: self.postId)].post_comment_count += 1
                 }
-
+             
+                self.message.removeAll()
+            case .failure(let err):
+                print(err.localizedDescription)
             }
-        }.coordinateSpace(name: "scroll")
 
+        }
     }
-
+    
     @ViewBuilder
-    func commentCell(comment : CommentInfo) ->  some View {
+    private func commentCell(comment : CommentInfo) ->  some View {
         HStack(alignment:.top){
 //                HStack(alignment:.center){
             WebImage(url:comment.user_info.UserPhotoURL)
@@ -153,11 +161,23 @@ struct PostInfoView : View {
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 35, height: 35)
                     .clipShape(Circle())
+                    .padding(.vertical,3)
 
                 VStack(alignment:.leading,spacing: 3){
-                    Text(comment.user_info.user_name)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(Color(uiColor: .systemGray))
+                    HStack{
+                        Text(comment.user_info.name)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(Color(uiColor: .systemGray))
+                        
+                        if comment.user_info.id == comment.user_info.id {
+                            Text("Author")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(Color(uiColor: .lightGray))
+                                .padding(3)
+                                .padding(.horizontal,5)
+                                .background(BlurView().clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+                        }
+                    }
 
 
                     Text(comment.comment)
@@ -173,11 +193,157 @@ struct PostInfoView : View {
             Spacer()
 
             Image(systemName: "heart")
-                .imageScale(.medium)
+                .imageScale(.small)
         }
 
         PostViewDivider
             .padding(.vertical,5)
+    }
+    
+    private func GetPostComments(){
+        self.isLoadingComment = true
+        APIService.shared.GetPostComments(postId: postId){ result in
+            self.isLoadingComment = false
+            switch result {
+            case .success(let data):
+                self.commentInfos = data.comments
+            case .failure(let err):
+                print("get comment failed : \(err.localizedDescription)")
+            }
+        }
+    }
+}
+
+struct PostInfoView : View {
+//    @Binding var offset: CGFloat
+    @EnvironmentObject var postVM : PostVM
+//    @EnvironmentObject var userVM : UserViewModel
+    @Binding var  postId : Int
+    
+    @State private var isGettingComments : Bool = false
+    var body: some View {
+        ScrollView(.vertical, showsIndicators: false){
+            VStack(alignment:.leading,spacing:8){
+                //Content and Comment View
+
+                Text(postVM.followingData[postId].post_title)
+                    .font(.system(size: 18, weight: .bold))
+
+                Text(postVM.followingData[postId].post_desc)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(Color(uiColor: UIColor.lightText))
+                    .multilineTextAlignment(.leading)
+
+                Text(postVM.followingData[postId].post_at.dateDescriptiveString())
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+                    .padding(.vertical,5)
+
+                Divider()
+                    .background(Color(uiColor: UIColor.darkGray))
+                    .padding(.bottom)
+
+                VStack(alignment:.leading){
+                    Text("Comments: \(postVM.followingData[postId].comments?.count ?? 0)")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(Color(uiColor: UIColor.lightText))
+
+                    if isGettingComments {
+                        
+                        HStack{
+                            ActivityIndicatorView()
+                            Text("Loading...")
+                                .font(.system(size:14))
+                        }
+                        .frame(maxWidth:.infinity,alignment: .center)
+                    }else {
+                        if postVM.followingData[postId].comments != nil && postVM.followingData[postId].comments!.count == 0 {
+                            HStack{
+                                Spacer()
+                                Image(systemName: "text.bubble")
+                                    .imageScale(.medium)
+                                    .foregroundColor(.gray)
+                                Text("沒有評論,趕緊霸佔一樓空位!")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(.gray)
+                                Spacer()
+                            }
+                            .padding(.vertical,20)
+                        }else {
+                            ForEach(postVM.followingData[postId].comments!) { comment in
+                                commentCell(comment: comment)
+                            }
+                            
+                        }
+                    }
+                }
+
+            }
+        }.coordinateSpace(name: "scroll")
+            .onAppear{
+                GetPostComments()
+            }
+    }
+
+    @ViewBuilder
+    func commentCell(comment : CommentInfo) ->  some View {
+        HStack(alignment:.top){
+//                HStack(alignment:.center){
+            WebImage(url:comment.user_info.UserPhotoURL)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 35, height: 35)
+                    .clipShape(Circle())
+                    .padding(.vertical,3)
+
+                VStack(alignment:.leading,spacing: 3){
+                    HStack{
+                        Text(comment.user_info.name)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(Color(uiColor: .systemGray))
+                        
+                        if comment.user_info.id == self.postVM.followingData[postId].user_info.id {
+                            Text("Author")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(Color(uiColor: .lightGray))
+                                .padding(3)
+                                .padding(.horizontal,5)
+                                .background(BlurView().clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+                        }
+                    }
+
+
+                    Text(comment.comment)
+                        .multilineTextAlignment(.leading)
+                        .font(.system(size: 12, weight: .semibold))
+
+                    Text(comment.comment_time.dateDescriptiveString())
+                        .foregroundColor(.gray)
+                        .font(.system(size: 10))
+                }
+
+//                }
+            Spacer()
+
+            Image(systemName: "heart")
+                .imageScale(.small)
+        }
+
+        PostViewDivider
+            .padding(.vertical,5)
+    }
+    
+    private func GetPostComments(){
+        self.isGettingComments = true
+        APIService.shared.GetPostComments(postId: postVM.followingData[postId].id){ result in
+            switch result {
+            case .success(let data):
+                self.isGettingComments = false
+                postVM.followingData[postId].comments = data.comments
+            case .failure(let err):
+                print("get comment failed : \(err.localizedDescription)")
+            }
+        }
     }
 }
 //

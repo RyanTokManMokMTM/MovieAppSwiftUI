@@ -8,6 +8,27 @@
 import SwiftUI
 import SDWebImageSwiftUI
 
+class SearchingHistoryManager : ObservableObject {
+    @AppStorage("searchHistroy") var history : [String] =  []
+    
+    func updateHistory(query : String){
+        if self.history.count == 15{
+            self.history.removeLast()
+        }
+        
+        let exist = self.history.contains{$0 == query}
+        if exist{
+            //the string is inside the collection
+            let index = self.history.firstIndex(of: query)
+            self.history.remove(at: index!)
+        }
+        self.history.insert(query, at: 0)
+    }
+    
+    func removeAllHistory(){
+        self.history.removeAll()
+    }
+}
 
 class MovieSearchVM : ObservableObject {
     @Published var searchingText : String = "" {
@@ -15,12 +36,13 @@ class MovieSearchVM : ObservableObject {
             getMovieSearchResult()
         }
     }
-    @Published var searchResult : [Movie] = []//For Result View
+    @Published var searchResult : [Movie] = []//For actucal Result View
+    
     @Published var searchResultPage : Int = 1
     @Published var isLoading : Bool = false
     @Published var fetchingError : NSError?
     @Published var recommandPlachold : String = "奇異博士2：失控多重宇宙"
-    
+    @Published var isSearching = true //false : only for showing result
     init(){}
     
     func getMovieSearchResult(){
@@ -40,7 +62,7 @@ class MovieSearchVM : ObservableObject {
         }
     }
     
-    func AddToHistory(){}
+    
     
     
 }
@@ -50,14 +72,17 @@ struct MovieMainSearchView: View {
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var postVM : PostVM
     @StateObject private var searchVM  = MovieSearchVM()
+    @StateObject private var historyManager = SearchingHistoryManager()
+   
     
     @FocusState private var isFocus : Bool
     let gridItems = Array(repeating: GridItem(.flexible(),spacing: 0), count: 2)
-    @AppStorage("searchHistory") var history : [String] =  ["Iron man","Dr.Stange"]
     
     @State private var isShowResult : Bool = false
     @State private var finalSearchingQuery = ""
     
+    
+    @State private var isDelete : Bool = false
     @Environment(\.dismiss) private var dissmiss
     var body: some View {
         VStack{
@@ -66,7 +91,7 @@ struct MovieMainSearchView: View {
             //Contant Data right now... it may chagne in future
             
             if self.searchVM.searchingText.isEmpty  {
-                if !history.isEmpty{
+                if !self.historyManager.history.isEmpty{
                     
                     HStack{
                         Text("搜尋歷史")
@@ -78,6 +103,8 @@ struct MovieMainSearchView: View {
                             withAnimation(.easeInOut(duration: 0.3)){
                                 //                            self.StateManager.isRemove.toggle()
                                 //                            self.StateManager.isFocuse = [false,false]
+                                self.isDelete = true
+//                                self.searchVM.removeAllHistory()
                             }
                         }){
                             Image(systemName: "trash")
@@ -89,7 +116,7 @@ struct MovieMainSearchView: View {
                     .padding(.horizontal)
                     .padding(.vertical,5)
                     
-                    HistorList(history: self.history)
+                    HistorList(history: self.historyManager.history)
                         .padding(.bottom,5)
                     
                 }
@@ -109,17 +136,6 @@ struct MovieMainSearchView: View {
                             ForEach(0..<hotItemTest.count){ i in
                                 //                            SearchHotCard(rank: i+1,rankColor: i <= 3 ? .red : .white, hotData: hotItemTest[i])
                                 Button(action:{
-                                    //                                self.searchMV.searchResult.removeAll()
-                                    //                                self.StateManager.isSeaching.toggle()
-                                    //                                self.searchMV.searchingText = hotData.title
-                                    //                                self.StateManager.isEditing = false
-                                    //                                withAnimation(.easeOut(duration:0.7)){
-                                    //                                    self.StateManager.isFocuse = [false,false]
-                                    //                                    self.StateManager.getSearchResult = true
-                                    //                                }
-                                    //                                self.StateManager.updateSearchingHistory(query: hotData.title)
-                                    //                                self.searchMV.searchingText = hotData.title
-                                    //                                self.searchMV.getSearchingResult()
                                 }){
                                     VStack(alignment:.leading){
                                         HStack(spacing:15){
@@ -174,6 +190,7 @@ struct MovieMainSearchView: View {
                                 self.isShowResult = true
                             }
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                self.historyManager.updateHistory(query: movie.title)
                                 self.searchVM.searchingText.removeAll()
                             }
                             
@@ -182,6 +199,7 @@ struct MovieMainSearchView: View {
                                 Text(movie.title)
                                     .font(.system(size: 14))
                                     .bold()
+                                    
                                 
                                 Spacer()
                                 
@@ -211,11 +229,28 @@ struct MovieMainSearchView: View {
                             .navigationBarBackButtonHidden(true)
                             .environmentObject(userVM)
                             .environmentObject(postVM)
+                            .environmentObject(historyManager)
                            ,isActive: $isShowResult){
                                EmptyView()
                            }
             
         )
+        .alert(isPresented: self.$isDelete){
+            withAnimation(){
+                Alert(title: Text("刪除所有搜尋歷史"), message: Text("確定刪掉?"),
+                      primaryButton: .default(Text("取消")){
+                        self.isFocus = true
+                      },
+                      secondaryButton: .default(Text("刪除")){
+                        withAnimation{
+                            self.historyManager.removeAllHistory()
+                            self.isFocus = true
+                            
+                        }
+                      })
+            }
+            
+        }
         
         
     }
@@ -240,8 +275,11 @@ struct MovieMainSearchView: View {
                             withAnimation{
                                 self.isShowResult = true
                             }
+                            self.historyManager.updateHistory(query: self.searchVM.searchingText)
                             self.searchVM.searchingText.removeAll()
                         }
+                        
+                       
                     })
             }
             .frame(height: 22)
@@ -284,7 +322,7 @@ struct MovieMainSearchView: View {
     private func SearchHistoryList() -> some View {
         ScrollView(.horizontal, showsIndicators: false){
             HStack{
-                ForEach(self.history,id:\.self){key in
+                ForEach(self.historyManager.history,id:\.self){key in
                     searchFieldButton(searchingText: key){
 //                        self.searchMV.searchResult.removeAll() //remove previous datas
 //                        self.StateManager.isSeaching.toggle()
@@ -312,12 +350,13 @@ struct MovieMainSearchView: View {
 struct MovieMainSearchResultView: View {
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var postVM : PostVM
+    @EnvironmentObject var historyManager : SearchingHistoryManager
     
     var searchKeyWord : String
+    @State private var isDelete : Bool = false
     @StateObject private var searchVM : MovieSearchVM = MovieSearchVM()
     @FocusState private var isFocus : Bool
-    @AppStorage("searchHistory") var history : [String] =  ["Iron man","Dr.Stange"]
-    let gridItems = Array(repeating: GridItem(.flexible(),spacing: 0), count: 2)
+    private let gridItems = Array(repeating: GridItem(.flexible(),spacing: 0), count: 2)
     
     @State private var tempQuery = ""
     @State private var isShowMovieDetail : Bool = false
@@ -327,7 +366,7 @@ struct MovieMainSearchResultView: View {
     var body: some View {
         VStack{
             SeachBar()
-            if isFocus {
+            if isFocus || isDelete{
                 //Show searching...
                 ShowSearchState()
             }else {
@@ -341,23 +380,41 @@ struct MovieMainSearchResultView: View {
                 self.searchVM.searchingText = searchKeyWord
                 self.searchVM.getMovieSearchResult()
             }
+
         }
         .background(Color("DarkMode2"))
         .background(
             NavigationLink(destination: MovieDetailView(movieId: self.movieId, isShowDetail: self.$isShowMovieDetail)
                             .environmentObject(userVM)
                             .environmentObject(postVM)
+                           
                            ,isActive: self.$isShowMovieDetail){
                 EmptyView()
             }
         
         )
+        .alert(isPresented: self.$isDelete){
+            withAnimation(){
+                Alert(title: Text("刪除所有搜尋歷史"), message: Text("確定刪掉?"),
+                      primaryButton: .default(Text("取消")){
+                        self.isFocus = true
+                      },
+                      secondaryButton: .default(Text("刪除")){
+                        withAnimation{
+                            self.historyManager.removeAllHistory()
+                            self.isFocus = true
+                            
+                        }
+                      })
+            }
+            
+        }
     }
     
     @ViewBuilder
     func ShowSearchState() -> some View {
         if self.searchVM.searchingText.isEmpty  {
-            if !history.isEmpty{
+            if !self.historyManager.history.isEmpty{
                 
                 HStack{
                     Text("搜尋歷史")
@@ -369,6 +426,8 @@ struct MovieMainSearchResultView: View {
                         withAnimation(.easeInOut(duration: 0.3)){
 //                            self.StateManager.isRemove.toggle()
 //                            self.StateManager.isFocuse = [false,false]
+                            self.isDelete = true
+//                            self.searchVM.removeAllHistory()
                         }
                     }){
                         Image(systemName: "trash")
@@ -380,7 +439,7 @@ struct MovieMainSearchResultView: View {
                 .padding(.horizontal)
                 .padding(.vertical,5)
                 
-                HistorList(history: self.history)
+                HistorList(history: self.historyManager.history)
                     .padding(.bottom,5)
                 
             }
@@ -462,6 +521,8 @@ struct MovieMainSearchResultView: View {
                         //GO THE Movie Detail Page
                         self.isFocus = false
                         self.searchVM.searchingText = movie.title
+                        self.historyManager.updateHistory(query: movie.title)
+
                     }){
                         HStack(spacing:0){
                             Text(movie.title)
@@ -579,7 +640,9 @@ struct MovieMainSearchResultView: View {
                     .focused($isFocus)
                     .onSubmit({
                         self.isFocus = false
+                        self.historyManager.updateHistory(query: self.searchVM.searchingText)
                         self.searchVM.getMovieSearchResult()
+                         
                     })
             }
             .frame(height: 22)
@@ -632,22 +695,10 @@ struct MovieMainSearchResultView: View {
     private func SearchHistoryList() -> some View {
         ScrollView(.horizontal, showsIndicators: false){
             HStack{
-                ForEach(self.history,id:\.self){key in
+                ForEach(self.historyManager.history,id:\.self){key in
                     searchFieldButton(searchingText: key){
-//                        self.searchMV.searchResult.removeAll() //remove previous datas
-//                        self.StateManager.isSeaching.toggle()
-//                        self.searchMV.searchingText = key
-//                        self.StateManager.isEditing = false
-//                        withAnimation(.easeOut(duration:0.7)){
-//                            self.StateManager.isFocuse = [false,false]
-//                            self.StateManager.getSearchResult = true
-//                        }
-//                        self.searchMV.isNoData = false
-//                        self.StateManager.updateSearchingHistory(query: key)
-//                        self.StateManager.searchingLoading = true
-//                        self.searchMV.getSearchingResult() //get new datas
-//
-
+                        //on tag set query string to this key
+                        
                     }
                 }
                 

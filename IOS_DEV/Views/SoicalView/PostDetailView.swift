@@ -402,7 +402,7 @@ struct PostDetailDescView : View {
                             .clipShape(Circle())
                         
                         VStack(alignment:.leading,spacing: 3){
-                            Text(info.user_info.user_name)
+                            Text(info.user_info.name)
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(Color(uiColor: .systemGray))
                             

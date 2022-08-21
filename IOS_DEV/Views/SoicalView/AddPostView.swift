@@ -88,26 +88,26 @@ struct AddPostDescView : View {
                         .frame(width: 110)
                     
 //
-                    Button(action:{
-                        //TODO: ADD MORE IMAGE TO THE POST
-                    }){
-                        VStack(spacing:0){
-                            Image(systemName: "plus")
-                                .imageScale(.large)
-                                .foregroundColor(.gray)
-                            Text("尚未開放")
-                                .font(.system(size: 12, weight: .semibold))
-                                .frame(width: 110)
-                        }
-                        .cornerRadius(10)
-                        .frame(width: 110,height:110 * 1.5)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10, style: RoundedCornerStyle.continuous)
-                                .stroke(Color.gray.opacity(0.85), style: StrokeStyle(lineWidth: 1, dash: [12]))
-                        )
-
-                    }
-                    .disabled(true)
+//                    Button(action:{
+//                        //TODO: ADD MORE IMAGE TO THE POST
+//                    }){
+//                        VStack(spacing:0){
+//                            Image(systemName: "plus")
+//                                .imageScale(.large)
+//                                .foregroundColor(.gray)
+//                            Text("尚未開放")
+//                                .font(.system(size: 12, weight: .semibold))
+//                                .frame(width: 110)
+//                        }
+//                        .cornerRadius(10)
+//                        .frame(width: 110,height:110 * 1.5)
+//                        .overlay(
+//                            RoundedRectangle(cornerRadius: 10, style: RoundedCornerStyle.continuous)
+//                                .stroke(Color.gray.opacity(0.85), style: StrokeStyle(lineWidth: 1, dash: [12]))
+//                        )
+//
+//                    }
+//                    .disabled(true)
 //
 
                     
