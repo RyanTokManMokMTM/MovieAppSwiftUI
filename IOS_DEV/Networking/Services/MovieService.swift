@@ -42,7 +42,13 @@ protocol ServerAPIServerServiceInterface {
     
     func CountFollowingUser(req: CountFollowingReq, completion : @escaping (Result<CountFollowingResp,Error>) -> ())
     func CountFollowedUser(req : CountFollowedReq, completion : @escaping (Result<CountFollowedResp,Error>) -> ())
+    func GetUserFollowingList(req: GetFollowingListReq,completion : @escaping (Result<GetFollowingListResp,Error>) -> ())
+    func GetUserFollowedList(req : GetFollowedListReq,completion : @escaping (Result<GetFollowedListResp,Error>) -> ())
     //Conennection check
+    
+    //TODO: USER GENRES SETTING
+    func UpdateUserGenre(req : UpdateUserGenreReq, completion : @escaping (Result<UpdateUserGenreResp,Error>) -> ())
+    func GetUserGenres(req : GetUserGenreReq,completion : @escaping (Result<GetUserGenreResp,Error>) -> ())
     
     //TODO: LIKED MOVIE
     func PostLikedMovie(req:NewUserLikeMoviedReq,completion : @escaping (Result<CreateUserLikedMovieResp,Error>) -> ())
@@ -68,11 +74,29 @@ protocol ServerAPIServerServiceInterface {
     func GetUserPostByUserID(userID : Int ,completion : @escaping (Result <UserPostResp,Error>) -> ())
     func CountUserPosts(req : CountUserPostReq, completion : @escaping (Result<CountUserPostResp,Error>) -> ())
     
+    //TODO: POST LIKED
+    func CreatePostLikes(req : CreatePostLikesReq,completion : @escaping (Result<CreatePostLikesResp,Error>) -> ())
+    func RemovePostLikes(req : RemovePostLikesReq,completion : @escaping (Result<RemovePostLikesResp,Error>) -> ())
+    func IsPostLiked(req : IsPostLikedReq,completion : @escaping (Result<IsPostLikedResp,Error>) -> ())
+    func CountPostLikes(req : CountPostLikesReq,completion : @escaping (Result<CountPostLikesResp,Error>) -> ())
+    
     //TODO: POST COMMENT
     func CreatePostComment(postId : Int,req : CreateCommentReq, completion : @escaping (Result<CreateCommentResp,Error>) -> ())
     func UpdatePostComment(commentId : Int, req : UpdateCommentReq, completion : @escaping (Result<UpdateCommentResp,Error>) -> ())
     func DeletePostComment(commentId : Int, completion : @escaping (Result<DeletePostCommentResp,Error>) -> ())
     func GetPostComments(postId : Int, completion : @escaping (Result<GetPostCommentsResp,Error>) -> ())
+    
+    //TODO: REPLY COMMENT
+    func CreateReplyComment(req : CreateReplyCommentReq, completion : @escaping (Result<CreateReplyCommentResp,Error>) -> ())
+    func GetReplyComment(req : GetReplyCommentReq, completion : @escaping (Result<GetReplyCommentResp,Error>) -> ())
+//    func DeletePostComment(commentId : Int, completion : @escaping (Result<DeletePostCommentResp,Error>) -> ())
+//    func GetPostComments(postId : Int, completion : @escaping (Result<GetPostCommentsResp,Error>) -> ())
+    
+    //TODO: COMMENT LIKES
+    func CreateCommentLikes(req : CreateCommentLikesReq,completion : @escaping (Result<CreateCommentLikesResp,Error>) -> ())
+    func RemoveCommentLikes(req : RemoveCommentLikesReq,completion : @escaping (Result<RemoveCommentLikesResp,Error>) -> ())
+    func IsCommentLiked(req : IsCommentLikedReq,completion : @escaping (Result<IsCommentLikedResp,Error>) -> ())
+    func CountCommentLikes(req : CountCommentLikesReq,completion : @escaping (Result<CountCommentLikesResp,Error>) -> ())
     
     //TODO: Friend
     func CreateNewFriend(req : CreateNewFriendReq, completion: @escaping (Result<CreateNewFriendResp,Error>) -> ())
@@ -149,6 +173,7 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     var id : String { rawValue }
     case HealthCheck
     
+    //MARK: USER API
     case UserLogin //Done
     case UserSignup //Done
     case UserProfile //Done
@@ -156,6 +181,8 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     case UserUpdateProfile
     case CountFollowingUser
     case CountFollowedUser
+    case GetUserFollowingList
+    case GetUserFollowedList
     
     //MARK: LIKED MOVIE API
     case CreateLikedMovie
@@ -182,23 +209,43 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     case GetUserPosts // Done
     case CountUserPosts //Done
     
-    //Movie API
+    //MARK: LIKED POST API
+    case CreatePostLikes
+    case RemovePostLikes
+    case IsPostLiked
+    case CountPostLikes
+    
+    //MARK: Movie API
     case GetMoviesInfoByGenre //Done
     case GetMovieGenrensByMovieID
     case GetMovieDetail
     case GetMovieLikedCount
     case GetMovieCollectedCount
     
-    //PostComment
+    //MARK: PostComment
     case CreateComment
     case UpdateComment
     case DeleteComment
     case GetPostComment
     
-    //Friend API
+    //MARK: Reply Comment
+    case CreateReplyComment
+    case GetReplyComment
+    
+    //MARK: LIKED COMMENT API
+    case CreateCommentLikes
+    case RemoveCommentLikes
+    case IsCommentLiked
+    case CountCommentLikes
+    
+    //MARK: Friend API
     case CreateNewFriend
     case RemoveFriend
     case GetOneFriend
+    
+    //MARK: USER GENRES
+    case UpdateUserGenre
+    case GetUserGenre
     
     var apiUri : String{
         switch self {
@@ -212,6 +259,8 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
         case .UserUpdateProfile: return "/user/profile"
         case .CountFollowingUser: return "/user/following/" //user_id
         case .CountFollowedUser: return "/user/followed/" //user_Id
+        case .GetUserFollowingList : return "/user/following/list/"
+        case .GetUserFollowedList : return "/user/followed/list/"
             
         case .GetMoviesInfoByGenre: return "/movies/list/"
         case .GetMovieGenrensByMovieID: return "/movies/genres/"
@@ -242,14 +291,31 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
         case .GetUserPosts: return "/posts/" // postID
         case .CountUserPosts: return "/posts/count/" //:user_id
             
+        case .CreatePostLikes: return "/liked/post"
+        case .RemovePostLikes: return "/liked/post"
+        case .IsPostLiked: return "/liked/post/"
+        case .CountPostLikes: return "/liked/post/count/"
+            
         case .CreateComment: return "/comments/" //postID
         case .UpdateComment: return "/comments/" //postID
         case .DeleteComment: return "/comments/" //postID
         case .GetPostComment: return "/comments/" //postID
             
+        case .CreateReplyComment: return "/comments/" //comments/:post_id/reply/:comment_id
+        case .GetReplyComment: return "/comments/reply/" //comments/reply/:comment_id
+            
+        case .CreateCommentLikes: return "/liked/comment"
+        case .RemoveCommentLikes: return "/liked/comment"
+        case .IsCommentLiked: return "/liked/comment/"
+        case .CountCommentLikes: return "/liked/comment/count/"
+        
+            
         case .CreateNewFriend: return "/friend"
         case .RemoveFriend: return "/friend"
         case .GetOneFriend: return "/friend/" //:friend_id
+            
+        case .UpdateUserGenre: return "/user/genres"
+        case .GetUserGenre: return "/user/genres/"
 
         }
     }

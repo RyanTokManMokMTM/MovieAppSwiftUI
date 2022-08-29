@@ -28,6 +28,42 @@ struct IOS_DEVApp: App {
     }
 }
 
+struct textFieldTest : View {
+    @State private var query = ""
+    @Binding var isShow : Bool
+    var body : some View {
+        VStack{
+            
+            Spacer()
+            TextField("hi", text: $query)
+            Spacer()
+        }
+        .ignoresSafeArea(.keyboard,edges:.bottom)
+        .navigationBarTitle("")
+        .navigationTitle("")
+        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
+        .background(Color("DarkMode2").frame(maxHeight:.infinity))
+    }
+}
+
+struct TestNav : View {
+    @State private var isShow = false
+    var body: some View {
+        NavigationView{
+            NavigationLink(destination: textFieldTest(isShow: $isShow), isActive: $isShow){
+                Button(action:{
+                    self.isShow = true
+                }){
+                    Text("Shpow")
+                }
+            }
+        }
+    }
+    
+}
+
+
 struct SheetModifier: View {
     @State var isPresented: Bool = false
     var body: some View {

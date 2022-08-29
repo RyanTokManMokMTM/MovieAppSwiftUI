@@ -78,7 +78,7 @@ struct SignUpView: View {
             .padding(.horizontal,20)
             .edgesIgnoringSafeArea(.all)
             .background(Color.black.overlay(Color.black.opacity(0.45)))
-            .ignoresSafeArea(.keyboard)
+//            .ignoresSafeArea(.keyboard)
             .zIndex(0)
             
             if isLoading{

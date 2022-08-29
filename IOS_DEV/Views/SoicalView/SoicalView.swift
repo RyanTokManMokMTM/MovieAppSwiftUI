@@ -16,6 +16,7 @@ enum TabItem : String{
 
 struct SoicalView: View {
     @EnvironmentObject var postVM : PostVM
+    @EnvironmentObject var userVM : UserViewModel
     var namespace : Namespace.ID
     var body: some View {
         GeometryReader{ proxy in
@@ -32,14 +33,13 @@ struct SoicalView: View {
        
 
                     }
+                    .environmentObject(postVM)
 //                    .animation(.easeOut(duration: 0.2), value: self.postVM.index)
                     .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                     .frame(width: proxy.size.width)
                 }
                 .frame(alignment: .top)
             }
-            .environmentObject(postVM)
-            
         }
         .onAppear{
             self.postVM.GetAllUserPost()

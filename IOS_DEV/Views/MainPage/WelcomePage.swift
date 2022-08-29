@@ -27,11 +27,12 @@ struct HomePage: View {
     var body: some View {
         
         ZStack{
-            BackGroundView()
-            HomeInfo()
-            
-            if isLoggedIn {
-                MovieHomePage(isLogOut: self.$isLoggedIn)
+            if !isLoggedIn {
+                BackGroundView()
+                HomeInfo()
+                
+            }else {
+                MovieHomePage(isLogOut: $isLoggedIn)
                     .environmentObject(UserVM)
                     .onAppear(perform: {
                         UIScrollView.appearance().bounces = true
@@ -46,12 +47,12 @@ struct HomePage: View {
             SignInView(backToHome: $isStarted,isLoggedIn: $isLoggedIn)
                 .environmentObject(UserVM)
         }
-        .environmentObject(UserVM)
-        .edgesIgnoringSafeArea(.all)
-        .padding(.top,25)
-        .padding(.horizontal,20)
-        .padding(.bottom,5)
-        .ignoresSafeArea(.keyboard)
+//        .environmentObject(UserVM)
+//        .edgesIgnoringSafeArea(.all)
+//        .padding(.top,25)
+//        .padding(.horizontal,20)
+//        .padding(.bottom,5)
+//        .ignoresSafeArea(.keyboard)
         .onAppear{
             APIService.shared.serverConnection(){ result in
                 self.isLoading = true

@@ -33,7 +33,7 @@ class PostVM : ObservableObject {
 //        self.GetFollowUserPost()
     }
 
-    func CreatePost(title : String, desc : String,movie: Movie,user: Profile){
+    func CreatePost(title : String, desc : String,movie: Movie,user: Profile, onSuccess : @escaping ()->()){
         let req = CreatePostReq(post_title: title, post_desc: desc, movie_id: movie.id)
         self.isLoading = true
         self.err = nil
@@ -47,6 +47,7 @@ class PostVM : ObservableObject {
                     let newPost = Post(id: data.id, user_info: PosterOwner(id: user.id, name: user.name, avatar: user.avatar), post_title: title, post_desc: desc, post_movie_info: PostMovieInfo(id: movie.id, title: movie.title, poster_path: movie.posterPath), post_like_count: 0, post_comment_count: 0, create_at: data.create_time, comments: [])
                     
                     self.followingData.insert(newPost, at: 0)
+                    onSuccess()
                     
                 case .failure(let err):
                     print(err.localizedDescription)

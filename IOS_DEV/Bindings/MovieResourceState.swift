@@ -12,7 +12,7 @@ import Foundation
 class MovieResourceState: ObservableObject {
     
     @Published var query = ""
-    @Published var resource: [ResourceResponse] = []
+    @Published var resource: [ResourceResponse]?
     @Published var isLoading = false
     @Published var error: NSError?
 

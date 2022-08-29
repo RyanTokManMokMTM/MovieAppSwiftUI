@@ -85,9 +85,9 @@ struct MovieMainSearchView: View {
     @State private var isDelete : Bool = false
     @Environment(\.dismiss) private var dissmiss
     var body: some View {
-        VStack{
+        VStack(spacing:0){
             SeachBar()
-            
+            Divider()
             //Contant Data right now... it may chagne in future
             
             if self.searchVM.searchingText.isEmpty  {
@@ -216,6 +216,7 @@ struct MovieMainSearchView: View {
             Spacer()
             
         }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
         .navigationBarTitle("")
         .navigationTitle("")
         .navigationBarHidden(true)
@@ -263,24 +264,29 @@ struct MovieMainSearchView: View {
                 Image(systemName: "magnifyingglass")
                     .imageScale(.medium)
                     .foregroundColor(.gray)
-                TextField(self.searchVM.recommandPlachold, text: self.$searchVM.searchingText)
-                    .accentColor(.white)
-                    .submitLabel(.search)
-                    .focused($isFocus)
-                    .onSubmit({
-                        if searchVM.searchResult.isEmpty { return }
-                        
-                        DispatchQueue.main.async {
-                            self.finalSearchingQuery = self.searchVM.searchingText
-                            withAnimation{
-                                self.isShowResult = true
+                VStack{
+                    Spacer()
+                    TextField(self.searchVM.recommandPlachold, text: self.$searchVM.searchingText)
+                        .accentColor(.white)
+                        .submitLabel(.search)
+                        .focused($isFocus)
+                        .onSubmit({
+                            if searchVM.searchResult.isEmpty { return }
+                            
+                            DispatchQueue.main.async {
+                                self.finalSearchingQuery = self.searchVM.searchingText
+                                withAnimation{
+                                    self.isShowResult = true
+                                }
+                                self.historyManager.updateHistory(query: self.searchVM.searchingText)
+                                self.searchVM.searchingText.removeAll()
                             }
-                            self.historyManager.updateHistory(query: self.searchVM.searchingText)
-                            self.searchVM.searchingText.removeAll()
-                        }
-                        
-                       
-                    })
+                            
+                           
+                        })
+                    Spacer()
+                }.ignoresSafeArea(.keyboard,edges: .bottom)
+
             }
             .frame(height: 22)
             .padding(.horizontal,5)
@@ -364,8 +370,9 @@ struct MovieMainSearchResultView: View {
     
     @Environment(\.dismiss) private var dissmiss
     var body: some View {
-        VStack{
+        VStack(spacing:0){
             SeachBar()
+            Divider()
             if isFocus || isDelete{
                 //Show searching...
                 ShowSearchState()
@@ -572,56 +579,7 @@ struct MovieMainSearchResultView: View {
         }
     }
     
-    @ViewBuilder
-    func MovieCardView(movieData : Movie) -> some View {
-        VStack(alignment:.leading,spacing:5){
-            WebImage(url: movieData.posterURL)
-                .resizable()
-                .placeholder {
-                    Rectangle()
-                        .foregroundColor(.clear)
-                        .aspectRatio(contentMode: .fit)
-                        .overlay(Text(movieData.title))
-                }
-                .indicator(.activity)
-                .transition(.fade(duration: 0.5))
-                .aspectRatio(contentMode: .fit)
-                .clipShape(CustomeConer(width: 5, height: 5, coners: .allCorners))
-            
-            Group {
-                VStack(alignment:.leading, spacing:2){
-                    Text(movieData.title)
-                        .font(.system(size:18,weight:.bold))
-                        .foregroundColor(.white)
-                    
-                    Text(movieData.releaseDate ?? "Coming Soon")
-                        .font(.system(size:12,weight:.semibold))
-                        .foregroundColor(.gray)
-                }
-                .padding(.bottom,8)
-                
-                HStack(spacing:3){
-                    ForEach(1...5,id:\.self){index in
-                        Image(systemName: "star.fill")
-                            .imageScale(.small)
-                            .foregroundColor(index <= Int(movieData.voteAverage)/2 ? .yellow: .gray)
-                    }
-                    Spacer()
-                    Text("(\(Int(movieData.voteAverage)/2).0)")
-                        .foregroundColor(.white)
-                        .font(.caption)
-                    
-                    
-                }
-            }
-            .padding(5)
-        }
-        .padding(.bottom,5)
-//        .background(Color("appleDark"))
-//        .clipShape(CustomeConer(width: 5, height: 5, coners: [.allCorners]))
-    }
-    
-    
+
     @ViewBuilder
     private func SeachBar() -> some View{
         HStack(spacing:5){
@@ -634,16 +592,21 @@ struct MovieMainSearchResultView: View {
                         .imageScale(.medium)
                         .foregroundColor(.gray)
                 }
-                TextField(self.searchVM.recommandPlachold, text: self.$searchVM.searchingText)
-                    .accentColor(.white)
-                    .submitLabel(.search)
-                    .focused($isFocus)
-                    .onSubmit({
-                        self.isFocus = false
-                        self.historyManager.updateHistory(query: self.searchVM.searchingText)
-                        self.searchVM.getMovieSearchResult()
-                         
-                    })
+                VStack{
+                    Spacer()
+                    TextField(self.searchVM.recommandPlachold, text: self.$searchVM.searchingText)
+                        .accentColor(.white)
+                        .submitLabel(.search)
+                        .focused($isFocus)
+                        .onSubmit({
+                            self.isFocus = false
+                            self.historyManager.updateHistory(query: self.searchVM.searchingText)
+                            self.searchVM.getMovieSearchResult()
+                             
+                        })
+                    
+                    Spacer()
+                }.ignoresSafeArea(.keyboard,edges: .bottom)
             }
             .frame(height: 22)
             .padding(.horizontal,5)
@@ -706,4 +669,54 @@ struct MovieMainSearchResultView: View {
             .padding(.horizontal)
         }
     }
+}
+
+struct  MovieCardView : View {
+    var movieData : Movie
+    var body : some  View {
+        VStack(alignment:.leading,spacing:5){
+            WebImage(url: movieData.posterURL)
+                .resizable()
+                .placeholder {
+                    Rectangle()
+                        .foregroundColor(.clear)
+                        .aspectRatio(contentMode: .fit)
+                        .overlay(Text(movieData.title))
+                }
+                .indicator(.activity)
+                .transition(.fade(duration: 0.5))
+                .aspectRatio(contentMode: .fit)
+                .clipShape(CustomeConer(width: 5, height: 5, coners: .allCorners))
+            
+            Group {
+                VStack(alignment:.leading, spacing:2){
+                    Text(movieData.title)
+                        .font(.system(size:18,weight:.bold))
+                        .foregroundColor(.white)
+                    
+                    Text(movieData.releaseDate ?? "Coming Soon")
+                        .font(.system(size:12,weight:.semibold))
+                        .foregroundColor(.gray)
+                }
+                .padding(.bottom,5)
+                
+                HStack(spacing:3){
+                    ForEach(1...5,id:\.self){index in
+                        Image(systemName: "star.fill")
+                            .imageScale(.small)
+                            .foregroundColor(index <= Int(movieData.voteAverage)/2 ? .yellow: .gray)
+                    }
+                    Spacer()
+                    Text("(\(Int(movieData.voteAverage)/2).0)")
+                        .foregroundColor(.white)
+                        .font(.caption)
+                    
+                    
+                }
+            }
+            .padding(5)
+        }
+        .padding(.bottom,5)
+    }
+   
 }

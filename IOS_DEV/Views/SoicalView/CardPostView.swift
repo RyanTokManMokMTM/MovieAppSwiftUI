@@ -15,16 +15,19 @@ struct CardPostView: View {
     var namespace : Namespace.ID
     var action : () -> ()
     var body: some View {
-        VStack(alignment:.leading){
+        VStack(alignment:.leading,spacing:5){
             
             Group {
                 WebImage(url: postData.post_movie_info.PosterURL)
-                    .placeholder(Image(systemName: "photo")) //
+                    .placeholder {
+                        Rectangle()
+                            .foregroundColor(Color("appleDark"))
+                            .aspectRatio(contentMode: .fit)
+                    }
                     .resizable()
                     .indicator(.activity)
                     .transition(.fade(duration: 0.5))
                     .aspectRatio(contentMode: .fit)
-                    
                     .clipShape(CustomeConer(width: 5, height: 5, coners: [.topLeft,.topRight]))
 //                    .matchedGeometryEffect(id: postData.id.description, in: namespace)
                     
@@ -33,7 +36,6 @@ struct CardPostView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
     //                    .matchedGeometryEffect(id: postData.post_title, in: namespace)
-                    .padding(.vertical,5)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                     .padding(.horizontal,5)

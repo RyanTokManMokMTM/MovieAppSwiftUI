@@ -23,12 +23,14 @@ struct CardFlowLayout: View {
         .frame(maxWidth:.infinity)
         .background(Color("DarkMode2").frame(maxWidth:.infinity))
         .background(
-            NavigationLink(destination:   PostDetailView()
+            NavigationLink(destination:
+                            PostDetailView()
+                            .environmentObject(postVM)
                             .navigationBarTitle("")
                             .navigationTitle("")
                             .navigationBarBackButtonHidden(true)
                             .navigationBarHidden(true)
-                            .environmentObject(postVM), isActive: self.$postVM.isShowPostDetail){
+                           , isActive: self.$postVM.isShowPostDetail){
                 EmptyView()
                 
             }

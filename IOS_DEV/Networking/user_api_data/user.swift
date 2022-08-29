@@ -28,6 +28,14 @@ struct UserUpdateAvatarReq  : Encodable{}
 
 struct UserUpdateCoverReq  : Encodable{}
 
+struct GetFollowingListReq {
+    let user_id : Int
+}
+
+struct GetFollowedListReq {
+    let user_id : Int
+}
+
 /// RESPONSE
 struct UserLoginResp : Decodable{
     var token: String
@@ -41,9 +49,28 @@ struct UserSignInResp: Decodable{
     var email: String
 }
 
+struct GetFollowingListResp : Decodable {
+    let following : [SimpleUserInfo]
+}
+
+struct GetFollowedListResp : Decodable {
+    let followed : [SimpleUserInfo]
+}
+
 struct UserProfileUpdateResp  : Decodable{}
+
 struct UploadImageResp  : Decodable{
     let path : String
+}
+
+struct SimpleUserInfo : Decodable {
+    var id : Int
+    var name : String
+    var avatar : String
+    
+    var UserPhotoURL: URL {
+        return URL(string:"\(SERVER_HOST)/resources\(avatar)" )!
+    }
 }
 
 struct Profile : Decodable{

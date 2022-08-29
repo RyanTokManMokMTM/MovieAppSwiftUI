@@ -57,10 +57,10 @@ struct AddPostViewBar : View{
             
            Spacer()
             
-            Image(systemName: "info.circle")
-                .imageScale(.large)
-                .foregroundColor(.white)
-            
+//            Image(systemName: "info.circle")
+//                .imageScale(.large)
+//                .foregroundColor(.white)
+//
         }
         .padding(.horizontal,5)
         .frame(width:UIScreen.main.bounds.width,height:50)
@@ -79,13 +79,14 @@ struct AddPostDescView : View {
         
         ScrollView(.vertical, showsIndicators: false){
             VStack(alignment:.leading,spacing:20){
-                
-                HStack(spacing:10){
-                    WebImage(url: movieInfo.posterURL)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .cornerRadius(10)
-                        .frame(width: 110)
+                    HStack(spacing:10){
+                        WebImage(url: movieInfo.posterURL)
+                            .resizable()
+                            .indicator(.activity) // Activity Indicator
+                            .transition(.fade(duration: 0.5)) // Fade Transition with duration
+                            .aspectRatio(contentMode: .fit)
+                            .cornerRadius(8)
+                            .frame(width: 110)
                     
 //
 //                    Button(action:{
@@ -223,16 +224,17 @@ struct PostButton : View {
                 return
             }
            
-            postVM.CreatePost(title: title, desc: desc, movie: movieInfo, user: userVM.profile!)
-            //TODO: SENDING REQUEST! - IGNORE
-            withAnimation{
-                self.isAddPost = false
-                self.isSelectedMovie = false
-                self.postVM.index = .Follow
+            postVM.CreatePost(title: title, desc: desc, movie: movieInfo, user: userVM.profile!){
+                //TODO: SENDING REQUEST! - IGNORE
+                withAnimation{
+                    DispatchQueue.main.async {
+                        self.isAddPost = false
+                        self.isSelectedMovie = false
+                        self.postVM.index = .Follow
+                    }
+//                    dissmiss()
+                }
             }
-            
-            dissmiss()
-            
         }){
             HStack{
                 Text("Posts Your Review")

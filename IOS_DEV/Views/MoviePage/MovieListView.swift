@@ -56,36 +56,7 @@ var MovieLists : [MovieList] = [
     MovieList(title: "熱門", list_end_point: .trending)
 ]
 
-class SearchMovieVM : ObservableObject {
-    @Published var query : String = "" {
-        didSet{
-//            SearchingMovie()
-        }
-    }
-    @Published var queryResult : [Movie] = []
-    @Published var error : Error?
-    @Published var isSearching : Bool = false
-    init(){
-    }
-    
-    func SearchingMovie(){
-        if query.isEmpty { return }
-        
-        self.isSearching = true
-        self.error = nil
-        MovieStore.shared.searchMovieInfo(query: self.query){ result in
-            switch result{
-            case.success(let data):
-                self.queryResult.removeAll()
-                self.queryResult = data.results
-//                print(data)
-            case .failure(let err):
-                print(err.localizedDescription)
-                self.error = err
-            }
-        }
-    }
-}
+
 
 enum HomeTabItem : String{
     case TV = "TV"
@@ -103,21 +74,21 @@ struct HomeNavTabView : View {
     var body: some View {
         HStack{
             Spacer()
-            
             Button(action:{
                 //MAY BE A NAVIGATION LINK
                 withAnimation{
-                    self.isSearching.toggle()
+                    self.isSearching = true
                 }
             }){
                 Image(systemName:"magnifyingglass")
                     .imageScale(.medium)
                     .foregroundColor(.white)
+                    
             }
         }.overlay(
             HStack(spacing:20){
 //                Spacer()
-                Text("Movie GO")
+                Text("Movies")
                     .LeckerliOneRegularFont(size:22)
                 Spacer()
 //                HomeTabButton(index: $index,tab: .TV) //TODO: NOT AVAILABLE YET

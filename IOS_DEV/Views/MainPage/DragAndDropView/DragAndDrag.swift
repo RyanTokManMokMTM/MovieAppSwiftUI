@@ -334,8 +334,8 @@ struct searchingField : View{
 }
 
 struct HistorList : View{
-    @EnvironmentObject var StateManager : SeachingViewStateManager
-    @EnvironmentObject var searchMV : SearchBarViewModel
+//    @EnvironmentObject var StateManager : SeachingViewStateManager
+//    @EnvironmentObject var searchMV : SearchBarViewModel
     var history :[String]
     var body: some View{
 
@@ -343,18 +343,18 @@ struct HistorList : View{
                 HStack{
                     ForEach(self.history,id:\.self){key in
                         searchFieldButton(searchingText: key){
-                            self.searchMV.searchResult.removeAll() //remove previous datas
-                            self.StateManager.isSeaching.toggle()
-                            self.searchMV.searchingText = key
-                            self.StateManager.isEditing = false
-                            withAnimation(.easeOut(duration:0.7)){
-                                self.StateManager.isFocuse = [false,false]
-                                self.StateManager.getSearchResult = true
-                            }
-                            self.searchMV.isNoData = false
-                            self.StateManager.updateSearchingHistory(query: key)
-                            self.StateManager.searchingLoading = true
-                            self.searchMV.getSearchingResult() //get new datas
+//                            self.searchMV.searchResult.removeAll() //remove previous datas
+//                            self.StateManager.isSeaching.toggle()
+//                            self.searchMV.searchingText = key
+//                            self.StateManager.isEditing = false
+//                            withAnimation(.easeOut(duration:0.7)){
+//                                self.StateManager.isFocuse = [false,false]
+//                                self.StateManager.getSearchResult = true
+//                            }
+//                            self.searchMV.isNoData = false
+//                            self.StateManager.updateSearchingHistory(query: key)
+//                            self.StateManager.searchingLoading = true
+//                            self.searchMV.getSearchingResult() //get new datas
                             
 
                         }

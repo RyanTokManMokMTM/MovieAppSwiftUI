@@ -665,20 +665,6 @@ struct PersonPostCardGridView : View{
                             }
                         }
                 }
-                .background(
-                    NavigationLink(destination:   PostDetailView()
-                                    .navigationBarTitle("")
-                                    .navigationTitle("")
-                                    .navigationBarBackButtonHidden(true)
-                                    .navigationBarHidden(true)
-                                    .environmentObject(postVM), isActive: self.$postVM.isShowPostDetail){
-                        EmptyView()
-                        
-                    }
-                )
-                
-
-                
             }
             
         }
@@ -1110,11 +1096,11 @@ struct EditProfile : View{
                             }
                         })
                         
-                        fieldCellButton(fieldName: "電影喜好", fieldData: "",action:{
-                            withAnimation(){
-                                self.isPreference.toggle()
-                            }
-                        })
+//                        fieldCellButton(fieldName: "電影喜好", fieldData: "",action:{
+//                            withAnimation(){
+//                                self.isPreference.toggle()
+//                            }
+//                        })
         
                     }
                 }
@@ -1205,9 +1191,6 @@ struct EditProfile : View{
 //        .background(Color("appleDark"))
     }
 }
-
-
-
 
 enum ProfileTab : String {
     case Posts = "文章"
@@ -1449,6 +1432,17 @@ struct personProfile: View {
                            ,isActive:$isViewMovieList){
                                EmptyView()
                            }
+        )
+        .background(
+            NavigationLink(destination:   PostDetailView()
+                            .navigationBarTitle("")
+                            .navigationTitle("")
+                            .navigationBarBackButtonHidden(true)
+                            .navigationBarHidden(true)
+                            .environmentObject(postVM), isActive: self.$postVM.isShowPostDetail){
+                EmptyView()
+                
+            }
         )
         
         

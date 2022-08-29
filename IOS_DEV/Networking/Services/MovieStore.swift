@@ -10,6 +10,9 @@ import Foundation
 import SwiftUI
 import BottomSheet
 
+
+let SERVER_HOST = "http://127.0.0.1:8000"
+
 class MovieStore: MovieService {
     static let shared = MovieStore()
     private init() {}
@@ -254,8 +257,8 @@ class APIService : ServerAPIServerServiceInterface{
     
     @AppStorage("userToken") var token : String = ""
     
-    private let API_SERVER_HOST = "http://0.0.0.0:8000/api/v1"
-    private let HOST = "http://0.0.0.0:8080/"
+    private let API_SERVER_HOST = "\(SERVER_HOST)/api/v1"
+    private let HOST = "\(SERVER_HOST)/"
 //    private let API_SERVER_HOST = "http://127.0.0.1:8080/api"
     private let Client = URLSession.shared
     private let Decoder = JSONDecoder()
@@ -436,6 +439,69 @@ class APIService : ServerAPIServerServiceInterface{
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
 //        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
+    func GetUserFollowingList(req: GetFollowingListReq,completion : @escaping (Result<GetFollowingListResp,Error>) -> ()){
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetUserFollowingList.apiUri + req.user_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url : url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+//        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
+    func GetUserFollowedList(req : GetFollowedListReq,completion : @escaping (Result<GetFollowedListResp,Error>) -> ()){
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetUserFollowedList.apiUri + req.user_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url : url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+//        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
+    //MARK: --USER GENRES SETTING
+    func UpdateUserGenre(req : UpdateUserGenreReq, completion : @escaping (Result<UpdateUserGenreResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.UpdateUserGenre.apiUri) else{
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+       
+        do {
+            let userData = try JSONEncoder().encode(req)
+            request.httpBody = userData
+            
+        } catch {
+            completion(.failure(APIError.badEncoding))
+        }
+        
+        request.httpMethod = "PATCH"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    func GetUserGenres(req : GetUserGenreReq,completion : @escaping (Result<GetUserGenreResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetUserGenre.apiUri + req.user_id.description) else{
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
         FetchAndDecode(request: request, completion: completion)
     }
 
@@ -716,6 +782,77 @@ class APIService : ServerAPIServerServiceInterface{
         FetchAndDecode(request: request, completion: completion)
     }
     
+    //MARK: POST LIKED
+    func CreatePostLikes(req : CreatePostLikesReq,completion : @escaping (Result<CreatePostLikesResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreatePostLikes.apiUri) else{
+            completion(.failure(APIError.apiError))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do{
+            let bodyData = try Encoder.encode(req)
+            request.httpBody = bodyData
+        }catch{
+            completion(.failure(APIError.badEncoding))
+            return
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    func RemovePostLikes(req : RemovePostLikesReq,completion : @escaping (Result<RemovePostLikesResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.RemovePostLikes.apiUri) else{
+            completion(.failure(APIError.apiError))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do{
+            let bodyData = try Encoder.encode(req)
+            request.httpBody = bodyData
+        }catch{
+            completion(.failure(APIError.badEncoding))
+            return
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    func IsPostLiked(req : IsPostLikedReq,completion : @escaping (Result<IsPostLikedResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.IsPostLiked.apiUri + req.post_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        FetchAndDecode(request: request, completion: completion)
+    }
+    func CountPostLikes(req : CountPostLikesReq,completion : @escaping (Result<CountPostLikesResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CountPostLikes.apiUri + req.post_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
     //MARK: POST COMMENT
     func CreatePostComment(postId : Int,req : CreateCommentReq, completion : @escaping (Result<CreateCommentResp,Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreateComment.apiUri + postId.description) else {
@@ -785,6 +922,114 @@ class APIService : ServerAPIServerServiceInterface{
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
 
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
+    //MARK: --REPLY COMMENT
+    func CreateReplyComment(req : CreateReplyCommentReq, completion : @escaping (Result<CreateReplyCommentResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreateReplyComment.apiUri + "\(req.post_id)/reply/\(req.comment_id)") else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do{
+            let  bodyData = try Encoder.encode(req)
+            request.httpBody =  bodyData
+        } catch {
+            completion(.failure(APIError.badEncoding))
+            return
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    func GetReplyComment(req : GetReplyCommentReq, completion : @escaping (Result<GetReplyCommentResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetReplyComment.apiUri + req.comment_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
+    //MARK: --COMMENT LIKES
+    func CreateCommentLikes(req : CreateCommentLikesReq,completion : @escaping (Result<CreateCommentLikesResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreateCommentLikes.apiUri) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do{
+            let  bodyData = try Encoder.encode(req)
+            request.httpBody =  bodyData
+        } catch {
+            completion(.failure(APIError.badEncoding))
+            return
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    func RemoveCommentLikes(req : RemoveCommentLikesReq,completion : @escaping (Result<RemoveCommentLikesResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.RemoveCommentLikes.apiUri) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do{
+            let  bodyData = try Encoder.encode(req)
+            request.httpBody =  bodyData
+        } catch {
+            completion(.failure(APIError.badEncoding))
+            return
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    func IsCommentLiked(req : IsCommentLikedReq,completion : @escaping (Result<IsCommentLikedResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.IsCommentLiked.apiUri + req.comment_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
+    func CountCommentLikes(req : CountCommentLikesReq,completion : @escaping (Result<CountCommentLikesResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CountCommentLikes.apiUri + req.comment_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
         FetchAndDecode(request: request, completion: completion)
     }
     

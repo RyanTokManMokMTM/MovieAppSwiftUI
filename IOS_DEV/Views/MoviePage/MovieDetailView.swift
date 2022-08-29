@@ -61,8 +61,13 @@ struct MovieDetailView: View {
         .navigationTitle("")
         .navigationBarBackButtonHidden(true)
         .onAppear {
-            self.movieDetailState.loadMovie(id: self.movieId)
-            self.movieImagesState.loadMovieImage(id: self.movieId)
+            if self.movieImagesState.movieImage == nil {
+                self.movieImagesState.loadMovieImage(id: self.movieId)
+            }
+            
+            if self.movieDetailState.movie == nil {
+                self.movieDetailState.loadMovie(id: self.movieId)
+            }
             self.IsUserLiked()
             self.IsUserCollected()
             self.CountMovieCollected()
@@ -602,7 +607,7 @@ struct NewDetailView: View {
                                             Color("PersonCellColor"),
                                             Color.black
                                         ], startPoint: .top, endPoint: .bottom).frame(width: UIScreen.main.bounds.width, height: offset > 0 ? offset + max + 20 : getHeaderHigth() + 20, alignment: .bottom)
-                                            .blur(radius: self.offset / 10)
+                                            .scaleEffect(offset > 0 ? (offset / 500) + 1 : 1)
                                     )
                                     .blur(radius: self.offset / 10)
                                     .zIndex(0)
@@ -705,10 +710,6 @@ struct NewDetailView: View {
                             case .More:
                                 MoreDetail()
 
-//                            case .OnShow:
-//                                VStack{
-//                                    Text("SERVICE NOT AVAILABLE YET...")
-//                                }
                             case .Online:
                                 MovieOTT(movieTitle: movie.title)
                             case .Similar:
@@ -899,6 +900,7 @@ struct NewDetailView: View {
                                 .foregroundColor(.gray)
                                 .font(.system(size: 14))
                                 .lineLimit(self.isShowMore ? nil : 3)
+                                .multilineTextAlignment(.leading)
                             
                             Text(self.isShowMore ? "顯示更少" : "顯示更多")
                                 .foregroundColor(Color(uiColor: UIColor.white))

@@ -45,7 +45,6 @@ class UserViewModel : ObservableObject{
     @Published var isEditName : Bool = false
     @Published var isEditAvarar : Bool = false
     @Published var isEditCover : Bool = false
-    
 
     init(){
         

@@ -9,8 +9,6 @@ import Foundation
 import SwiftUI
 import AVKit
 
-
-let SERVER_HOST = "http://0.0.0.0:8000"
 //USE FOR FAKE DATA TO TEST UI
 
 //USE LOCAL VIDEO URL

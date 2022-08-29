@@ -34,14 +34,9 @@ class MovieDetailManager : ObservableObject {
 
 struct MovieHomePage: View {
     @EnvironmentObject var userVM : UserViewModel
-    @StateObject var previewModel = PreviewModel()
     @StateObject var StateManager  = SeachingViewStateManager()
-    @StateObject var DragAndDropPreview = DragSearchModel()
     @StateObject var postVM = PostVM()
-    
-    @ObservedObject  var userController = UserController() //Image Update
-    @StateObject var SearchVM = SearchMovieVM()
-    
+
     @Binding var isLogOut : Bool
     @State private var showHomePage : Bool = false // show it by default
 //    @State private var orientation = UIDeviceOrientation.unknown
@@ -96,15 +91,32 @@ struct MovieHomePage: View {
                                     .tag(1)
                                 
                                 
-                                MessageView()
+//                                MessageView()
+//                                    .navigationTitle("")
+//                                    .navigationBarTitle("")
+//                                    .navigationBarHidden(true)
+//                                    .tabItem{
+//                                        VStack(alignment:.center,spacing:10){
+//                                            Image(systemName:"paperplane.fill")
+//                                                .imageScale(.medium)
+//                                            Text("訊息")
+//                                                .frame(width: 50)
+//                                                .font(.caption)
+//                                        }
+//
+//                                    }
+//                                    .tag(2)
+                                
+                                
+                                Text("Frient list")
                                     .navigationTitle("")
                                     .navigationBarTitle("")
                                     .navigationBarHidden(true)
                                     .tabItem{
                                         VStack(alignment:.center,spacing:10){
-                                            Image(systemName:"paperplane.fill")
+                                            Image(systemName:"person.2.fill")
                                                 .imageScale(.medium)
-                                            Text("訊息")
+                                            Text("朋友")
                                                 .frame(width: 50)
                                                 .font(.caption)
                                         }
@@ -142,10 +154,11 @@ struct MovieHomePage: View {
                         
                     }
                     .edgesIgnoringSafeArea(.all)
-                    .environmentObject(previewModel)
-                    .environmentObject(StateManager) //here due to bottomSheet need to use to update some state
-                    .environmentObject(DragAndDropPreview) //here due to bottomSheet need to use to update some state
+//                    .environmentObject(previewModel)
+//                    .environmentObject(StateManager) //here due to bottomSheet need to use to update some state
+//                    .environmentObject(DragAndDropPreview) //here due to bottomSheet need to use to update some state
                     .environmentObject(postVM)
+                    .environmentObject(userVM)
 
                 }
 //                .ignoresSafeArea(.keyboard, edges: .bottom)

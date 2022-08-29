@@ -5,100 +5,110 @@
 //  Created by Kao Li Chi on 2021/6/5.
 //
 
-
 import SwiftUI
-import SDWebImageSwiftUI
 
 struct GetMoreMovie: View{
+    @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var postVM : PostVM
+    
     let movieID: Int
-    @ObservedObject private var recommendState = RecommendState()
- 
+    @StateObject private var recommendState = RecommendState()
+    @State private var isShowMovieDetail = false
+    @State private var showDetailId = 0
     var body: some View {
-        ZStack {
-            LoadingView(isLoading: self.recommendState.isLoading, error: self.recommendState.error) {
-                self.recommendState.RecommendMovies(id: movieID)
-            }
+        VStack {
             
-            if recommendState.movies != nil {
-                MoreMovieView(movies: self.recommendState.movies!)
+            if recommendState.isLoading || recommendState.error != nil {
+                LoadingView(isLoading: self.recommendState.isLoading, error: self.recommendState.error) {
+                    self.recommendState.RecommendMovies(id: movieID)
+                }
+            } else if recommendState.movies != nil {
+                if recommendState.movies!.isEmpty {
+                    Text("No recommended movie.")
+                }else {
+                    FlowLayoutView(list: recommendState.movies!, columns: 2,HSpacing: 10,VSpacing: 20){ info in
+                        Button(action: {
+                            self.showDetailId = info.id
+                            self.isShowMovieDetail = true
+                        }){
+                            MovieCardView(movieData: info)
+                        }
+                    }
+                }
             }
-            
         }
         .onAppear {
             self.recommendState.RecommendMovies(id: movieID)
             
         }
-    }
-}
-
-struct MoreMovieView: View {
-
-    var columns = Array(repeating: GridItem(.flexible(),spacing:15), count: 3)
-    let movies : [Movie]
-    
-    var body: some View {
+        .background(
+            NavigationLink(destination: MovieDetailView(movieId: self.showDetailId, isShowDetail: $isShowMovieDetail)
+                            .environmentObject(postVM)
+                            .environmentObject(userVM)
+                           , isActive: $isShowMovieDetail) {
+                EmptyView()
+            }
         
-        ScrollView(.vertical)
-        {
-            LazyVGrid(columns: columns, spacing: 20){
-                ForEach(self.movies ,id: \.id) { movie in
-                    
-                    NavigationLink(destination: MovieDetailView(movieId: movie.id, isShowDetail: .constant(false)))
-                    {
-                        MovieItem(movie: movie)
-                    }
-                   
-                }
-            }
-            .padding(.bottom,UIApplication.shared.windows.first?.safeAreaInsets.bottom)
-            
-            Spacer(minLength: 50)
-            
-        }
-    
-    
-    }
-    
-   
-}
-
-struct MoreMovieView_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationView{
-            Color.black.edgesIgnoringSafeArea(.all)
-            GetMoreMovie(movieID: 590223)
-        }
+        )
     }
 }
-
-struct MovieItem:View {
-    var movie:Movie
-    var body: some View {
-       
-        VStack{
-            WebImage(url: movie.posterURL)
-                .resizable()
-                .aspectRatio(contentMode:.fit)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.purple, lineWidth: 1)
-                )
-
-            
-            
-            VStack(spacing:5){
-                Text(movie.title)
-                    .bold()
-                    .font(.subheadline)
-                    .foregroundColor(.white)
-                Text(movie.ratingText)
-                    .font(.caption)
-                    .foregroundColor(.yellow)
-            }
-            
-        }
-           
-            
-    }
-}
+//
+//struct MoreMovieView: View {
+//    let movies : [Movie]
+//    var body: some View {
+//
+//        FlowLayoutView(list: movies, columns: 2,HSpacing: 5,VSpacing: 10){ info in
+//
+//            MovieCardView(movieData: info)
+//        }
+////
+////        FlowLayoutView(list: self.movies, columns: 2,HSpacing: 10,VSpacing: 15){ info in
+////            Button(action:{
+////                DispatchQueue.main.async {
+//////                    self.movieId = info.id
+//////                    self.isShowMovieDetail = true
+////                }
+////            }){
+////                MovieCardView(movieData: info)
+////            }
+////        }
+////        .frame(maxWidth:.infinity)
+////        .background(Color("DarkMode2").frame(maxWidth:.infinity))
+//
+//    }
+//
+//
+//}
+//
+//
+//struct MovieItem:View {
+//    var movie:Movie
+//    var body: some View {
+//
+//        VStack{
+//            WebImage(url: movie.posterURL)
+//                .resizable()
+//                .aspectRatio(contentMode:.fit)
+//                .clipShape(RoundedRectangle(cornerRadius: 10))
+//                .overlay(
+//                    RoundedRectangle(cornerRadius: 10)
+//                        .stroke(Color.purple, lineWidth: 1)
+//                )
+//
+//
+//
+//            VStack(spacing:5){
+//                Text(movie.title)
+//                    .bold()
+//                    .font(.subheadline)
+//                    .foregroundColor(.white)
+//                Text(movie.ratingText)
+//                    .font(.caption)
+//                    .foregroundColor(.yellow)
+//            }
+//
+//        }
+//
+//
+//    }
+//}

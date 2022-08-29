@@ -16,12 +16,19 @@ struct MovieOTT: View {
     @ObservedObject private var movieResourceState = MovieResourceState()
 
     var body: some View {
-        ZStack {
-            LoadingView(isLoading: self.movieResourceState.isLoading, error: self.movieResourceState.error) {
-                self.movieResourceState.fetchMovieResource(query:movieTitle )
+        VStack {
+            if self.movieResourceState.isLoading || self.movieResourceState.error != nil{
+                LoadingView(isLoading: self.movieResourceState.isLoading, error: self.movieResourceState.error) {
+                    self.movieResourceState.fetchMovieResource(query:movieTitle )
+                }
+                
+            }else if self.movieResourceState.resource != nil {
+                if self.movieResourceState.resource!.isEmpty {
+                   Text("No resources.")
+               } else {
+                   MovieOTTView(OTT: self.movieResourceState.resource!)
+               }
             }
-
-            MovieOTTView(OTT: self.movieResourceState.resource)
             
         }
         .onAppear {
@@ -91,11 +98,3 @@ struct MovieOTTView:View {
     }
 }
 
-
-
-struct MovieResource_Previews: PreviewProvider {
-    static var previews: some View {
-        MovieOTTView(OTT: OTTurl)
-            .preferredColorScheme(.dark)
-    }
-}

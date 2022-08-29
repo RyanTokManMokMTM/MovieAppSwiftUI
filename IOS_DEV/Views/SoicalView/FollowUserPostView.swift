@@ -35,7 +35,7 @@ struct FollowUserPostView: View {
 
             }
         }
-        .SheetWithDetents(isPresented:  self.$isShowMorePostDetail, detents: [.medium(),.large()]){
+        .SheetWithDetents(isPresented:  self.$isShowMorePostDetail, detents: [.medium()]){
             self.isShowMorePostDetail = false
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
                 self.postId = 0
