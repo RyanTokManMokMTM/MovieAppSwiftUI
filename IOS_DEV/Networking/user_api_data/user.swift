@@ -85,7 +85,7 @@ struct Profile : Decodable{
     var UserCollection : [Post]? //if no datas ,is a empty list
     var UserLikedMovies : [LikedMovieCard]? //if no datas ,is a empty list
     var UserCustomList : [CustomListInfo]?
-    var UserGenrePrerences :[MovieGenreTab]? // if no datas ,is a empty list
+    var UserGenrePrerences :[GenreTypeInfo]? // if no datas ,is a empty list
     
     var UserPhotoURL: URL {
         return URL(string:"\(SERVER_HOST)/resources\(avatar ?? "")" )!

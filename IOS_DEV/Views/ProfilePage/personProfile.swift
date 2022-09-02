@@ -32,8 +32,20 @@ struct MovieGenreTab : Identifiable ,Codable{
 class MoviePrerefencesSettingModel : ObservableObject {
     @Published var prerefencesType : [MovieGenreTab]
     @Published var isSelectedType : [MovieGenreTab] = []
+    
+    
     init(){
         self.prerefencesType = tempGenreTab
+    }
+    
+    func SetUpSelected(selected: [Int]){
+        
+        for genreId in selected {
+            let index = prerefencesType.firstIndex{$0.id == genreId}
+            guard let index = index else{ return }
+            self.prerefencesType[index].isSelected = true
+            isSelectedType.append(self.prerefencesType[index])
+        }
     }
     
     func updateSelected(preferencesID : Int){
@@ -420,9 +432,9 @@ struct EditUserName : View {
 struct MoviePreferenceSetting : View {
     @EnvironmentObject var userVM : UserViewModel
     @State private var offset : CGFloat = 0.0
+    var selectedIds : [Int]
     @StateObject var preferencesMv : MoviePrerefencesSettingModel = MoviePrerefencesSettingModel()
     @Binding var isPreferences : Bool
-
     var body : some View{
         GeometryReader{proxy in
             VStack(spacing:0){
@@ -442,11 +454,25 @@ struct MoviePreferenceSetting : View {
                         Spacer()
                         
                         Button(action:{
-                            withAnimation(){
-//                              self.userInfo.UserGenrePrerences.append(contentsOf: self.preferencesMv.isSelectedType.map{$0})
-          
-                                self.isPreferences.toggle()
+                            var ids : [Int] = []
+                            
+                            for info in self.preferencesMv.isSelectedType {
+                                ids.append(info.id)
                             }
+                            
+                            self.userVM.UpdateUserGenresSetting(genreIds: ids){
+                                withAnimation{
+                                    self.isPreferences.toggle()
+                                }
+                            }
+//
+//
+//
+//                            withAnimation(){
+////                              self.userInfo.UserGenrePrerences.append(contentsOf: self.preferencesMv.isSelectedType.map{$0})
+//
+//                                self.isPreferences.toggle()
+//                            }
                         }){
                             Text("完成")
                                 .foregroundColor(.white)
@@ -504,7 +530,9 @@ struct MoviePreferenceSetting : View {
             .edgesIgnoringSafeArea(.all)
             .environmentObject(preferencesMv)
         }
-        
+        .onAppear{
+            self.preferencesMv.SetUpSelected(selected: selectedIds)
+        }
     }
     
 }
@@ -557,13 +585,13 @@ struct userMoviePreferenceTab : View {
 }
 
 struct profileCardCell : View {
-    var post : Post
+    var Id : Int
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var postVM : PostVM
 
     var body: some View{
         VStack(alignment:.center){
-            WebImage(url: post.post_movie_info.PosterURL)
+            WebImage(url: userVM.profile!.UserCollection![Id].post_movie_info.PosterURL)
                 .placeholder(Image(systemName: "photo")) //
                 .resizable()
                 .indicator(.activity)
@@ -578,7 +606,7 @@ struct profileCardCell : View {
             Group{
     
                 HStack{
-                    Text(post.post_title)
+                    Text(self.userVM.profile!.UserCollection![Id].post_title)
                         .bold()
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
@@ -609,10 +637,21 @@ struct profileCardCell : View {
                     Spacer()
                     
                     HStack(spacing:5){
-                        Image(systemName: "heart")
+                        Image(systemName: self.userVM.profile!.UserCollection![Id].is_post_liked ?  "heart.fill" : "heart" )
                             .imageScale(.small)
+                            .foregroundColor(self.userVM.profile!.UserCollection![Id].is_post_liked ? .red : .gray)
+                            .onTapGesture {
+                                withAnimation{
+                                    if self.userVM.profile!.UserCollection![Id].is_post_liked {
+                                        UnLikePost()
+                                    }else {
+                                        LikePost()
+                                    }
+                                    //                                self.isLiked.toggle()
+                                }
+                            }
                         
-                        Text(post.post_like_desc)
+                        Text(self.userVM.profile!.UserCollection![Id].post_like_desc)
                             .foregroundColor(Color("subTextGray"))
                             .font(.caption)
                     }
@@ -625,9 +664,45 @@ struct profileCardCell : View {
         .background(Color("MoviePostColor").cornerRadius(5))
         .padding(.horizontal,2)
         .onTapGesture {
-            self.postVM.selectedPost = post
+            self.postVM.selectedPost = self.userVM.profile!.UserCollection![Id]
             withAnimation{
                 self.postVM.isShowPostDetail.toggle()
+            }
+        }
+    }
+    
+    
+    private func UnLikePost(){
+        self.userVM.profile!.UserCollection![Id].is_post_liked = false
+        self.userVM.profile!.UserCollection![Id].post_like_count =  self.userVM.profile!.UserCollection![Id].post_like_count - 1
+        let req = RemovePostLikesReq(post_id: self.userVM.profile!.UserCollection![Id].id)
+        APIService.shared.RemovePostLikes(req: req){ result in
+            switch result {
+            case .success(_):
+                print("post unliked")
+            case .failure(let err):
+                self.userVM.profile!.UserCollection![Id].is_post_liked = true
+                self.userVM.profile!.UserCollection![Id].post_like_count =  self.userVM.profile!.UserCollection![Id].post_like_count + 1
+                print(err.localizedDescription)
+            
+            }
+        }
+        
+    }
+    
+    private func LikePost(){
+        self.userVM.profile!.UserCollection![Id].is_post_liked = true
+        self.userVM.profile!.UserCollection![Id].post_like_count =  self.userVM.profile!.UserCollection![Id].post_like_count + 1
+        let req = CreatePostLikesReq(post_id: self.userVM.profile!.UserCollection![Id].id)
+        APIService.shared.CreatePostLikes(req: req){ result in
+            switch result {
+            case .success(_):
+                print("post likes")
+            case .failure(let err):
+                self.userVM.profile!.UserCollection![Id].is_post_liked = false
+                self.userVM.profile!.UserCollection![Id].post_like_count =  self.userVM.profile!.UserCollection![Id].post_like_count - 1
+                print(err.localizedDescription)
+            
             }
         }
     }
@@ -657,7 +732,7 @@ struct PersonPostCardGridView : View{
             }else{
                 FlowLayoutView(list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10){ info in
                 
-                    profileCardCell(post: info)
+                    profileCardCell(Id: userVM.GetPostIndex(postId: info.id))
                         .onTapGesture {
                             withAnimation{
                                 postVM.selectedPost = info
@@ -1096,11 +1171,11 @@ struct EditProfile : View{
                             }
                         })
                         
-//                        fieldCellButton(fieldName: "電影喜好", fieldData: "",action:{
-//                            withAnimation(){
-//                                self.isPreference.toggle()
-//                            }
-//                        })
+                        fieldCellButton(fieldName: "電影喜好", fieldData: "",action:{
+                            withAnimation(){
+                                self.isPreference.toggle()
+                            }
+                        })
         
                     }
                 }
@@ -1145,7 +1220,7 @@ struct EditProfile : View{
                 .edgesIgnoringSafeArea(.all)
         }
         .fullScreenCover(isPresented: $isPreference){
-            MoviePreferenceSetting(isPreferences: $isPreference)
+            MoviePreferenceSetting(selectedIds: self.userVM.GetPreferenceIds(), isPreferences: $isPreference)
         }
     }
     
@@ -1416,7 +1491,7 @@ struct personProfile: View {
                 .zIndex(0)
                 .onAppear{
                     self.userVM.getUserPosts()
-                    
+                    self.userVM.GetUserGenresSetting()
                 }
             }
             
@@ -1434,7 +1509,7 @@ struct personProfile: View {
                            }
         )
         .background(
-            NavigationLink(destination:   PostDetailView()
+            NavigationLink(destination:   PostDetailView(postForm: .Profile, isFromProfile: true)
                             .navigationBarTitle("")
                             .navigationTitle("")
                             .navigationBarBackButtonHidden(true)
@@ -1495,22 +1570,25 @@ struct personProfile: View {
                     .font(.footnote)
                     .bold()
                 
-                if self.userVM.profile!.UserGenrePrerences!.isEmpty{
-                    Text("使用者沒有特定喜好的電影項目~")
-                        .font(.footnote)
-                }else{
+                if self.userVM.profile!.UserGenrePrerences != nil && self.userVM.fetchUserGenreError == nil && !self.userVM.isUserGenresLoading{
                     
-                    HStack{
-                        ForEach(0..<userVM.profile!.UserGenrePrerences!.count){i in
-                                Text(userVM.profile!.UserGenrePrerences![i].genreName)
-                                    .font(.caption)
-                                    .padding(8)
-                                    .background(BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
-               
+                    if self.userVM.profile!.UserGenrePrerences!.isEmpty{
+                        Text("使用者沒有特定喜好的電影項目~")
+                            .font(.footnote)
+                    }else{
+                        
+                        HStack{
+                            ForEach(0..<userVM.profile!.UserGenrePrerences!.count){i in
+                                Text(userVM.profile!.UserGenrePrerences![i].name)
+                                        .font(.caption)
+                                        .padding(8)
+                                        .background(BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+                   
 
+                            }
                         }
+                        .padding(.top,5)
                     }
-                    .padding(.top,5)
                 }
             }
             

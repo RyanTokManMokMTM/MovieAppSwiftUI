@@ -34,6 +34,8 @@ class UserViewModel : ObservableObject{
     @Published var IsUpdating : Bool = false
     @Published var IsUploading : Bool = false
     @Published var isLoadingProfile : Bool = false
+    @Published var isUserGenresLoading : Bool = false
+    @Published var isUserGenresUpdating : Bool = false
     
     @Published var ListError : Error?
     @Published var PostError : Error?
@@ -41,6 +43,8 @@ class UserViewModel : ObservableObject{
     @Published var UpdateError : Error?
     @Published var UploadError : Error?
     @Published var fetchProfileError : Error?
+    @Published var fetchUserGenreError : Error?
+    @Published var updateUserGenreError : Error?
     
     @Published var isEditName : Bool = false
     @Published var isEditAvarar : Bool = false
@@ -68,7 +72,7 @@ class UserViewModel : ObservableObject{
             case .success(let data):
                 print("GET USER PROFILE SUCCEED")
                 self.profile = data
-                self.profile!.UserGenrePrerences = []
+//                self.profile!.UserGenrePrerences = []
                 self.isLoadingProfile = false
                 print(data)
             case .failure(let err):
@@ -94,6 +98,7 @@ class UserViewModel : ObservableObject{
             return
         }
         
+        print(userID!)
         self.IsPostLoading = true
         APIService.shared.GetUserPostByUserID(userID: self.userID!){ [weak self]  result in
             guard let self = self else { return }
@@ -245,5 +250,66 @@ class UserViewModel : ObservableObject{
     
     func IsOwner(userID : Int) -> Bool{
         return self.userID! == userID
+    }
+    
+    func GetUserGenresSetting(){
+        self.isUserGenresLoading = true
+        self.fetchUserGenreError = nil
+        
+        let req = GetUserGenreReq(user_id: self.userID!)
+        APIService.shared.GetUserGenres(req: req){result in
+            self.isUserGenresLoading = false
+            switch result{
+            case .success(let data):
+                self.profile!.UserGenrePrerences = data.user_genres
+            case .failure(let err):
+                self.fetchUserGenreError = err
+                print(err.localizedDescription)
+            }
+        }
+    }
+    
+    func UpdateUserGenresSetting(genreIds : [Int],onSuccess : @escaping ()->()){
+        self.isUserGenresUpdating = true
+        self.updateUserGenreError = nil
+        
+        let req = UpdateUserGenreReq(genre_ids: genreIds)
+        
+
+        APIService.shared.UpdateUserGenre(req: req){result in
+            DispatchQueue.main.async {
+                self.isUserGenresUpdating = false
+                switch result{
+                case .success(_):
+                    print("updated user genres")
+                    onSuccess()
+                case .failure(let err):
+                    self.updateUserGenreError = err
+                    print(err.localizedDescription)
+                }
+            }
+        }
+    }
+    
+    func GetPostIndex(postId : Int) -> Int{
+        print("collection ??\(self.profile!.UserCollection == nil)")
+        if self.profile!.UserCollection == nil {
+            return -1
+        }
+        
+        return self.profile!.UserCollection!.firstIndex{$0.id == postId} ?? -1
+    }
+    
+    func GetPreferenceIds() -> [Int]{
+        if self.profile!.UserGenrePrerences == nil || self.profile!.UserGenrePrerences!.isEmpty {
+            return []
+        }
+        
+        var ids : [Int] = []
+        for genre in self.profile!.UserGenrePrerences!{
+            ids.append(genre.id)
+        }
+        
+        return ids
     }
 }

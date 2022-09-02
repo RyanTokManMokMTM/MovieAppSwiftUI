@@ -10,10 +10,9 @@ import SDWebImageSwiftUI
 
 struct CardFlowLayout: View {
     @EnvironmentObject var postVM : PostVM
-    var namespace: Namespace.ID
     var body: some View {
         FlowLayoutView(list: self.postVM.postData, columns: 2,HSpacing: 5,VSpacing: 10){ info in
-                CardPostView(postData: info,namespace:namespace){
+            CardPostView(Id:self.postVM.getPostIndexFromDiscoveryList(postId: info.id)){
                     self.postVM.selectedPost = info
                     withAnimation{
                         self.postVM.isShowPostDetail.toggle()
@@ -24,7 +23,7 @@ struct CardFlowLayout: View {
         .background(Color("DarkMode2").frame(maxWidth:.infinity))
         .background(
             NavigationLink(destination:
-                            PostDetailView()
+                            PostDetailView(postForm: .AllPost, isFromProfile: false)
                             .environmentObject(postVM)
                             .navigationBarTitle("")
                             .navigationTitle("")

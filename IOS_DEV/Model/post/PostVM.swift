@@ -10,6 +10,7 @@ import SwiftUI
 
 
 class PostVM : ObservableObject {
+    @Published var initData : Bool = true
     @Published var postData : [Post] = [] //set to nil for first time
     @Published var followingData : [Post] = [] //set to nil for firs time
     @Published var index : TabItem = .Explore
@@ -44,7 +45,7 @@ class PostVM : ObservableObject {
                 case .success(let data):
 //                    print(data)
                     
-                    let newPost = Post(id: data.id, user_info: PosterOwner(id: user.id, name: user.name, avatar: user.avatar), post_title: title, post_desc: desc, post_movie_info: PostMovieInfo(id: movie.id, title: movie.title, poster_path: movie.posterPath), post_like_count: 0, post_comment_count: 0, create_at: data.create_time, comments: [])
+                    let newPost = Post(id: data.id, user_info: PosterOwner(id: user.id, name: user.name, avatar: user.avatar), post_title: title, post_desc: desc, post_movie_info: PostMovieInfo(id: movie.id, title: movie.title, poster_path: movie.posterPath), post_like_count: 0, post_comment_count: 0, create_at: data.create_time, is_post_liked: false, comments: [])
                     
                     self.followingData.insert(newPost, at: 0)
                     onSuccess()
@@ -99,7 +100,7 @@ class PostVM : ObservableObject {
 //                    self.followingData = data.post_info
                 case .failure(let err):
 //                    print("POST DATA")
-//                    print(err.localizedDescription)
+                    print(err.localizedDescription)
                     self.isGetFollowPostErr = err
                 }
             }

@@ -45,9 +45,7 @@ struct MovieHomePage: View {
     @State private var message : String = ""
     @FocusState private var isFocus : Bool
     @Namespace var namespace
-    
-    
-    
+
     var body: some View {
         NavigationView{
             ZStack{
@@ -108,7 +106,7 @@ struct MovieHomePage: View {
 //                                    .tag(2)
                                 
                                 
-                                Text("Frient list")
+                                MessageView()
                                     .navigationTitle("")
                                     .navigationBarTitle("")
                                     .navigationBarHidden(true)

@@ -35,6 +35,7 @@ struct OtherUserProfile: View {
                     userVM.getUserPosts()
 //                    print("post  get")
                     IsUserFollowing()
+                    userVM.GetUserGenresSetting()
                 }
                 
             }
@@ -43,6 +44,10 @@ struct OtherUserProfile: View {
             getFollowing()
             
         }
+        .onDisappear{
+            print("???\(self.userVM.profile!.UserCollection == nil)")
+        }
+
     }
     
     private func getPostCount(){
@@ -327,7 +332,7 @@ struct UserProfileView : View {
                             
                             HStack{
                                 ForEach(0..<userVM.profile!.UserGenrePrerences!.count){i in
-                                        Text(userVM.profile!.UserGenrePrerences![i].genreName)
+                                        Text(userVM.profile!.UserGenrePrerences![i].name)
                                             .font(.caption)
                                             .padding(8)
                                             .background(BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
@@ -384,15 +389,15 @@ struct UserProfileView : View {
 //                .buttonStyle(StaticButtonStyle())
                 .foregroundColor(.white)
 
-                Button(action:{
-                    //TODO : Edite data
-                }){
-                    Text("訊息")
-                        .padding(8)
-                        .background(BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
-                        .overlay(RoundedRectangle(cornerRadius: 25).stroke())
-                }
-                .foregroundColor(.white)
+//                Button(action:{
+//                    //TODO : Edite data
+//                }){
+//                    Text("訊息")
+//                        .padding(8)
+//                        .background(BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+//                        .overlay(RoundedRectangle(cornerRadius: 25).stroke())
+//                }
+//                .foregroundColor(.white)
 
             }
             .font(.footnote)
@@ -472,7 +477,7 @@ struct OtherPersonPostCardGridView : View{
             }else{
                 FlowLayoutView(list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10){ info in
                 
-                    profileCardCell(post: info)
+                    profileCardCell(Id : userVM.GetPostIndex(postId: info.id))
                         .onTapGesture {
                             withAnimation{
                                 postVM.selectedPost = info
@@ -481,11 +486,12 @@ struct OtherPersonPostCardGridView : View{
                         }
                 }
                 .background(
-                    NavigationLink(destination:   PostDetailView()
+                    NavigationLink(destination:   PostDetailView(postForm: .Profile, isFromProfile: true)
                                     .navigationBarTitle("")
                                     .navigationTitle("")
                                     .navigationBarBackButtonHidden(true)
                                     .navigationBarHidden(true)
+                                    .environmentObject(userVM)
                                     .environmentObject(postVM), isActive: self.$postVM.isShowPostDetail){
                         EmptyView()
                         

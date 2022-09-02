@@ -220,9 +220,9 @@ extension Date{
         let dayBetween = daysBetween(date: Date())
         
         if dayBetween == 0{
-            return "Today"
+            return "今天"
         } else if dayBetween == 1 {
-            return "Yesterday"
+            return "昨天"
         }else if dayBetween < 5 {
             let weekDay = Calendar.current.component(.weekday, from: self) - 1
             return formatter.weekdaySymbols[weekDay]

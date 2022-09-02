@@ -16,6 +16,9 @@ struct FollowUserPostView: View {
     
     @State private var isShowMorePostDetail : Bool = false
     @State private var postId : Int = -1
+    
+    @State private var isShowUserProfile : Bool = false
+    @State private var shownUserID : Int = 0
     var body: some View {
         ScrollView(.vertical, showsIndicators: false){
             
@@ -28,7 +31,7 @@ struct FollowUserPostView: View {
                 .padding(.vertical)
             }else {
                 ForEach(self.postVM.followingData){ info in
-                    FollowPostCell(isShowMovieDetail: $isShowMovieDetail, movieId: $movieId,info: info, isShowMorePostDetail:self.$isShowMorePostDetail, postId: self.$postId)
+                    FollowPostCell(isShowMovieDetail: $isShowMovieDetail, movieId: $movieId,Id : postVM.getPostIndexFromFollowList(postId: info.id), isShowMorePostDetail:self.$isShowMorePostDetail, postId: self.$postId,isShowUserProfile: $isShowUserProfile,shownUserID:$shownUserID)
                         .padding(.bottom,10)
                 }
 //                .padding(.bottom,UIApplication.shared.windows.first?.safeAreaInsets.bottom )
@@ -56,6 +59,17 @@ struct FollowUserPostView: View {
                 EmptyView()
             }
         )
+        .background(
+            NavigationLink(destination:OtherUserProfile(userID: shownUserID)
+                            .navigationTitle("")
+                            .navigationBarHidden(true)
+                            .navigationBarBackButtonHidden(true)
+                           ,isActive: $isShowUserProfile){
+                EmptyView()
+            }
+        
+        
+        )
 
     }
 }
@@ -69,12 +83,16 @@ struct FollowPostCell : View {
     @Binding var isShowMovieDetail : Bool
     @Binding var movieId : Int
     
-    var info : Post
+    var Id : Int
     @Binding var isShowMorePostDetail : Bool
     @Binding var postId : Int
+    @Binding var isShowUserProfile : Bool
+    @Binding  var shownUserID : Int
     
     @State private var moreText : Bool = false
     @State private var isShowAll = false
+    @State private var isTapToLike = false
+    
     var body: some View{
         VStack(spacing:10){
             UserInfoCell()
@@ -88,43 +106,78 @@ struct FollowPostCell : View {
     @ViewBuilder
     func UserInfoCell() -> some View{
         HStack(alignment:.center){
-            WebImage(url:info.user_info.UserPhotoURL)
+            WebImage(url:self.postVM.followingData[Id].user_info.UserPhotoURL)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 35, height: 35)
                     .clipShape(Circle())
 
             HStack(alignment:.center, spacing:10){
-                Text(info.user_info.name)
+                Text(self.postVM.followingData[Id].user_info.name)
                     .font(.system(size: 16, weight: .semibold))
-                Text(info.post_at.dateDescriptiveString())
+                Text(self.postVM.followingData[Id].post_at.dateDescriptiveString())
                     .font(.caption)
                     .foregroundColor(.gray)
             }
             Spacer()
-            
-            Button(action: {
-                //TODO: DO SOME MORE THING??
-            }){
-                Image(systemName: "ellipsis")
-                    .imageScale(.large)
-                    .foregroundColor(.white)
-            }
-            .disabled(true)
+            //TODO: Coming Soone???
+//            Button(action: {
+//                //TODO: DO SOME MORE THING??
+//            }){
+//                Image(systemName: "ellipsis")
+//                    .imageScale(.large)
+//                    .foregroundColor(.white)
+//            }
+//            .disabled(true)
             
             
         }
         .padding(.horizontal,10)
+        .onTapGesture{
+            if postVM.followingData[Id].user_info.id != userVM.userID {
+                self.shownUserID = self.postVM.followingData[Id].user_info.id
+                withAnimation{
+                    self.isShowUserProfile = true
+                }
+            }
+        }
     }
     
     @ViewBuilder
     func UserPostInfo() -> some View {
         VStack(alignment: .leading,spacing: 8){
 //                TabView(selection:$index){
-            WebImage(url:info.post_movie_info.PosterURL)
+            WebImage(url:self.postVM.followingData[Id].post_movie_info.PosterURL)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(maxWidth:.infinity,maxHeight: UIScreen.main.bounds.height / 2.2)
+                .onTapGesture(count: 2){
+                    print("liked post")
+                    withAnimation{
+                        self.isTapToLike = true
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){
+                        withAnimation{
+                            self.isTapToLike = false
+                        }
+                    }
+                    
+                    if !self.postVM.followingData[Id].is_post_liked {
+                        //liked the post
+                        LikePost()
+                    }
+                }
+                .overlay(
+                    ZStack{
+                        if self.isTapToLike{
+                            Image(systemName: "heart.fill")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 80)
+                                .foregroundColor(.red)
+                        }
+                    }
+                )
             
 //            PostButton()
             
@@ -133,9 +186,9 @@ struct FollowPostCell : View {
                     withAnimation{
                         self.isShowMovieDetail = true
                     }
-                    self.movieId = info.post_movie_info.id
+                    self.movieId = self.postVM.followingData[Id].post_movie_info.id
                 }){
-                    Text("#\(info.post_movie_info.title)")
+                    Text("#\(self.postVM.followingData[Id].post_movie_info.title)")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.red)
                         .padding(.top,5)
@@ -145,13 +198,13 @@ struct FollowPostCell : View {
             }
 
             HStack(alignment:.bottom){
-                Text(info.post_desc)
+                Text(self.postVM.followingData[Id].post_desc)
                     .lineLimit(self.isShowAll ? nil : 1)
                     .background(
-                        Text(info.post_desc).lineLimit(1)
+                        Text(self.postVM.followingData[Id].post_desc).lineLimit(1)
                             .background(GeometryReader { visibleTextGeometry in
                                 ZStack { //large size zstack to contain any size of text
-                                    Text(info.post_desc)
+                                    Text(self.postVM.followingData[Id].post_desc)
                                         .background(GeometryReader { fullTextGeometry in
                                             Color.clear.onAppear {
                                                 self.moreText = fullTextGeometry.size.height > visibleTextGeometry.size.height
@@ -230,20 +283,29 @@ struct FollowPostCell : View {
             Spacer()
             
             HStack(spacing:10){
-                Button(action:{
-                    //TODO: Like the post
-                }){
-                    HStack(spacing:5){
-                        Image(systemName: "heart")
+                HStack(spacing:5){
+                    Button(action:{
+                        //TODO: Like the post
+                        if self.postVM.followingData[Id].is_post_liked {
+                           UnLikePost()
+                        }else {
+                            LikePost()
+                        }
+                    }){
+                        
+                        Image(systemName: self.postVM.followingData[Id].is_post_liked ?  "heart.fill" : "heart")
                             .imageScale(.medium)
-                        Text(info.post_like_count.description)
-                            .font(.caption)
+                            .foregroundColor(self.postVM.followingData[Id].is_post_liked ? .red : .gray)
+                        
                     }
-                    .foregroundColor(.white)
+                    
+                    Text(self.postVM.followingData[Id].post_like_count.description)
+                        .font(.caption)
                 }
+                .foregroundColor(.white)
                 
                 Button(action:{
-                    self.postId  = info.id
+                    self.postId  = self.postVM.followingData[Id].id
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
                         withAnimation{
                             self.isShowMorePostDetail = true
@@ -253,7 +315,7 @@ struct FollowPostCell : View {
                     HStack(spacing:5){
                         Image(systemName: "text.bubble")
                             .imageScale(.medium)
-                        Text(info.post_comment_count.description)
+                        Text(self.postVM.followingData[Id].post_comment_count.description)
                             .font(.caption)
                     }
                     .foregroundColor(.white)
@@ -263,5 +325,40 @@ struct FollowPostCell : View {
         }
 
     }
-
+    
+    
+    private func UnLikePost(){
+        self.postVM.followingData[Id].is_post_liked = false
+        self.postVM.followingData[Id].post_like_count =  self.postVM.followingData[Id].post_like_count - 1
+        let req = RemovePostLikesReq(post_id: self.postVM.followingData[Id].id)
+        APIService.shared.RemovePostLikes(req: req){ result in
+            switch result {
+            case .success(_):
+                print("post unliked")
+            case .failure(let err):
+                self.postVM.followingData[Id].is_post_liked = true
+                self.postVM.followingData[Id].post_like_count =  self.postVM.followingData[Id].post_like_count + 1
+                print(err.localizedDescription)
+            
+            }
+        }
+        
+    }
+    
+    private func LikePost(){
+        self.postVM.followingData[Id].is_post_liked = true
+        self.postVM.followingData[Id].post_like_count =  self.postVM.followingData[Id].post_like_count + 1
+        let req = CreatePostLikesReq(post_id: self.postVM.followingData[Id].id)
+        APIService.shared.CreatePostLikes(req: req){ result in
+            switch result {
+            case .success(_):
+                print("post likes")
+            case .failure(let err):
+                self.postVM.followingData[Id].is_post_liked = false
+                self.postVM.followingData[Id].post_like_count =  self.postVM.followingData[Id].post_like_count - 1
+                print(err.localizedDescription)
+            
+            }
+        }
+    }
 }

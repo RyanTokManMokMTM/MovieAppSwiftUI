@@ -71,7 +71,7 @@ struct CommentInfo : Decodable,Identifiable{
     let comment : String
     let update_at : Int
     var reply_comments : Int
-    var replys : [Comment]? //can be empty
+    var replys : [CommentInfo]? //can be empty
     
     var comment_time : Date{
         return Date(timeIntervalSince1970: TimeInterval(update_at))

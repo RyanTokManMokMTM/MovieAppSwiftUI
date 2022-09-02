@@ -26,7 +26,7 @@ struct SoicalView: View {
                 
                 ScrollView(.horizontal, showsIndicators: false){
                     TabView(selection: self.$postVM.index){
-                        CardFlowLayout(namespace: namespace)
+                        CardFlowLayout()
                             .tag(TabItem.Explore)
                         FollowUserPostView()
                             .tag(TabItem.Follow)
@@ -42,8 +42,11 @@ struct SoicalView: View {
             }
         }
         .onAppear{
-            self.postVM.GetAllUserPost()
-            self.postVM.GetFollowUserPost()
+            if postVM.initData {
+                self.postVM.GetAllUserPost()
+                self.postVM.GetFollowUserPost()
+                postVM.initData = false
+            }
         }
 
     }

@@ -21,7 +21,7 @@ struct Post : Identifiable,Hashable,Decodable{
     let post_title : String
     let post_desc : String
     let post_movie_info : PostMovieInfo
-    let post_like_count : Int
+    var post_like_count : Int
     var post_comment_count : Int
     let create_at : Int
     var is_post_liked : Bool

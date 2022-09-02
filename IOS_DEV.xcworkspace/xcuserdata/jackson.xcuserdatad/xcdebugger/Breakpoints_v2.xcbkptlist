@@ -14,8 +14,8 @@
             filePath = "IOS_DEV/Views/SoicalView/CardPostView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "17"
-            endingLineNumber = "17"
+            startingLineNumber = "16"
+            endingLineNumber = "16"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -30,8 +30,8 @@
             filePath = "IOS_DEV/Views/ProfilePage/personProfile.swift"
             startingColumnNumber = "13"
             endingColumnNumber = "13"
-            startingLineNumber = "1119"
-            endingLineNumber = "1119"
+            startingLineNumber = "1127"
+            endingLineNumber = "1127"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -97,6 +97,22 @@
             startingLineNumber = "113"
             endingLineNumber = "113"
             landmarkName = "textFieldShouldReturn(_:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "1DDD6FBA-C01A-4388-95E0-82D112BDB4B0"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "IOS_DEV/Views/SoicalView/PostBottomSheet.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "301"
+            endingLineNumber = "301"
+            landmarkName = "commentCell(comment:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

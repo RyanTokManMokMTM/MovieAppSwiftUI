@@ -8,8 +8,16 @@
 import SwiftUI
 import SDWebImageSwiftUI
 
+enum postDatFrom{
+    case AllPost
+    case Profile
+}
 
 struct PostDetailView: View {
+    
+    var postForm : postDatFrom
+    var isFromProfile : Bool
+    
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
     
@@ -17,6 +25,7 @@ struct PostDetailView: View {
     @State private var message : String = ""
     @FocusState private var isFocues : Bool
     
+    @State private var isTapToLike : Bool = false
     @State private var isShowUserProfile : Bool = false
     @State private var shownUserID : Int = 0
     
@@ -25,12 +34,16 @@ struct PostDetailView: View {
     @State private var commentInfos : [CommentInfo] = []
     @State private var index = 0
     @State private var isShowMoreDetail : Bool = false
+    
+    @State private var isLoadingReply : Bool = false
+    @State private var replyCommentId : Int = -1
+    @State private var placeHolder : String = ""
+    @State private var isReply : Bool = false
+    
+    
     var body: some View {
         ZStack(alignment: .top){
             VStack(spacing:0){
-//                PostDetailViewTopBar(isShowUserProfile: self.$isShowUserProfile,userID:$shownUserID, isFollowing: $isUserFollowing)
-//                    .environmentObject(postVM)
-//                    .environmentObject(userVM)
                 PostTopBar()
                 
                 //Image tab view
@@ -59,7 +72,6 @@ struct PostDetailView: View {
         .onAppear{
             IsUserFollowing()
             GetPostComments()
-            print("user id: \(userVM.profile!.id)")
         }
         
         
@@ -71,7 +83,7 @@ struct PostDetailView: View {
             //                Spacer()
             Divider()
             HStack{
-                TextField("留下點什麼~",text:$message)
+                TextField(self.placeHolder.isEmpty ? "留下點什麼~" : self.placeHolder,text:$message)
                     .font(.system(size:14))
                     .padding(.horizontal)
                     .frame(height:35)
@@ -81,7 +93,12 @@ struct PostDetailView: View {
                     .submitLabel(.send)
                     .onSubmit({
                         //TODO: SEND THE COMMENT
-                        CreatePostComment()
+                        
+                        if self.isReply {
+                            CreatePostReplyMessge()
+                        }else {
+                            CreatePostComment()
+                        }
                     })
                     .accentColor(.white)
             }
@@ -92,61 +109,7 @@ struct PostDetailView: View {
         
         
     }
-    
-    func IsUserFollowing(){
-        let req = GetOneFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
-        APIService.shared.GetOneFriend(req: req){ result in
-            switch result {
-            case .success(let data):
-                self.isUserFollowing = data.is_friend
-                print(self.isUserFollowing)
-            case .failure(let err):
-                print(err.localizedDescription)
-            }
-        }
-    }
-    
-    private func CreatePostComment(){
-        if message.isEmpty { return }
-        let postId =  self.postVM.selectedPost!.id
-        let req = CreateCommentReq(comment: self.message)
-        print(postId)
-        APIService.shared.CreatePostComment(postId: postId, req: req){ result in
-            switch result {
-            case .success(let data):
-                let newComment = CommentInfo(id: data.id, user_info:
-                                                CommentUser(id: self.userVM.profile!.id, name: self.userVM.profile!.name, avatar: self.userVM.profile!.avatar ?? ""),
-                                             comment: self.message, update_at: data.create_at)
-
-                self.commentInfos.insert(newComment, at: 0)
-                //this will change??
-//                DispatchQueue.main.async {
-//                    self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)].post_comment_count += 1
-//                }
-                print(self.postVM.getPostIndexFromFollowList(postId: postId))
-
-                self.message.removeAll()
-            case .failure(let err):
-                print(err.localizedDescription)
-            }
-
-        }
-    }
-    
-    private func GetPostComments(){
-        self.isLoadingComment = true
-        let postId = self.postVM.selectedPost!.id
-        APIService.shared.GetPostComments(postId: postId){ result in
-            self.isLoadingComment = false
-            switch result {
-            case .success(let data):
-                self.commentInfos = data.comments
-            case .failure(let err):
-                print("get comment failed : \(err.localizedDescription)")
-            }
-        }
-    }
-    
+        
     @ViewBuilder
     private func PostTopBar() -> some View {
             HStack(alignment:.center){
@@ -177,6 +140,11 @@ struct PostDetailView: View {
         //                .matchedGeometryEffect(id: postData.user_info.id, in: namespace)
                 }
                 .onTapGesture{
+                    if postForm == .Profile{
+                        self.postVM.isShowPostDetail = false
+                        return
+                    }
+                    
                     if postVM.selectedPost!.user_info.id != userVM.userID {
                         self.shownUserID = self.postVM.selectedPost!.user_info.id
                         withAnimation{
@@ -218,15 +186,16 @@ struct PostDetailView: View {
                             )
                             
                     }
-                }else {
-                    Button(action:{
-                        //TODO: MODIFY THE POST
-                    }){
-                        Image(systemName: "ellipsis")
-                            .foregroundColor(.white)
-                            .imageScale(.large)
-                    }
                 }
+//                else {
+//                    Button(action:{
+//                        //TODO: MODIFY THE POST
+//                    }){
+//                        Image(systemName: "ellipsis")
+//                            .foregroundColor(.white)
+//                            .imageScale(.large)
+//                    }
+//                }
 
             }
     //        .edgesIgnoringSafeArea(.all)
@@ -238,37 +207,7 @@ struct PostDetailView: View {
                 print(self.postVM.followingData.count)
             }
         }
-        
-    private func followUser(){
-        let req = CreateNewFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
-        APIService.shared.CreateNewFriend(req: req){ result in
-            switch result{
-            case .success(_):
-                print("User Followed")
-            case .failure(let err):
-                print(err.localizedDescription)
-                withAnimation{
-                    self.isUserFollowing.toggle()
-                }
-            }
-        }
-    }
     
-    private func UnFollowUser(){
-        let req = RemoveFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
-        APIService.shared.RemoveFriend(req: req){ result in
-            switch result{
-            case .success(_):
-                print("User UnFollowed")
-                
-            case .failure(let err):
-                print(err.localizedDescription)
-                withAnimation{
-                    self.isUserFollowing.toggle()
-                }
-            }
-        }
-    }
     
     @ViewBuilder
     private func postBody() -> some View {
@@ -283,6 +222,33 @@ struct PostDetailView: View {
                     .aspectRatio(contentMode: .fit)
 //                    .matchedGeometryEffect(id: self.postVM.selectedPost!.id.description, in: namespace)
                     .frame(width: UIScreen.main.bounds.width)
+                    .onTapGesture(count: 2){
+                        print("liked post")
+                        withAnimation{
+                            self.isTapToLike = true
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){
+                            withAnimation{
+                                self.isTapToLike = false
+                            }
+                        }
+                        
+                        if !self.postVM.selectedPost!.is_post_liked {
+                            //liked the post
+                            LikePost()
+                        }
+                    }
+                    .overlay(
+                        ZStack{
+                            if self.isTapToLike{
+                                Image(systemName: "heart.fill")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 80)
+                                    .foregroundColor(.red)
+                            }
+                        }
+                    )
                 //maxinum image is 10
                 Text("\(index + 1)/1")
                     .font(.system(size: 12, weight: .semibold))
@@ -301,7 +267,7 @@ struct PostDetailView: View {
                         .fill(self.index + 1 == i ? .red : .gray)
                         .frame(width: 5, height: 5)
                         .scaleEffect(self.index + 1 == i ? 1.2 : 0.9)
-                        .animation(.spring())
+//                        .animation(.spring())
                 }
             }
             VStack{
@@ -316,7 +282,6 @@ struct PostDetailView: View {
 
         }
     }
-    
     
     @ViewBuilder
     func PostContent() -> some View{
@@ -362,7 +327,7 @@ struct PostDetailView: View {
     
     @ViewBuilder
     func CommentView() -> some View{
-        Text("Comments : \(commentInfos.count)")
+        Text("留言 : \(self.postVM.selectedPost!.post_comment_count)")
             .foregroundColor(.white)
             .font(.system(size: 14,weight: .medium))
         
@@ -403,63 +368,400 @@ struct PostDetailView: View {
             }
         }
     }
-    
-    @ViewBuilder
-    private func commentCell(comment : CommentInfo) ->  some View {
-        HStack(alignment:.top){
-//                HStack(alignment:.center){
-            WebImage(url:comment.user_info.UserPhotoURL)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 35, height: 35)
-                    .clipShape(Circle())
-                    .padding(.vertical,3)
-
-                VStack(alignment:.leading,spacing: 3){
-                    HStack{
-                        Text(comment.user_info.name)
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(Color(uiColor: .systemGray))
-                        
-                        if self.postVM.selectedPost!.user_info.id == comment.user_info.id {
-                            Text("Author")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundColor(Color(uiColor: .lightGray))
-                                .padding(3)
-                                .padding(.horizontal,5)
-                                .background(BlurView().clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
-                        }
-                    }
-
-
-                    Text(comment.comment)
-                        .multilineTextAlignment(.leading)
-                        .font(.system(size: 12, weight: .semibold))
-                    
-                    HStack{
-                        Text(comment.comment_time.dateDescriptiveString())
-                            .foregroundColor(.gray)
-                            .font(.system(size: 11))
-                        
-                        Text("Reply")
-                            .foregroundColor(.gray)
-                            .font(.system(size: 11,weight:.semibold))
-                    }
+        
+    private func followUser(){
+        let req = CreateNewFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
+        APIService.shared.CreateNewFriend(req: req){ result in
+            switch result{
+            case .success(_):
+                print("User Followed")
+            case .failure(let err):
+                print(err.localizedDescription)
+                withAnimation{
+                    self.isUserFollowing.toggle()
                 }
-
-//                }
-            Spacer()
-
-            Image(systemName: "heart")
-                .imageScale(.small)
-            
+            }
         }
-
-        PostViewDivider
-            .padding(.vertical,5)
     }
     
- 
+    private func UnFollowUser(){
+        let req = RemoveFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
+        APIService.shared.RemoveFriend(req: req){ result in
+            switch result{
+            case .success(_):
+                print("User UnFollowed")
+                
+            case .failure(let err):
+                print(err.localizedDescription)
+                withAnimation{
+                    self.isUserFollowing.toggle()
+                }
+            }
+        }
+    }
+    
+    func IsUserFollowing(){
+        let req = GetOneFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
+        APIService.shared.GetOneFriend(req: req){ result in
+            switch result {
+            case .success(let data):
+                self.isUserFollowing = data.is_friend
+                print(self.isUserFollowing)
+            case .failure(let err):
+                print(err.localizedDescription)
+            }
+        }
+    }
+    
+    private func CreatePostComment(){
+        if message.isEmpty { return }
+        let postId =  self.postVM.selectedPost!.id
+        let req = CreateCommentReq(comment: self.message)
+        print(postId)
+        APIService.shared.CreatePostComment(postId: postId, req: req){ result in
+            switch result {
+            case .success(let data):
+                let newComment = CommentInfo(id: data.id, user_info:
+                                                CommentUser(id: self.userVM.profile!.id, name: self.userVM.profile!.name, avatar: self.userVM.profile!.avatar ?? ""),
+                                             comment: self.message, update_at: data.create_at, reply_comments:0)
+
+                self.commentInfos.insert(newComment, at: 0)
+                //this will change??
+//                DispatchQueue.main.async {
+//                    self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)].post_comment_count += 1
+//                }
+                print(self.postVM.getPostIndexFromFollowList(postId: postId))
+
+                self.message.removeAll()
+            case .failure(let err):
+                print(err.localizedDescription)
+            }
+
+        }
+    }
+    
+    private func CreatePostReplyMessge(){
+        let index = commentInfos.firstIndex{$0.id == self.replyCommentId}
+        guard let index = index else { return }
+        
+        let postId = self.postVM.selectedPost!.id
+        
+        let req = CreateReplyCommentReq(post_id: self.postVM.postData[self.postVM.getPostIndexFromDiscoveryList(postId: postId)].id, comment_id: self.replyCommentId, comment: self.message)
+        APIService.shared.CreateReplyComment(req: req){ result in
+            switch result {
+            case .success(let data):
+                let newComment = CommentInfo(id: data.id, user_info:
+                                                CommentUser(id: self.userVM.profile!.id, name: self.userVM.profile!.name, avatar: self.userVM.profile!.avatar ?? ""),
+                                             comment: self.message, update_at: data.create_at, reply_comments: 0)
+
+                if self.commentInfos[index].replys == nil {
+                    self.commentInfos[index].replys = []
+                }
+                self.commentInfos[index].replys!.append(newComment)
+                
+                DispatchQueue.main.async {
+                    self.postVM.postData[self.postVM.getPostIndexFromDiscoveryList(postId: postId)].post_comment_count += 1
+//                    self.commentInfos[index].reply_comments += 1
+                }
+                
+                self.replyCommentId = -1
+                self.message.removeAll()
+                self.isReply = false
+            case .failure(let err):
+                print(err.localizedDescription)
+            }
+
+        }
+        
+    }
+    
+    private func GetPostComments(){
+        self.isLoadingComment = true
+        let postId = self.postVM.selectedPost!.id
+        APIService.shared.GetPostComments(postId: postId){ result in
+            self.isLoadingComment = false
+            switch result {
+            case .success(let data):
+                self.commentInfos = data.comments
+            case .failure(let err):
+                print("get comment failed : \(err.localizedDescription)")
+            }
+        }
+    }
+    
+    private func GetCommentReply(commentId : Int){
+        let index = commentInfos.firstIndex{$0.id == commentId}
+        guard let index = index else { return }
+        
+        self.isLoadingReply = true
+        let req = GetReplyCommentReq(comment_id: commentId)
+        APIService.shared.GetReplyComment(req: req){ result in
+            self.isLoadingReply = false
+            switch result{
+            case .success(let data):
+                self.commentInfos[index].replys = data.reply
+                
+//               let index = commentInfos.first{$0.id = self.replyCommentId}
+            case .failure(let err):
+                print(err.localizedDescription)
+            }
+        }
+    }
+    
+    private func LikePost(){
+        self.postVM.selectedPost!.is_post_liked = true
+        self.postVM.selectedPost!.post_like_count += 1
+        let req = CreatePostLikesReq(post_id: self.postVM.selectedPost!.id)
+        APIService.shared.CreatePostLikes(req: req){ result in
+            switch result {
+            case .success(_):
+                print("post likes")
+            case .failure(let err):
+                self.postVM.selectedPost!.is_post_liked = false
+                self.postVM.selectedPost!.post_like_count += 1
+                print(err.localizedDescription)
+            
+            }
+        }
+    }
+    
+//    @ViewBuilder
+//    private func commentCell(comment : CommentInfo) ->  some View {
+//        HStack(alignment:.top){
+////                HStack(alignment:.center){
+//            WebImage(url:comment.user_info.UserPhotoURL)
+//                    .resizable()
+//                    .aspectRatio(contentMode: .fill)
+//                    .frame(width: 35, height: 35)
+//                    .clipShape(Circle())
+//                    .padding(.vertical,3)
+//
+//                VStack(alignment:.leading,spacing: 3){
+//                    HStack{
+//                        Text(comment.user_info.name)
+//                            .font(.system(size: 14, weight: .semibold))
+//                            .foregroundColor(Color(uiColor: .systemGray))
+//
+//                        if self.postVM.selectedPost!.user_info.id == comment.user_info.id {
+//                            Text("Author")
+//                                .font(.system(size: 12, weight: .semibold))
+//                                .foregroundColor(Color(uiColor: .lightGray))
+//                                .padding(3)
+//                                .padding(.horizontal,5)
+//                                .background(BlurView().clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+//                        }
+//                    }
+//
+//
+//                    Text(comment.comment)
+//                        .multilineTextAlignment(.leading)
+//                        .font(.system(size: 12, weight: .semibold))
+//
+//                    HStack{
+//                        Text(comment.comment_time.dateDescriptiveString())
+//                            .foregroundColor(.gray)
+//                            .font(.system(size: 11))
+//
+//                        Text("Reply")
+//                            .foregroundColor(.gray)
+//                            .font(.system(size: 11,weight:.semibold))
+//                    }
+//                }
+//
+////                }
+//            Spacer()
+//
+//            Button(action:{
+//                //Comment Like~
+//            }){
+//                Image(systemName: "heart")
+//                    .imageScale(.small)
+//            }
+//
+//        }
+//
+//        PostViewDivider
+//            .padding(.vertical,5)
+//    }
+//
+    @ViewBuilder
+    private func commentCell(comment : CommentInfo) ->  some View {
+        VStack{
+            HStack(alignment:.top){
+                //                HStack(alignment:.center){
+                Group{
+                    WebImage(url:comment.user_info.UserPhotoURL)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 35, height: 35)
+                        .clipShape(Circle())
+                        .padding(.vertical,3)
+                    
+                    VStack(alignment:.leading,spacing: 3){
+                        HStack{
+                            Text(comment.user_info.name)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(Color(uiColor: .systemGray))
+                            
+                            if getPostInfo().user_info.id == comment.user_info.id {
+                                Text("作者")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundColor(Color(uiColor: .lightGray))
+                                    .padding(3)
+                                    .padding(.horizontal,5)
+                                    .background(BlurView().clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+                            }
+                        }
+                        
+                        
+                        Text(comment.comment)
+                            .multilineTextAlignment(.leading)
+                            .font(.system(size: 14, weight: .semibold))
+                        
+                        HStack{
+                            Text(comment.comment_time.dateDescriptiveString())
+                                .foregroundColor(.gray)
+                                .font(.system(size: 12))
+                        }
+                        .padding(.top,3)
+                    }
+                }
+                .onTapGesture {
+                    self.placeHolder = "回覆@\(comment.user_info.name)"
+                    self.isReply = true
+                    self.replyCommentId = comment.id
+                }
+                Spacer()
+                
+                Image(systemName: "heart")
+                    .imageScale(.small)
+            }
+            
+            if comment.reply_comments > 0{
+                HStack(spacing:0){
+                    Spacer()
+                        .frame(width: UIScreen.main.bounds.width / 8.5)
+                    
+                    if self.isLoadingReply{
+                        Text("Loading...")
+                            .font(.system(size:12,weight: .semibold))
+                    } else {
+                        VStack{
+                            if comment.replys != nil {
+                                ForEach(comment.replys!){reply in
+                                    replyCommentCell(comment: reply,releatedCommentId : comment.id)
+                                }
+                            }
+                            
+                            if comment.replys != nil && comment.reply_comments - comment.replys!.count <= 0 {
+                                HStack{
+                                    Text("已經沒有評論了~")
+                                        .font(.system(size:14,weight: .semibold))
+                                    
+                                    Spacer()
+                                }
+                                .padding(.vertical,5)
+                                .foregroundColor(.gray)
+                            } else {
+                                Button(action:{
+                                    GetCommentReply(commentId: comment.id)
+                                }){
+                                    HStack{
+                                        Text("顯示\(comment.reply_comments - (comment.replys?.count ?? 0))條評論")
+                                            .font(.system(size:14,weight: .semibold))
+                                        
+                                        Spacer()
+                                    }
+                                    .padding(.vertical,5)
+                                    .foregroundColor(.gray)
+                                }
+                            }
+                        }
+                    
+                        
+                    }
+                }
+            }
+            
+            PostViewDivider
+                .padding(.vertical,5)
+        }
+    }
+    
+    @ViewBuilder
+    private func replyCommentCell(comment : CommentInfo,releatedCommentId : Int) ->  some View {
+        VStack{
+            HStack(alignment:.top){
+                Group{
+                    WebImage(url:comment.user_info.UserPhotoURL)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 35, height: 35)
+                        .clipShape(Circle())
+                        .padding(.vertical,3)
+                    
+                    VStack(alignment:.leading,spacing: 3){
+                        HStack{
+                            Text(comment.user_info.name)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(Color(uiColor: .systemGray))
+                            
+                            if getPostInfo().user_info.id == comment.user_info.id {
+                                Text("作者")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundColor(Color(uiColor: .lightGray))
+                                    .padding(3)
+                                    .padding(.horizontal,5)
+                                    .background(BlurView().clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+                            }
+                        }
+                        
+                        
+                        Text(comment.comment)
+                            .multilineTextAlignment(.leading)
+                            .font(.system(size: 14, weight: .semibold))
+                        
+                        HStack{
+                            Text(comment.comment_time.dateDescriptiveString())
+                                .foregroundColor(.gray)
+                                .font(.system(size: 12))
+                        }
+                        .padding(.top,3)
+                    }
+                }
+                .onTapGesture {
+                    self.placeHolder = "回覆@\(comment.user_info.name)"
+                    self.isReply = true
+                    self.replyCommentId = replyCommentId
+                }
+                Spacer()
+                
+                Image(systemName: "heart")
+                    .imageScale(.small)
+            }
+
+            
+//            PostViewDivider
+//                .padding(.vertical,5)
+        }
+    }
+    
+    private func getPostInfo() -> Post{
+        //if post from post data -> get post from post data
+        //else get from user profile
+        print(self.postForm)
+        let postId = self.postVM.selectedPost!.id
+        let index : Int
+        switch postForm {
+        case .AllPost:
+            index = self.postVM.getPostIndexFromDiscoveryList(postId: postId)
+            return self.postVM.postData[index]
+        case .Profile:
+            index = self.userVM.GetPostIndex(postId: postId)
+            print("profile index?\(index)")
+            return self.userVM.profile!.UserCollection![index]
+        }
+    }
 }
 //
 //struct PostDetailViewTopBar : View {
@@ -812,6 +1114,7 @@ struct PostDetailView: View {
 
 
 var PostViewDivider : some View {
+    
     Divider()
         .background(Color("DetechingColor"))
         .padding(.vertical,5)

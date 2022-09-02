@@ -327,7 +327,9 @@ struct ChattingView : View{
 
 struct MessageView: View {
     @StateObject private var msgVM = MessageViewModel()
-    
+    @State private var isShowLikesNotification : Bool = false
+    @State private var isShowFollowingNotification : Bool = false
+    @State private var isShowCommentNotification : Bool = false
     var body: some View {
         GeometryReader{ proxy in
             VStack(spacing:0){
@@ -345,44 +347,44 @@ struct MessageView: View {
                     }
                     .frame(width: UIScreen.main.bounds.width, height: proxy.safeAreaInsets.top + 30,alignment: .bottom)
                     Divider()
-                    MessageHeaderTab()
+                    MessageHeaderTab(isShowLikesNotification: $isShowLikesNotification, isShowFollowingNotification: $isShowFollowingNotification, isShowCommentNotification: $isShowCommentNotification)
                         .padding(.top)
                     
-                    List(){
-                        ForEach(self.msgVM.ChatList,id:\.id){info in
-                            ZStack{
-                                chatRow(info:info)
-                                
-                                NavigationLink(destination:ChattingView(chatInfo: info)
-                                                .environmentObject(msgVM)
-                                ){
-                                    EmptyView()
-                                }
-                                .opacity(0)
-                                .buttonStyle(PlainButtonStyle())
-                                .frame(width: 0)
-                            }
-                            .listRowBackground(Color("DarkMode2"))
-                            
-                            //                                .swipeActions(edge: .leading,allowsFullSwipe: true){
-                            //                                    Button(action:{
-                            //                                        self.msgVM.updateReadMark(!info.hasUnrealMsg, info: info)
-                            //                                    }){
-                            //                                        if info.hasUnrealMsg{
-                            //                                            Label("Read", image: "text.bubble")
-                            //                                        }else{
-                            //                                            Label("Unread", image: "circle.fill")
-                            //                                        }
-                            //                                    }
-                            //                                    .tint(.blue)
-                            //                                }
-                            
-                        }
-                        .onDelete(perform: { indexSet in
-                            self.msgVM.ChatList.remove(atOffsets: indexSet)
-                        })
-                    }
-                    .listStyle(.plain)
+//                    List(){
+//                        ForEach(self.msgVM.ChatList,id:\.id){info in
+//                            ZStack{
+//                                chatRow(info:info)
+//
+//                                NavigationLink(destination:ChattingView(chatInfo: info)
+//                                                .environmentObject(msgVM)
+//                                ){
+//                                    EmptyView()
+//                                }
+//                                .opacity(0)
+//                                .buttonStyle(PlainButtonStyle())
+//                                .frame(width: 0)
+//                            }
+//                            .listRowBackground(Color("DarkMode2"))
+//
+//                            //                                .swipeActions(edge: .leading,allowsFullSwipe: true){
+//                            //                                    Button(action:{
+//                            //                                        self.msgVM.updateReadMark(!info.hasUnrealMsg, info: info)
+//                            //                                    }){
+//                            //                                        if info.hasUnrealMsg{
+//                            //                                            Label("Read", image: "text.bubble")
+//                            //                                        }else{
+//                            //                                            Label("Unread", image: "circle.fill")
+//                            //                                        }
+//                            //                                    }
+//                            //                                    .tint(.blue)
+//                            //                                }
+//
+//                        }
+//                        .onDelete(perform: { indexSet in
+//                            self.msgVM.ChatList.remove(atOffsets: indexSet)
+//                        })
+//                    }
+//                    .listStyle(.plain)
                     
                     
                     .padding(.top)
@@ -445,19 +447,54 @@ struct chatRow : View{
 }
 
 struct MessageHeaderTab : View{
+    @Binding var isShowLikesNotification : Bool
+    @Binding var isShowFollowingNotification : Bool
+    @Binding var isShowCommentNotification : Bool
+    
     var body: some View{
         HStack{
             Spacer()
-            tabButton(systemIcon: "heart.circle.fill", iconColor: .red, buttonText: "點讚"){
-                print("any like")
+            NavigationLink(destination: LikesNotificationView(isShowView: $isShowLikesNotification)
+                            .navigationBarBackButtonHidden(true)
+                            .navigationTitle("")
+                            .navigationBarTitle("")
+                            .navigationBarHidden(true)
+                           ,isActive: $isShowLikesNotification){
+                tabButton(systemIcon: "heart.circle.fill", iconColor: .red, buttonText: "點讚"){
+                    withAnimation{
+                        self.isShowLikesNotification = true
+                    }
+                }
             }
+            
             Spacer()
-            tabButton(systemIcon: "person.fill", iconColor: .blue, buttonText: "新增追蹤"){
-                print("any follow")
+            
+            NavigationLink(destination: FollowingNotification(isShowView:$isShowFollowingNotification)
+                            .navigationBarBackButtonHidden(true)
+                            .navigationTitle("")
+                            .navigationBarTitle("")
+                            .navigationBarHidden(true)
+                           ,isActive: $isShowFollowingNotification){
+                tabButton(systemIcon: "person.fill", iconColor: .blue, buttonText: "新增追蹤"){
+                    withAnimation{
+                        self.isShowFollowingNotification = true
+                    }
+                }
             }
+            
             Spacer()
-            tabButton(systemIcon: "paperplane.fill", iconColor: .orange, buttonText: "評論"){
-                print("any comment")
+            
+            NavigationLink(destination: CommentNotificationView(isShowView: $isShowCommentNotification)
+                            .navigationBarBackButtonHidden(true)
+                            .navigationTitle("")
+                            .navigationBarTitle("")
+                            .navigationBarHidden(true)
+                           ,isActive: $isShowCommentNotification){
+                tabButton(systemIcon: "paperplane.fill", iconColor: .orange, buttonText: "評論"){
+                    withAnimation{
+                        self.isShowCommentNotification = true
+                    }
+                }
             }
             Spacer()
         }
@@ -473,11 +510,27 @@ struct MessageHeaderTab : View{
                             .foregroundColor(iconColor)
                             .font(.title2)
                             .imageScale(.medium)
+                           
                     }
                     .frame(width: 40, height: 40, alignment: .center)
-                    .background(BlurView().clipShape(CustomeConer(width: 10, height: 10, coners: [.allCorners])))
+                    .background(BlurView()
+                                    .clipShape(CustomeConer(width: 10, height: 10, coners: [.allCorners]))
+                    )
+//                    .overlay(
+//                        ZStack(alignment:.topLeading){
+//                            Circle()
+//                                .fill(.red)
+//                                .frame(width: 12, height: 12)
+//                                .overlay(
+//                                    Text("10")
+//                                        .font(.system(size: 10))
+//                                )
+//                        }
+//                    )
                 }
             }
+            
+            
             Text(buttonText)
                 .font(.footnote)
         }

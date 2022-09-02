@@ -919,13 +919,13 @@ struct NewDetailView: View {
                             .font(.system(size: 16,weight: .semibold))
                         
                         Spacer()
-                        Button(action:{
-                            
-                        }){
-                            Text("顯示更多")
-                                .font(.system(size: 14,weight: .semibold))
-                                .foregroundColor(Color(uiColor: UIColor.darkGray))
-                        }
+//                        Button(action:{
+//
+//                        }){
+//                            Text("顯示更多")
+//                                .font(.system(size: 14,weight: .semibold))
+//                                .foregroundColor(Color(uiColor: UIColor.darkGray))
+//                        }
                     }
                     
                     
@@ -973,13 +973,13 @@ struct NewDetailView: View {
                             .font(.system(size: 16,weight: .semibold))
                         
                         Spacer()
-                        Button(action:{
-                            
-                        }){
-                            Text("顯示更多")
-                                .font(.system(size: 14,weight: .semibold))
-                                .foregroundColor(Color(uiColor: UIColor.darkGray))
-                        }
+//                        Button(action:{
+//
+//                        }){
+//                            Text("顯示更多")
+//                                .font(.system(size: 14,weight: .semibold))
+//                                .foregroundColor(Color(uiColor: UIColor.darkGray))
+//                        }
                     }
                     
                     

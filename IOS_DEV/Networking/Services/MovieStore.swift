@@ -766,6 +766,8 @@ class APIService : ServerAPIServerServiceInterface{
         }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         FetchAndDecode(request: request, completion: completion)
     }
     
@@ -812,7 +814,7 @@ class APIService : ServerAPIServerServiceInterface{
         }
         
         var request = URLRequest(url: url)
-        request.httpMethod = "PATCH"
+        request.httpMethod = "DELETE"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
@@ -955,7 +957,7 @@ class APIService : ServerAPIServerServiceInterface{
         }
         
         var request = URLRequest(url: url)
-        request.httpMethod = "POST"
+        request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         
         FetchAndDecode(request: request, completion: completion)

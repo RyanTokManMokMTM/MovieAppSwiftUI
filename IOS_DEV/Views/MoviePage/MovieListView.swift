@@ -88,7 +88,7 @@ struct HomeNavTabView : View {
         }.overlay(
             HStack(spacing:20){
 //                Spacer()
-                Text("Movies")
+                Text("OTTSoSo")
                     .LeckerliOneRegularFont(size:22)
                 Spacer()
 //                HomeTabButton(index: $index,tab: .TV) //TODO: NOT AVAILABLE YET
