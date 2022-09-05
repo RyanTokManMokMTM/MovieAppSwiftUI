@@ -9,6 +9,7 @@ import SwiftUI
 import AVKit
 
 struct HomePage: View {
+    @State private var HubState : BenHubState = BenHubState()
     @State private var ServerInternalError : Bool = false //for checking server connected
     @ObservedObject private var networkingService = NetworkingService.shared
     @AppStorage("userToken") private var userToken : String = ""
@@ -20,149 +21,56 @@ struct HomePage: View {
     @State private var isStarted = false
 
     private let screen  = UIScreen.main.bounds
-    init(){
-        UIScrollView.appearance().bounces = false
-    }
+//    init(){
+//        UIScrollView.appearance().bounces = false
+//    }
     
     var body: some View {
         
-        ZStack{
-            if !isLoggedIn {
-                BackGroundView()
-                HomeInfo()
+        NavigationView(){
+            ZStack{
                 
-            }else {
-                MovieHomePage(isLogOut: $isLoggedIn)
+                SignInView()
                     .environmentObject(UserVM)
-                    .onAppear(perform: {
-                        UIScrollView.appearance().bounces = true
-                    })
-                    .onDisappear(perform: {
-                        UIScrollView.appearance().bounces = false
-                    })
-                    .environment(\.colorScheme, .dark)
-            }
-        }
-        .fullScreenCover(isPresented: $isStarted){
-            SignInView(backToHome: $isStarted,isLoggedIn: $isLoggedIn)
-                .environmentObject(UserVM)
-        }
-//        .environmentObject(UserVM)
-//        .edgesIgnoringSafeArea(.all)
-//        .padding(.top,25)
-//        .padding(.horizontal,20)
-//        .padding(.bottom,5)
-//        .ignoresSafeArea(.keyboard)
-        .onAppear{
-            APIService.shared.serverConnection(){ result in
-                self.isLoading = true
-                switch result{
-                case .success(let response):
-                    print(response)
-                    autoLogin()
-                case .failure( _):
-                    DispatchQueue.main.async{
-                        self.ServerInternalError.toggle()
-                    }
-                    
+                    .environmentObject(HubState)
+                    .zIndex(0)
+                
+                if UserVM.isLogIn{
+                    MovieHomePage(isLogOut: $isLoggedIn)
+                        .environmentObject(UserVM)
+                        .environmentObject(HubState)
+                        .environment(\.colorScheme, .dark)
+                        .zIndex(1)
+
                 }
-                self.isLoading = false
-                
-                
             }
-            
+            .navigationTitle("")
+            .navigationBarHidden(true)
+            .navigationBarTitle("")
         }
+        .navigationViewStyle(.stack)
+//        .onAppear{
+//            APIService.shared.serverConnection(){ result in
+//                self.isLoading = true
+//                switch result{
+//                case .success(let response):
+//                    print(response)
+//                    autoLogin()
+//                case .failure( _):
+//                    DispatchQueue.main.async{
+//                        self.ServerInternalError.toggle()
+//                    }
+//
+//                }
+//                self.isLoading = false
+//
+//
+//            }
+//
+//        }
 
         
 
-    }
-    
-    @ViewBuilder
-    func BackGroundView() -> some View{
-        ScrollView{
-            TabView(selection: $currentBG){
-                ForEach(0..<5){i in
-                    Image("movie\(i+1)")
-                        .resizable()
-                        .imageScale(.small)
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width:UIScreen.main.bounds.width,height:UIScreen.main.bounds.height,alignment: .center )
-                        .clipped()
-                        .overlay(
-                            Color.black.opacity(0.65).edgesIgnoringSafeArea(.all)
-                        )
-                        .edgesIgnoringSafeArea(.all)
-
-                }
-                .ignoresSafeArea()
-            }
-            .frame(width: screen.width, height: screen.height, alignment: .center)
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-        }
-    }
-    
-    @ViewBuilder
-    func HomeInfo() -> some View{
-        VStack(){
-            Spacer()
-            VStack(){
-                
-                VStack(alignment:.leading,spacing: 12){
-                    Text("WELCOME TO MOVIE APP")
-                        .foregroundColor(.white)
-                        .TekoBold(size: 40)
-//                            .padding(.horizontal,20)
-                    
-                    Text("Enjoy your life time.\nAnd share with your friends!")
-                        .lineSpacing(8)
-                        .foregroundColor(.white)
-                        .PadaukRegular(size: 18)
-//                            .padding(.horizontal,20)
-                    
-                    
-                    HStack{
-                        ForEach(0..<5){i in
-
-                            Rectangle()
-                                .fill(i == currentBG ? Color.red : Color.white)
-                                .foregroundColor(.white)
-                                .scaleEffect(i  == currentBG ? 1.2 : 1)
-                                .frame(width: 5, height: 5)
-                                .animation(.spring(), value: i == currentBG)
-//                                    .id(currentBG)
-                               
-
-                        }
-
-                        Spacer()
-                    }
-                    .padding(.top,20)
-//                        .padding(20)
-    //
-                    
-                }
-                .padding(.bottom,screen.height / 6)
-
-                Button(action:{
-                    withAnimation(){
-                        self.isStarted.toggle()
-                    }
-                }){
-                    Text("GET STARTED")
-                        .bold()
-                        .OswaldSemiBold()
-                        .foregroundColor(.pink)
-                        .frame(maxWidth:.infinity,maxHeight: 50)
-                        .background(Color.white.cornerRadius(8))
-                }
-            }
-            .padding(.horizontal,30)
-            .padding(.bottom,80)
-//                .background(Color.white.padding(.horizontal,20))
-        }
-        .frame(width: screen.width, height: screen.height)
-
-        
     }
     
     func autoLogin(){

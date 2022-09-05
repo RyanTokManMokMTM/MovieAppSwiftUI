@@ -237,7 +237,7 @@ struct PostButton : View {
             }
         }){
             HStack{
-                Text("Posts Your Review")
+                Text("發布")
             }
             .font(.system(size: 16, weight: .medium))
             .foregroundColor(.white)

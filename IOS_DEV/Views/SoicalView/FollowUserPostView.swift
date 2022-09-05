@@ -11,6 +11,7 @@ import SDWebImageSwiftUI
 struct FollowUserPostView: View {
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var HubState : BenHubState
     @State private var isShowMovieDetail = false
     @State private var movieId = -1
     
@@ -70,6 +71,25 @@ struct FollowUserPostView: View {
         
         
         )
+        .onAppear{
+            if postVM.initFollowing {
+                HubState.SetWait(message: "Loading")
+                self.postVM.GetFollowUserPost(onSucceed: {
+                    HubState.isWait = false
+                }, onFailed: {errMsg in
+                    HubState.isWait = false
+                    HubState.AlertMessage(sysImg: "xmark.circle.fill", message: errMsg)
+                })
+                postVM.initFollowing = false
+            }
+        }
+        .wait(isLoading: $HubState.isWait){
+            BenHubLoadingView(message: HubState.message)
+        }
+        .alert(isAlert: $HubState.isPresented){
+            BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
+        }
+        
 
     }
 }

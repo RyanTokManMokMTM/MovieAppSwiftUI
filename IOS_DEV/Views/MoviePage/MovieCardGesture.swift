@@ -87,7 +87,7 @@ struct MovieCardGesture :View{
                         
                         
                         VStack{
-                            Text("Movie Discovery")
+                            Text("電影預覽")
                                 .bold()
                                 .font(.title3)
                             

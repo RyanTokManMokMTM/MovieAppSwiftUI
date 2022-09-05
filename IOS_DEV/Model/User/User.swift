@@ -25,6 +25,7 @@ struct User: Decodable{
 
 class UserViewModel : ObservableObject{
 //    @Published var user : Me?//???
+    @Published var isLogIn : Bool = false
     @Published var profile : Profile?
     @Published var userID : Int?
     

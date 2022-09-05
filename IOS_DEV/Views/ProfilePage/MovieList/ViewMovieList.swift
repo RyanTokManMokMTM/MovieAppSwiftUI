@@ -8,14 +8,18 @@
 import SwiftUI
 import SDWebImageSwiftUI
 
+
+
 struct ViewMovieList: View {
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var postVM : PostVM
     var listIndex : Int
     @Binding var isViewList : Bool
-    @State var isShowMovieDetail : Bool = false
-    @State var movieID : Int = 0
-    
+    @State private var isShowMovieDetail : Bool = false
+    @State private var movieID : Int = 0
+    @State private var isManageMode : Bool = false
+    @State private var isEditList : Bool = false
+    @State private var removeMovie : [Int] = []
     init(index : Int,isViewList : Binding<Bool>){
         self.colums = 2
         self.HSpacing = 5
@@ -24,6 +28,7 @@ struct ViewMovieList: View {
         self._isViewList = isViewList
         
     }
+    
     var colums : Int
     var HSpacing : CGFloat
     var VSpacing : CGFloat
@@ -33,27 +38,51 @@ struct ViewMovieList: View {
                 VStack{
                     HStack(){
                         Button(action:{
-                            withAnimation{
-//                                self.isCreateList = false
-                                self.isViewList = false
+                            if isManageMode {
+                                withAnimation{
+                                    self.isManageMode = false
+                                }
+                            }else {
+                                withAnimation{
+                                    self.isViewList = false
+                                }
                             }
                         }){
-                           Image(systemName: "chevron.left")
-                                .imageScale(.large)
-                                .foregroundColor(.white)
+                            if self.isManageMode{
+                                Text("完成")
+                                    .foregroundColor(.red)
+                                    .font(.system(size: 15,weight:.semibold))
+                            }else {
+                                Image(systemName: "chevron.left")
+                                    .imageScale(.large)
+                                    .foregroundColor(.white)
+                            }
                         }
                         Spacer()
                         
-                        Button(action:{
+                        if !isManageMode{
+                            Button(action:{
+                                self.isManageMode = true
+                            }){
+                                
+                              Text("管理專輯")
+                                    .font(.system(size:14))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal,15)
+                                    .cornerRadius(25)
+                            }
                             
-                        }){
-                            
-                          Text("管理專輯")
-                                .font(.system(size:14))
-                                .foregroundColor(.white)
-                                .padding(.horizontal,15)
-//                                .background(Color.red)
-                                .cornerRadius(25)
+//                            Button(action:{
+//    //                            self.isManageMode = true
+//                            }){
+//
+//                              Text("編輯")
+//                                    .font(.system(size:14))
+//                                    .foregroundColor(.white)
+//                                    .padding(.horizontal,15)
+//    //                                .background(Color.red)
+//                                    .cornerRadius(25)
+//                            }
                         }
                      
                     }
@@ -99,14 +128,8 @@ struct ViewMovieList: View {
                             ForEach(customList(),id:\.self){datas in
                                 LazyVStack(spacing:VSpacing){
                                     ForEach(datas) { info in
-                                        Button(action:{
-                                            withAnimation{
-                                                self.movieID = info.id
-                                                self.isShowMovieDetail.toggle()
-                                            }
-                                        }){
-                                            MovieCard(info: info)
-                                        }
+                                        
+                                        MovieListCard(info: info, isManageMode: $isManageMode,movieID: $movieID,isShowMovieDetail:$isShowMovieDetail)
                                     }
                                 }
                             }
@@ -154,38 +177,21 @@ struct ViewMovieList: View {
     
     @ViewBuilder
     func MovieCard(info : MovieInfo) -> some View {
-        VStack(alignment:.leading){
-            Group {
-                WebImage(url: info.posterURL)
-                    .placeholder(Image(systemName: "photo"))
-                    .resizable()
-                    .indicator(.activity)
-                    .transition(.fade(duration: 0.5))
-                    .aspectRatio(contentMode: .fit)
-                    .clipShape(CustomeConer(width: 5, height: 5, coners:.allCorners))
-//                    .matchedGeometryEffect(id: postData.id.description, in: namespace)
+        ZStack(alignment:.topTrailing){
+            WebImage(url: info.posterURL)
+                .placeholder(Image(systemName: "photo"))
+                .resizable()
+                .indicator(.activity)
+                .transition(.fade(duration: 0.5))
+                .aspectRatio(contentMode: .fit)
+                .clipShape(CustomeConer(width: 5, height: 5, coners:.allCorners))
+            
+            if self.isManageMode{
+                BlurView(sytle: .systemThinMaterialLight).frame(width: 25, height: 25).clipShape(Circle())
                     
-                
-//                VStack{
-//                    Text(info.title)
-//                        .font(.system(size: 14, weight: .semibold))
-//                        .foregroundColor(.white)
-//                        .padding(.vertical,5)
-//                        .lineLimit(2)
-//                        .multilineTextAlignment(.leading)
-//                        .padding(.horizontal,5)
-//
-//                    HStack(spacing:5){
-//                        ForEach(0..<5){i in
-//                            Image(systemName:"star.fill" )
-//                                .imageScale(.small)
-//                                .foregroundColor(i < Int(info.vote_average / 2) ? Color.yellow : Color.gray)
-//                                .font(.system(size:12))
-//                        }
-//                    }
-//                }
             }
         }
+
         .background(Color("appleDark"))
         .clipShape(CustomeConer(width: 5, height: 5, coners: [.allCorners]))
     }
@@ -207,5 +213,47 @@ struct ViewMovieList: View {
             }
         }
         return gridList
+    }
+}
+
+struct MovieListCard : View {
+    var info : MovieInfo
+    @Binding var isManageMode : Bool
+    @Binding var movieID : Int
+    @Binding var isShowMovieDetail : Bool
+    @State private var isRemove : Bool = false
+    
+    var body : some View {
+        ZStack(alignment:.topTrailing){
+            WebImage(url: info.posterURL)
+                .placeholder(Image(systemName: "photo"))
+                .resizable()
+                .indicator(.activity)
+                .transition(.fade(duration: 0.5))
+                .aspectRatio(contentMode: .fit)
+                .clipShape(CustomeConer(width: 5, height: 5, coners:.allCorners))
+            
+            if self.isManageMode{
+                Image(systemName: self.isRemove ? "checkmark.circle.fill" : "circle.fill")
+                    .imageScale(.large)
+                    .foregroundColor(isRemove ? Color.green : Color.white.opacity(0.5))
+                    .zIndex(1)
+                    .padding(5)
+                    
+            }
+        }
+        .onTapGesture{
+            if isManageMode{
+                withAnimation{
+                    self.isRemove.toggle()
+                    //insert into candindate list
+                }
+            }else {
+                self.movieID = info.id
+                self.isShowMovieDetail.toggle()
+            }
+        }
+        .background(Color("appleDark"))
+        .clipShape(CustomeConer(width: 5, height: 5, coners: [.allCorners]))
     }
 }

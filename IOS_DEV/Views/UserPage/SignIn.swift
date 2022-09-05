@@ -17,50 +17,60 @@ var NowUserPhoto:Image? // user who login
 
 struct SignInView: View   {
     @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var HubState : BenHubState
+    @ObservedObject private var networkingService = NetworkingService.shared
+    
     @State private var email : String = ""
     @State private var password : String = ""
     
+    @FocusState private var isEmaillFocus : Bool
+    @FocusState private var isPasswordFocus : Bool
+    
     @State private var isSignUp : Bool = false
-    @State private var isLoading : Bool = false
-    @State var ErrorAlert = false
     @State private var remember = false
-    @State private var errMsg : String = ""
-    @Binding  var backToHome : Bool
-    @Binding var isLoggedIn : Bool
+//    @Binding  var backToHome : Bool
     @AppStorage("userEmail") private var userEmail : String = ""
     @AppStorage("userPassword") private var userPassword : String = ""
     @AppStorage("rememberUser") private var rememberUser : Bool = false
-    @ObservedObject private var networkingService = NetworkingService.shared
-    @State private var isFocuse : [Bool] = [false,true]
+//    @State private var isFocuse : [Bool] = [false,true]
     
     var body: some View {
         ZStack{
             VStack(alignment:.leading){
-                VStack{
-                    Button(action:{
-                        withAnimation(){
-                            self.backToHome.toggle()
-                        }
-                    }){
-                        Image(systemName: "chevron.left")
-                            .imageScale(.large)
-                            .foregroundColor(.white)
-                    }
-                }
-                .padding(.vertical)
-                .padding(.top,UIApplication.shared.windows.first?.safeAreaInsets.top)
-                .padding(.bottom,50)
                 VStack(alignment:.leading,spacing:0){
                     HStack{
-                        Text("Sign In")
+                        Text("歡迎來到OTT SoSo！")
                             .TekoBold(size: 40)
                             .foregroundColor(.white)
                         
                     }
                     
-                    LoginInfo(FieldText: "Email", bindText: $email, placeHolder: "Enter your email", keyType: .default, returnType: .default)
-                    LoginInfo(FieldText: "Password", bindText: $password, placeHolder: "Enter your password", keyType: .default, returnType: .default,isSecureText: true)
+                    VStack{
+                        TextField("郵箱", text: $email)
+                            .accentColor(.white)
+                            .submitLabel(.done)
+                            .focused($isEmaillFocus)
+                        
+                        Divider()
+                            .background(Color.gray)
+                    }
+                    .padding(.vertical)
+                    .padding(.horizontal,5)
                     
+//                    .frame(height:25)
+                    
+                    VStack{
+                        SecureField("密碼", text: $password)
+                            .accentColor(.white)
+                            .submitLabel(.done)
+                            .focused($isPasswordFocus)
+                        
+                        Divider()
+                            .background(Color.gray)
+                    }
+                    .padding(.vertical)
+                    .padding(.horizontal,5)
+
                     HStack{
                         Group{
                             Image(systemName: self.remember ? "checkmark.square.fill" : "square.fill")
@@ -72,7 +82,7 @@ struct SignInView: View   {
                                         UserDefaults.standard.set( self.remember, forKey: "rememberUser")
                                     }
                                 }
-                            Text("Remember me")
+                            Text("記住我")
                                 .font(.footnote)
                                 .foregroundColor(.white)
                                 .OswaldSemiBold()
@@ -86,11 +96,13 @@ struct SignInView: View   {
                         Button(action:{
                             //Check and
                             withAnimation(){
-                                self.isLoading.toggle()
+//                                self.isLoading.toggle()
+                                HubState.SetWait(message: "Loading")
                             }
+                            
                             self.Login(UserName: self.email, Password: self.password)
                         }){
-                            Text("Sign In")
+                            Text("登入")
                                 .bold()
                                 .OswaldSemiBold()
                                 .foregroundColor(.white)
@@ -100,7 +112,7 @@ struct SignInView: View   {
                         .padding(.top)
                         
                         HStack{
-                            Text("Do not have an account?")
+                            Text("沒有任何帳號後?")
                                 .foregroundColor(.gray)
                             
                             Button(action:{
@@ -109,62 +121,45 @@ struct SignInView: View   {
                                     self.isSignUp.toggle()
                                 }
                             }){
-                                Text("SignUp")
+                                Text("註冊一個新的帳號")
                                     .foregroundColor(.white)
                             }
                         }
+                        .padding(.top,5)
                         .OswaldSemiBold(size: 15)
                     }
                 }
-                Spacer()
+//                Spacer()
             }
             .padding(.horizontal,20)
-            .edgesIgnoringSafeArea(.all)
-            .background(Color.black.overlay(Color.black.opacity(0.45)).edgesIgnoringSafeArea(.all))
+            .padding(.bottom,UIScreen.main.bounds.height / 4)
+//            .edgesIgnoringSafeArea(.all)
+//            .background(Color.black.overlay(Color.black.opacity(0.45)).edgesIgnoringSafeArea(.all))
+            .background(Color("DarkMode2"))
             .zIndex(0)
+            .frame(maxWidth:.infinity,maxHeight: .infinity,alignment: .center)
+            
             
             if isSignUp{
                 SignUpView(backToSignIn: $isSignUp)
                     .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .trailing)))
                     .zIndex(1)
             }
-            
-            if isLoading{
-                VStack{
-                    BasicLoadingView()
-                        .padding()
-                        .background(BlurView().cornerRadius(15))
-                }
-                .zIndex(1.0)
-                .frame(maxWidth:.infinity, maxHeight:.infinity)
-                .background(Color.black.opacity(0.75).edgesIgnoringSafeArea(.all))
-            }
         }
-        .ignoresSafeArea(.keyboard)
-        .alert(isPresented: $ErrorAlert, content: {
-            Alert(title: Text(errMsg),
-                  dismissButton: .default(Text("Enter")))
-        })
+//        .ignoresSafeArea(.keyboard)
         .onAppear(perform: {
             self.remember = rememberUser
             self.email = userEmail
             self.password = userPassword
         })
-
-    }
-    
-    @ViewBuilder
-    func LoginInfo(FieldText : String,bindText: Binding<String>,placeHolder : String,keyType : UIKeyboardType,returnType:UIReturnKeyType,isSecureText : Bool = false) -> some View{
-        VStack(alignment:.leading){
-            Text(FieldText)
-                .OswaldSemiBold()
-                .foregroundColor(.white)
-            CustomUITextView(focuse:$isFocuse,text: bindText, placeholder: placeHolder, keybooardType: keyType, returnKeytype: returnType, tag: 1,isSecureText:isSecureText)
-                .frame(height:23)
-            Divider()
-                .background(Color.white)
+        .wait(isLoading: $HubState.isWait){
+            BenHubLoadingView(message: HubState.message)
         }
-        .padding(.vertical,10)
+        .background(Color("DarkMode2"))
+        .alert(isAlert: $HubState.isPresented){
+            BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
+        }
+
     }
     
     
@@ -174,49 +169,21 @@ struct SignInView: View   {
         APIService.shared.UserLogin(req: loginReq){ (result) in
             switch result {
             case .success(let user):
-                print("login success")
-                //get user profile by token
-                ErrorAlert = false
                 UserDefaults.standard.set(user.token, forKey: "userToken") //storing token
                 UserDefaults.standard.set(user.expired, forKey: "tokenExpired") //storing token expired time
                 
                 self.GetUserProfile(token: user.token)
-            case .failure(let error):
-                print(error.localizedDescription)
-                ErrorAlert = true
-                self.isLoading.toggle()
-                self.errMsg = error.localizedDescription
+            case .failure(let err):
+                DispatchQueue.main.async {
+                    withAnimation{
+                        HubState.isWait = false
+                        HubState.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
+                    }
+
+                }//
             }
         }
-//        networkingService.requestLogin(endpoint: "/api/v1/user/login", loginObject: loginReq) { (result) in
-//            switch result {
-//            case .success(let user):
-//                print("login success")
-////                self.isPresented.toggle()
-//                //Here we are gonna to set t
-//
-//                ErrorAlert = false
-////                NowUserName = user.name
-////                NowUserID = user.id
-//                //set it to user model
-//                self.userVM.setUserInfo(info: user)
-//                UserDefaults.standard.set(self.remember ? email : "", forKey: "userEnail")
-//                UserDefaults.standard.set(self.remember ? password : "", forKey: "userPassword")
-//
-//                withAnimation(){
-//                    self.isLoggedIn.toggle()
-//                    self.backToHome.toggle()
-//                    self.isLoading.toggle()
-//                }
-//
-//            case .failure(let error):
-//                //need to fixed here
-//                print("login failed")
-//                print(error.localizedDescription)
-//                ErrorAlert = true
-//                self.isLoading.toggle()
-//            }
-//        }
+
     }
     
     
@@ -225,26 +192,25 @@ struct SignInView: View   {
         APIService.shared.GetUserProfile(token: token){ (result) in
             switch result{
             case .success(let profile):
-                ErrorAlert = false
-//                NowUserName = user.name
-//                NowUserID = user.id
-                //set it to user model
+//                ErrorAlert = false
+
                 self.userVM.setUserInfo(info: profile)
-                self.errMsg.removeAll()
                 UserDefaults.standard.set(self.remember ? email : "", forKey: "userEmail")
                 UserDefaults.standard.set(self.remember ? password : "", forKey: "userPassword")
                 
-                withAnimation(){
-                    self.isLoggedIn.toggle()
-                    self.backToHome.toggle()
-                    self.isLoading.toggle()
-                }
-            case .failure(let error):
-                print(error.localizedDescription)
-                self.errMsg = error.localizedDescription
-                withAnimation(){
-                    self.ErrorAlert = true
-                    self.isLoading.toggle()
+                
+                    withAnimation{
+                        self.HubState.isWait = false
+                        self.userVM.isLogIn.toggle()
+//                        self.backToHome.toggle()
+                        
+                    }
+                HubState.AlertMessage(sysImg: "checkmark.circle.fill", message: "登入成功!")
+            case .failure(let err):
+
+                withAnimation{
+                    HubState.isWait = false
+                    HubState.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
                 }
             }
         }

@@ -17,6 +17,7 @@ enum TabItem : String{
 struct SoicalView: View {
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var HubState : BenHubState
     var namespace : Namespace.ID
     var body: some View {
         GeometryReader{ proxy in
@@ -34,6 +35,7 @@ struct SoicalView: View {
 
                     }
                     .environmentObject(postVM)
+                    .environmentObject(HubState)
 //                    .animation(.easeOut(duration: 0.2), value: self.postVM.index)
                     .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                     .frame(width: proxy.size.width)
@@ -41,13 +43,7 @@ struct SoicalView: View {
                 .frame(alignment: .top)
             }
         }
-        .onAppear{
-            if postVM.initData {
-                self.postVM.GetAllUserPost()
-                self.postVM.GetFollowUserPost()
-                postVM.initData = false
-            }
-        }
+      
 
     }
 }

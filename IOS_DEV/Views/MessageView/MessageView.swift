@@ -133,6 +133,24 @@ extension ChatInfo{
             Message("等我一下喔！大概5分鐘左右", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 15)),
             Message("行！好了叫我,帶你飛 😎😎", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 15))
         ], hasUnrealMsg: true),
+        ChatInfo(id: UUID(), user: MessageUser(UserIcons: UIImage(named: "icon2")!, UserName: "Alice"), messages: [
+            Message("在幹嘛鴨", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 15)),
+            Message("有空一起來打有些遊戲嗎?", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 15)),
+            Message("等我一下喔！大概5分鐘左右", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 15)),
+            Message("怎麼啦？", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 19))
+        ], hasUnrealMsg: true),
+        ChatInfo(id: UUID(), user: MessageUser(UserIcons: UIImage(named: "icon5")!, UserName: "咖椰"), messages: [
+            Message("在幹嘛鴨", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 15)),
+            Message("有空一起來打有些遊戲嗎?", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 15)),
+            Message("等我一下喔！大概5分鐘左右", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 15)),
+            Message("??????", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 25))
+        ], hasUnrealMsg: false),
+        ChatInfo(id: UUID(), user: MessageUser(UserIcons: UIImage(named: "icon4")!, UserName: "萊恩"), messages: [
+            Message("在幹嘛鴨", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 15)),
+            Message("有空一起來打有些遊戲嗎?", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 15)),
+            Message("等我一下喔！大概5分鐘左右", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 15)),
+            Message("🤔", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 30))
+        ], hasUnrealMsg: false),
     ]
 }
 
@@ -350,41 +368,41 @@ struct MessageView: View {
                     MessageHeaderTab(isShowLikesNotification: $isShowLikesNotification, isShowFollowingNotification: $isShowFollowingNotification, isShowCommentNotification: $isShowCommentNotification)
                         .padding(.top)
                     
-//                    List(){
-//                        ForEach(self.msgVM.ChatList,id:\.id){info in
-//                            ZStack{
-//                                chatRow(info:info)
-//
-//                                NavigationLink(destination:ChattingView(chatInfo: info)
-//                                                .environmentObject(msgVM)
-//                                ){
-//                                    EmptyView()
-//                                }
-//                                .opacity(0)
-//                                .buttonStyle(PlainButtonStyle())
-//                                .frame(width: 0)
-//                            }
-//                            .listRowBackground(Color("DarkMode2"))
-//
-//                            //                                .swipeActions(edge: .leading,allowsFullSwipe: true){
-//                            //                                    Button(action:{
-//                            //                                        self.msgVM.updateReadMark(!info.hasUnrealMsg, info: info)
-//                            //                                    }){
-//                            //                                        if info.hasUnrealMsg{
-//                            //                                            Label("Read", image: "text.bubble")
-//                            //                                        }else{
-//                            //                                            Label("Unread", image: "circle.fill")
-//                            //                                        }
-//                            //                                    }
-//                            //                                    .tint(.blue)
-//                            //                                }
-//
-//                        }
-//                        .onDelete(perform: { indexSet in
-//                            self.msgVM.ChatList.remove(atOffsets: indexSet)
-//                        })
-//                    }
-//                    .listStyle(.plain)
+                    List(){
+                        ForEach(self.msgVM.ChatList,id:\.id){info in
+                            ZStack{
+                                chatRow(info:info)
+
+                                NavigationLink(destination:ChattingView(chatInfo: info)
+                                                .environmentObject(msgVM)
+                                ){
+                                    EmptyView()
+                                }
+                                .opacity(0)
+                                .buttonStyle(PlainButtonStyle())
+                                .frame(width: 0)
+                            }
+                            .listRowBackground(Color("DarkMode2"))
+
+                            //                                .swipeActions(edge: .leading,allowsFullSwipe: true){
+                            //                                    Button(action:{
+                            //                                        self.msgVM.updateReadMark(!info.hasUnrealMsg, info: info)
+                            //                                    }){
+                            //                                        if info.hasUnrealMsg{
+                            //                                            Label("Read", image: "text.bubble")
+                            //                                        }else{
+                            //                                            Label("Unread", image: "circle.fill")
+                            //                                        }
+                            //                                    }
+                            //                                    .tint(.blue)
+                            //                                }
+
+                        }
+                        .onDelete(perform: { indexSet in
+                            self.msgVM.ChatList.remove(atOffsets: indexSet)
+                        })
+                    }
+                    .listStyle(.plain)
                     
                     
                     .padding(.top)
@@ -460,10 +478,21 @@ struct MessageHeaderTab : View{
                             .navigationBarTitle("")
                             .navigationBarHidden(true)
                            ,isActive: $isShowLikesNotification){
-                tabButton(systemIcon: "heart.circle.fill", iconColor: .red, buttonText: "點讚"){
-                    withAnimation{
-                        self.isShowLikesNotification = true
+                ZStack(alignment:.topTrailing){
+                    tabButton(systemIcon: "heart.circle.fill", iconColor: .red, buttonText: "點讚"){
+                        withAnimation{
+                            self.isShowLikesNotification = true
+                        }
                     }
+                    
+                    Text("10")
+                        .font(.system(size: 12,weight: .medium))
+                        .frame(width: 20, height: 20)
+                        .background(
+                            Circle()
+                                .fill(Color.red)
+                        )
+                        .offset(x: 5, y: -5)
                 }
             }
             
@@ -475,10 +504,21 @@ struct MessageHeaderTab : View{
                             .navigationBarTitle("")
                             .navigationBarHidden(true)
                            ,isActive: $isShowFollowingNotification){
-                tabButton(systemIcon: "person.fill", iconColor: .blue, buttonText: "新增追蹤"){
-                    withAnimation{
-                        self.isShowFollowingNotification = true
+                ZStack(alignment:.topTrailing){
+                    tabButton(systemIcon: "person.fill", iconColor: .blue, buttonText: "新增追蹤"){
+                        withAnimation{
+                            self.isShowFollowingNotification = true
+                        }
                     }
+                    
+                    Text("8")
+                        .font(.system(size: 12,weight: .medium))
+                        .frame(width: 20, height: 20)
+                        .background(
+                            Circle()
+                                .fill(Color.red)
+                        )
+                        .offset(x: 5, y: -5)
                 }
             }
             
@@ -490,10 +530,21 @@ struct MessageHeaderTab : View{
                             .navigationBarTitle("")
                             .navigationBarHidden(true)
                            ,isActive: $isShowCommentNotification){
-                tabButton(systemIcon: "paperplane.fill", iconColor: .orange, buttonText: "評論"){
-                    withAnimation{
-                        self.isShowCommentNotification = true
+                ZStack(alignment:.topTrailing){
+                    tabButton(systemIcon: "paperplane.fill", iconColor: .orange, buttonText: "評論"){
+                        withAnimation{
+                            self.isShowCommentNotification = true
+                        }
                     }
+                    
+                    Text("1")
+                        .font(.system(size: 12,weight: .medium))
+                        .frame(width: 20, height: 20)
+                        .background(
+                            Circle()
+                                .fill(Color.red)
+                        )
+                        .offset(x: 5, y: -5)
                 }
             }
             Spacer()

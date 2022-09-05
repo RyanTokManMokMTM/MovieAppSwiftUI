@@ -34,6 +34,7 @@ class MovieDetailManager : ObservableObject {
 
 struct MovieHomePage: View {
     @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var HubState : BenHubState
     @StateObject var StateManager  = SeachingViewStateManager()
     @StateObject var postVM = PostVM()
 
@@ -47,7 +48,7 @@ struct MovieHomePage: View {
     @Namespace var namespace
 
     var body: some View {
-        NavigationView{
+//        NavigationView{
             ZStack{
                 GeometryReader {geo in
                     VStack(spacing:0){
@@ -88,24 +89,7 @@ struct MovieHomePage: View {
                                     }
                                     .tag(1)
                                 
-                                
-//                                MessageView()
-//                                    .navigationTitle("")
-//                                    .navigationBarTitle("")
-//                                    .navigationBarHidden(true)
-//                                    .tabItem{
-//                                        VStack(alignment:.center,spacing:10){
-//                                            Image(systemName:"paperplane.fill")
-//                                                .imageScale(.medium)
-//                                            Text("訊息")
-//                                                .frame(width: 50)
-//                                                .font(.caption)
-//                                        }
-//
-//                                    }
-//                                    .tag(2)
-                                
-                                
+                                                    
                                 MessageView()
                                     .navigationTitle("")
                                     .navigationBarTitle("")
@@ -157,6 +141,7 @@ struct MovieHomePage: View {
 //                    .environmentObject(DragAndDropPreview) //here due to bottomSheet need to use to update some state
                     .environmentObject(postVM)
                     .environmentObject(userVM)
+                    .environmentObject(HubState)
 
                 }
 //                .ignoresSafeArea(.keyboard, edges: .bottom)
@@ -164,18 +149,12 @@ struct MovieHomePage: View {
             }
             .background(Color("DarkMode2").edgesIgnoringSafeArea(.all))
             .onAppear {
-                 UIApplication.topViewController()?
-                    .navigationController?.isNavigationBarHidden = true
+//                 UIApplication.topViewController()?
+//                    .navigationController?.isNavigationBarHidden = true
                     UITabBar.appearance().isTranslucent = false
                     UITabBar.appearance().backgroundColor = UIColor(named:"DarkMode2")
              }
-
-            
-
-
-
         }
-        .navigationViewStyle(.stack)
 //            .onRotate { newOrientation in
 //                if Appdelegate.orientationLock == .landscape {
 //                    withAnimation(){
@@ -192,7 +171,7 @@ struct MovieHomePage: View {
 
         
 
-    }
+//    }
 }
 
 

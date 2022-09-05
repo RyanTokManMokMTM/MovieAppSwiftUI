@@ -111,7 +111,9 @@ let tempGenreTab : [MovieGenreTab] = [
 ]
 
 struct UserSetting : View {
+    @EnvironmentObject var userVM : UserViewModel
     @Binding var isSetting : Bool
+    @State private var isLogout = false
     var body : some View{
         GeometryReader{proxy in
             let top = proxy.safeAreaInsets.top
@@ -155,7 +157,9 @@ struct UserSetting : View {
                     
                     Section(header:Text("")){
                         Button(action:{
-                            
+                            withAnimation{
+                                self.isLogout = true
+                            }
                         }){
                             HStack{
                                 Spacer()
@@ -177,6 +181,21 @@ struct UserSetting : View {
         }
         .onAppear { UITableView.appearance().isScrollEnabled = false }
         .onDisappear{ UITableView.appearance().isScrollEnabled = true }
+        .alert(isPresented: self.$isLogout){
+            withAnimation(){
+                Alert(title: Text("用戶登出"), message: Text("確定要登出當前帳戶?"),
+                      primaryButton: .default(Text("取消")){
+                        //
+                      },
+                      secondaryButton: .default(Text("確定")){
+                        withAnimation{
+                            self.userVM.isLogIn = false
+                        }
+                      })
+            }
+            
+        }
+        
     }
     
     @ViewBuilder
@@ -1359,18 +1378,18 @@ struct personProfile: View {
         ZStack(alignment:.top){
             ZStack{
 //                it may add in the Future
-                HStack{
-                    Button(action:{}){
-                        Image(systemName: "line.3.horizontal")
-                            .foregroundColor(.white)
-                            .font(.title2)
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal)
-                .frame(height: topEdge)
-                .padding(.top,30)
-                .zIndex(1)
+//                HStack{
+//                    Button(action:{}){
+//                        Image(systemName: "line.3.horizontal")
+//                            .foregroundColor(.white)
+//                            .font(.title2)
+//                    }
+//                    Spacer()
+//                }
+//                .padding(.horizontal)
+//                .frame(height: topEdge)
+//                .padding(.top,30)
+//                .zIndex(1)
                 
                 VStack(alignment:.center){
                     Spacer()
@@ -1514,6 +1533,7 @@ struct personProfile: View {
                             .navigationTitle("")
                             .navigationBarBackButtonHidden(true)
                             .navigationBarHidden(true)
+                            .environmentObject(userVM)
                             .environmentObject(postVM), isActive: self.$postVM.isShowPostDetail){
                 EmptyView()
                 
@@ -1593,7 +1613,7 @@ struct personProfile: View {
             }
             
             
-            HStack{
+            HStack(spacing:8){
 
                 
                 VStack{
@@ -1624,6 +1644,7 @@ struct personProfile: View {
                 }){
                     NavigationLink(destination:
                                     EditProfile(isEditProfile: $isEditProfile)
+                                    .environmentObject(userVM)
                                    , isActive: $isEditProfile){
                         Text("編輯資料")
                             .navigationBarBackButtonHidden(true)

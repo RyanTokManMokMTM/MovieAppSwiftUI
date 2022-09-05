@@ -10,7 +10,8 @@ import SwiftUI
 
 
 class PostVM : ObservableObject {
-    @Published var initData : Bool = true
+    @Published var initAllData : Bool = true
+    @Published var initFollowing : Bool = true
     @Published var postData : [Post] = [] //set to nil for first time
     @Published var followingData : [Post] = [] //set to nil for firs time
     @Published var index : TabItem = .Explore
@@ -58,7 +59,7 @@ class PostVM : ObservableObject {
         }
     }
     
-    func GetAllUserPost() {
+    func GetAllUserPost(onSucceed : @escaping ()->() , onFailed : @escaping  (_ errMsg : String)->()) {
         self.isGetPostLoading = true
         self.isGetPostErr = nil
         self.postData = []
@@ -68,6 +69,7 @@ class PostVM : ObservableObject {
                 switch result {
                 case .success(let data):
                     print("Fetched!\(data)")
+                    onSucceed()
                     for var info in data.post_info {
                         info.comments = [] //we will fetch the data when user press the comment
                         self.postData.append(info)
@@ -77,13 +79,14 @@ class PostVM : ObservableObject {
                 case .failure(let err):
 //                    print("POST DATA")
 //                    print(err.localizedDescription)
+                    onFailed(err.localizedDescription)
                     self.isGetPostErr = err
                 }
             }
         }
     }
     
-    func GetFollowUserPost() {
+    func GetFollowUserPost(onSucceed : @escaping ()->() , onFailed : @escaping  (_ errMsg : String)->()) {
         self.isGetFollowPostLoading = true
         self.isGetFollowPostErr = nil
         self.followingData = []
@@ -93,6 +96,7 @@ class PostVM : ObservableObject {
                 switch result {
                 case .success(let data):
                     print("Fetched!\(data)")
+                    onSucceed()
                     for var info in data.post_info {
                         info.comments = [] //we will fetch the data when user press the comment
                         self.followingData.append(info)
@@ -102,6 +106,7 @@ class PostVM : ObservableObject {
 //                    print("POST DATA")
                     print(err.localizedDescription)
                     self.isGetFollowPostErr = err
+                    onFailed(err.localizedDescription)
                 }
             }
         }

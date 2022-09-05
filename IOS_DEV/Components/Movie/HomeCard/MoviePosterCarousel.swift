@@ -13,6 +13,7 @@ struct MoviePosterCarousel: View {
     let title: String
     @EnvironmentObject var State : MovieListState
     @EnvironmentObject var postVM : PostVM
+    @EnvironmentObject var userVM : UserViewModel
 
     @State private var isCardSelectedMovie:Bool = false
     @State private var isAction : Bool = false
@@ -61,7 +62,7 @@ struct MoviePosterCarousel: View {
                     NavigationLink(destination:
                                     MovieDetailView(movieId: self.selectedMovieID, isShowDetail: $isAction)
                                     .environmentObject(postVM)
-                                 
+                                    .environmentObject(userVM)
                                    ,isActive:$isAction
                                   ){EmptyView()}
                 )
@@ -70,7 +71,7 @@ struct MoviePosterCarousel: View {
                     NavigationLink(destination:
                                     ShowMoreStateMovieView(stateTitle: title, stateMovies: self.State.movies!, isShowAll: self.$isShowAll)
                                     .environmentObject(postVM)
-                                 
+                                    .environmentObject(userVM)
                                     ,isActive: self.$isShowAll
                                   ){EmptyView()}
                 

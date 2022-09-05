@@ -46,8 +46,8 @@
             filePath = "IOS_DEV/Views/MovieHomePage.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "45"
-            endingLineNumber = "45"
+            startingLineNumber = "46"
+            endingLineNumber = "46"
             landmarkName = "MovieHomePage"
             landmarkType = "14">
             <Locations>
@@ -113,6 +113,22 @@
             startingLineNumber = "301"
             endingLineNumber = "301"
             landmarkName = "commentCell(comment:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "2AAC8DAF-821D-44D4-A970-D4ACDF2EADD0"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "IOS_DEV/Views/ProfilePage/personProfile.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "1636"
+            endingLineNumber = "1636"
+            landmarkName = "profile()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

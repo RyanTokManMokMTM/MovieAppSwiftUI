@@ -29,6 +29,37 @@ struct IOS_DEVApp: App {
     }
 }
 
+struct BenHubTest : View {
+    @StateObject var hubState = BenHubState()
+    var body : some View {
+        ZStack(){
+            NavigationView{
+                Button(action:{
+                    withAnimation{
+                        hubState.SetWait(message: "Loading")
+                    }
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3){
+                        withAnimation{
+                            hubState.isWait = false
+                            hubState.AlertMessage(sysImg: "checkmark.circle.fill", message: "更新成功")
+                        }
+                    }
+                }){
+                    Text("Testing Hub")
+                }
+            }
+            .wait(isLoading: $hubState.isWait){
+                BenHubLoadingView(message: hubState.message)
+            }
+            .alert(isAlert: $hubState.isPresented){
+                BenHubAlertView(message: hubState.message, sysImg: hubState.sysImg)
+            }
+        
+        }
+    }
+}
+
 struct textFieldTest : View {
     @State private var query = ""
     @Binding var isShow : Bool

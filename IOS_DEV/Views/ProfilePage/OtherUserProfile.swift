@@ -347,7 +347,7 @@ struct UserProfileView : View {
             }
             
             
-            HStack{
+            HStack(spacing:8){
                 VStack{
                     Text(self.posts == -1 ? "--" : self.posts.description)
                         .bold()
@@ -389,15 +389,15 @@ struct UserProfileView : View {
 //                .buttonStyle(StaticButtonStyle())
                 .foregroundColor(.white)
 
-//                Button(action:{
-//                    //TODO : Edite data
-//                }){
-//                    Text("訊息")
-//                        .padding(8)
-//                        .background(BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
-//                        .overlay(RoundedRectangle(cornerRadius: 25).stroke())
-//                }
-//                .foregroundColor(.white)
+                Button(action:{
+                    //TODO : Edite data
+                }){
+                    Text("訊息")
+                        .padding(8)
+                        .background(BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+                        .overlay(RoundedRectangle(cornerRadius: 25).stroke())
+                }
+                .foregroundColor(.white)
 
             }
             .font(.footnote)

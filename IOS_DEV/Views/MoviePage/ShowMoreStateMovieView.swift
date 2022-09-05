@@ -10,7 +10,7 @@ import SDWebImageSwiftUI
 
 struct ShowMoreStateMovieView: View {
     @EnvironmentObject var postVM : PostVM
-    
+    @EnvironmentObject var userVM : UserViewModel
     var stateTitle : String
     var stateMovies : [Movie]
     @Binding var isShowAll : Bool
@@ -40,6 +40,7 @@ struct ShowMoreStateMovieView: View {
                 .background(
                     NavigationLink(destination: MovieDetailView(movieId: self.selectedMovieID, isShowDetail: self.$isShowMovieDetail)
                                     .environmentObject(postVM)
+                                    .environmentObject(userVM)
                                    ,isActive: self.$isShowMovieDetail){
                         EmptyView()
                     }
