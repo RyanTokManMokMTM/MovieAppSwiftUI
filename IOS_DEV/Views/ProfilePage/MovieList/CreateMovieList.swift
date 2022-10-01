@@ -71,9 +71,10 @@ struct CreateMovieList: View {
                     
                     List{
                         HStack(spacing:5){
-                            Text("標題:")
+                            Text("標題")
                                 .font(.system(size:14,weight:.semibold))
                                 .foregroundColor(.white)
+                                .padding(.trailing,8)
                             
                             TextField("", text: $listTitle)
                                 .font(.system(size:14))
@@ -85,16 +86,18 @@ struct CreateMovieList: View {
                         .listRowBackground(Color("DarkMode2"))
                         
                         HStack(alignment:.center,spacing:5){
-                            Text("簡介:")
+                            Text("簡介")
                                 .font(.system(size:14,weight:.semibold))
-                                .foregroundColor(.white)
+                                .foregroundColor(.gray)
+                                .padding(.trailing,8)
                             
                            TextEditor(text: $intro)
                                 .font(.system(size:14))
+                                .foregroundColor(.gray)
                                 .focused($isIntroFocus)
                                 .lineLimit(5)
                                 .frame(height:100)
-                                .accentColor(.white)
+                                .accentColor(.gray)
     //                            .frame(maxWidth:.infinity)
                         }
                         .frame(height:100)

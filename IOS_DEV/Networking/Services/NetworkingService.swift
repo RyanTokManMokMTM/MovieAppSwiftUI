@@ -11,7 +11,7 @@ import Foundation
 import SwiftUI
 
 //let baseUrl="http://120.126.16.229:8080"
-let baseUrl="http://127.0.0.1:8000"
+let baseUrl="http://127.0.0.156767yy:8000"
 
 class NetworkingService: ObservableObject {
     private var token = ""

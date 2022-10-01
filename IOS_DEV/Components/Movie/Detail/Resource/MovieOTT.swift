@@ -13,7 +13,7 @@ import SafariServices
 struct MovieOTT: View {
 
     let movieTitle: String
-    @ObservedObject private var movieResourceState = MovieResourceState()
+    @StateObject private var movieResourceState = MovieResourceState()
 
     var body: some View {
         VStack {
@@ -27,6 +27,7 @@ struct MovieOTT: View {
                    Text("No resources.")
                } else {
                    MovieOTTView(OTT: self.movieResourceState.resource!)
+               
                }
             }
             

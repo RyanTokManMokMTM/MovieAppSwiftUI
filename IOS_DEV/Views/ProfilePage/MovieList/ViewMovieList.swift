@@ -20,6 +20,7 @@ struct ViewMovieList: View {
     @State private var isManageMode : Bool = false
     @State private var isEditList : Bool = false
     @State private var removeMovie : [Int] = []
+
     init(index : Int,isViewList : Binding<Bool>){
         self.colums = 2
         self.HSpacing = 5
@@ -41,6 +42,7 @@ struct ViewMovieList: View {
                             if isManageMode {
                                 withAnimation{
                                     self.isManageMode = false
+                                    updateListMovie()
                                 }
                             }else {
                                 withAnimation{
@@ -49,9 +51,11 @@ struct ViewMovieList: View {
                             }
                         }){
                             if self.isManageMode{
+                                
                                 Text("完成")
                                     .foregroundColor(.red)
                                     .font(.system(size: 15,weight:.semibold))
+                                
                             }else {
                                 Image(systemName: "chevron.left")
                                     .imageScale(.large)
@@ -61,28 +65,33 @@ struct ViewMovieList: View {
                         Spacer()
                         
                         if !isManageMode{
-                            Button(action:{
-                                self.isManageMode = true
-                            }){
-                                
-                              Text("管理專輯")
-                                    .font(.system(size:14))
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal,15)
-                                    .cornerRadius(25)
-                            }
                             
-//                            Button(action:{
-//    //                            self.isManageMode = true
-//                            }){
-//
-//                              Text("編輯")
-//                                    .font(.system(size:14))
-//                                    .foregroundColor(.white)
-//                                    .padding(.horizontal,15)
-//    //                                .background(Color.red)
-//                                    .cornerRadius(25)
-//                            }
+                            HStack{
+                                Button(action:{
+                                    self.isManageMode = true
+                                }){
+                                    
+                                    
+                                  Text("管理專輯")
+                                        .font(.system(size:14))
+                                        .foregroundColor(.white)
+                                        .cornerRadius(25)
+                                        .padding(.horizontal)
+                                }
+                                
+                                Button(action:{
+        //                            self.isManageMode = true
+                                    self.isEditList = true
+                                }){
+
+                                    Image(systemName: "gearshape")
+                                        .foregroundColor(.white)
+                                        .imageScale(.large)
+//                                        .cornerRadius(25)
+                                }
+                            }
+                            .padding(.horizontal,15)
+
                         }
                      
                     }
@@ -129,7 +138,7 @@ struct ViewMovieList: View {
                                 LazyVStack(spacing:VSpacing){
                                     ForEach(datas) { info in
                                         
-                                        MovieListCard(info: info, isManageMode: $isManageMode,movieID: $movieID,isShowMovieDetail:$isShowMovieDetail)
+                                        MovieListCard(info: info, isManageMode: $isManageMode,movieID: $movieID,isShowMovieDetail:$isShowMovieDetail, removeList: $removeMovie)
                                     }
                                 }
                             }
@@ -152,7 +161,18 @@ struct ViewMovieList: View {
                 EmptyView()
             }
         )
+        .background(
+            NavigationLink(destination: EditMovieList(listIndex: listIndex, isBackToRoot:  $isViewList)
+                            .environmentObject(userVM)
+                            .navigationBarTitle("")
+                            .navigationTitle("")
+                            .navigationBarHidden(true)
+                           , isActive: $isEditList){
+                EmptyView()
+            }
+        )
     }
+    
     
     @ViewBuilder
     func userInfo() -> some View {
@@ -214,6 +234,15 @@ struct ViewMovieList: View {
         }
         return gridList
     }
+    
+    private func updateListMovie(){
+        if removeMovie.isEmpty {
+            return
+        }
+        
+        
+        //Send Request!
+    }
 }
 
 struct MovieListCard : View {
@@ -221,6 +250,7 @@ struct MovieListCard : View {
     @Binding var isManageMode : Bool
     @Binding var movieID : Int
     @Binding var isShowMovieDetail : Bool
+    @Binding var removeList : [Int]
     @State private var isRemove : Bool = false
     
     var body : some View {
@@ -248,6 +278,7 @@ struct MovieListCard : View {
                     self.isRemove.toggle()
                     //insert into candindate list
                 }
+                updateList(movieID: info.id)
             }else {
                 self.movieID = info.id
                 self.isShowMovieDetail.toggle()
@@ -256,4 +287,21 @@ struct MovieListCard : View {
         .background(Color("appleDark"))
         .clipShape(CustomeConer(width: 5, height: 5, coners: [.allCorners]))
     }
+    
+    private func updateList(movieID : Int){
+        if let _ = removeList.first(where: {
+            return $0 == movieID
+        }) {
+         //exit
+            let index = removeList.firstIndex(of: movieID)
+            removeList.remove(at: index!)
+            print("removed id\(movieID)")
+        } else {
+            //not exist
+            removeList.append(movieID)
+            print("added id\(movieID)")
+        }
+    }
+    
+    
 }
