@@ -12,6 +12,7 @@ enum StateType {
     case normal
     case system_message
     case notification
+    case message
 }
 
 final class BenHubState : ObservableObject{

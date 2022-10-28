@@ -14,16 +14,10 @@ struct OtherUserProfile: View {
     @StateObject var userVM = UserViewModel()
     @StateObject var postVM = PostVM()
     @State private var isUserFollowing = false
-//    @State private var follower : Int = -1
-//    @State private var following : Int = -1
     @State private var friends : Int = -1
     @State private var posts : Int = -1
     @State private var isFriendInfo : IsFriendResp? = nil
-    
-//    @State private var isFriend : Bool = false
-//    @State private var isSentReq : Bool = false
-//    @State private var fdReqID : Int = -1
-//    @State private var reqSender : Int = -1
+
     var userID : Int
     var owner :Int
     var body: some View {
@@ -39,10 +33,7 @@ struct OtherUserProfile: View {
                 DispatchQueue.main.async {
                     userVM.setUserID(userID: userID)
                     userVM.getUserProfile()
-//                    print("profile get\(self.userVM.profile!.name)")
                     userVM.getUserPosts()
-//                    print("post  get")
-//                    IsUserFollowing()
                     userVM.GetUserGenresSetting()
                 }
                 
@@ -50,14 +41,9 @@ struct OtherUserProfile: View {
             getPostCount()
             getFriendCount()
             getIsFriend()
-            //get is friend state
-//            getFollower()
-//            getFollowing()
+
             
         }
-//        .onDisappear{
-//            print("???\(self.userVM.profile!.UserCollection == nil)")
-//        }
 
     }
     
@@ -687,13 +673,17 @@ struct OtherUserCustomListView : View{
         VStack(alignment:.leading){
            if self.userVM.profile?.UserCustomList != nil{
                if self.userVM.profile!.UserCustomList!.isEmpty {
-                   Text("User has no any custom list yet")
+                   VStack{
+                       Spacer()
+                       Text("無收藏專輯")
+                           .font(.system(size:15))
+                           .foregroundColor(.gray)
+                       Spacer()
+                   }
                } else {
                    ListInfo()
                }
 
-           } else {
-               Text("User has no any custom list yet?")
            }
         }
         .padding(8)
@@ -701,7 +691,7 @@ struct OtherUserCustomListView : View{
     
     @ViewBuilder
     func ListInfo() -> some View {
-        ForEach(0..<self.userVM.profile!.UserCustomList!.count){ i in
+        ForEach(0..<self.userVM.profile!.UserCustomList!.count, id:\.self){ i in
             Button(action:{
 //                //Open the list view
                 withAnimation{

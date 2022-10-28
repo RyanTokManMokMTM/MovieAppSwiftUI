@@ -173,6 +173,8 @@ struct MovieListView: View {
                     BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
                 case .notification:
                     BenHubAlertWithFriendRequest(user: HubState.senderInfo!, message: HubState.message)
+                case .message:
+                    BenHubAlertWithMessage(user: HubState.senderInfo!, message: HubState.message)
                 }
             }
             

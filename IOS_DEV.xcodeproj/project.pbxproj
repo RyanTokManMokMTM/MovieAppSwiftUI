@@ -138,7 +138,6 @@
 		6FD20E77274F41AB004F21F6 /* Courgette-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6FD20E76274F41AB004F21F6 /* Courgette-Regular.ttf */; };
 		6FD20E7D274F52AC004F21F6 /* Teko-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6FD20E7C274F52AC004F21F6 /* Teko-Bold.ttf */; };
 		6FDC01BB27777582008F73F0 /* ChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDC01BA27777582008F73F0 /* ChartView.swift */; };
-		6FDC01BF2777784A008F73F0 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDC01BE2777784A008F73F0 /* ProfileView.swift */; };
 		6FDC01C2277778AD008F73F0 /* SignIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDC01C0277778AC008F73F0 /* SignIn.swift */; };
 		6FDC01C3277778AD008F73F0 /* SignUp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDC01C1277778AD008F73F0 /* SignUp.swift */; };
 		6FF3A21E27510C910084637D /* UITextFieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FF3A21A27510C8C0084637D /* UITextFieldView.swift */; };
@@ -359,7 +358,6 @@
 		6FD20E76274F41AB004F21F6 /* Courgette-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Courgette-Regular.ttf"; sourceTree = "<group>"; };
 		6FD20E7C274F52AC004F21F6 /* Teko-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Teko-Bold.ttf"; sourceTree = "<group>"; };
 		6FDC01BA27777582008F73F0 /* ChartView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChartView.swift; sourceTree = "<group>"; };
-		6FDC01BE2777784A008F73F0 /* ProfileView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		6FDC01C0277778AC008F73F0 /* SignIn.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SignIn.swift; sourceTree = "<group>"; };
 		6FDC01C1277778AD008F73F0 /* SignUp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SignUp.swift; sourceTree = "<group>"; };
 		6FF3A21A27510C8C0084637D /* UITextFieldView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UITextFieldView.swift; sourceTree = "<group>"; };
@@ -808,7 +806,6 @@
 			isa = PBXGroup;
 			children = (
 				7A94724B28951BB700B0758B /* MovieList */,
-				6FDC01BE2777784A008F73F0 /* ProfileView.swift */,
 				6F7DD5CE278FDD180035FCFA /* personProfile.swift */,
 				7A900EE0279FED4C0076DC34 /* ImageCropVIew.swift */,
 				7AFBE716289FBA7E0000B267 /* OtherUserProfile.swift */,
@@ -1388,7 +1385,6 @@
 				7A1F500628AA4217009A23CB /* friend.swift in Sources */,
 				0194A5F726961A8B00E24598 /* MovieOverviews.swift in Sources */,
 				0194A5E02695A1A400E24598 /* Utils.swift in Sources */,
-				6FDC01BF2777784A008F73F0 /* ProfileView.swift in Sources */,
 				016DE80D26F1A1BF0046DDEA /* UserController.swift in Sources */,
 				7A41C0182881633E005FAEBD /* PostBottomSheet.swift in Sources */,
 				0170180A26969EEF00E51209 /* MoviePosterCarousel.swift in Sources */,

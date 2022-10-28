@@ -113,28 +113,24 @@ class WebsocketManager : ObservableObject{
                 
                 do {
                     let obj = try  decode(type: MessageResp.self, obj: strObj)
-                    print(obj)
                     if obj.opcode == WebsocketOpCode.OpPing.rawValue{
-                        //send a point message
-                        print("received a ping message")
-//                        MessageReq(opcode: WebsocketOpCode.OpPong, message_id: "", group_id: 0, message: "", sent_time: "")
                         let pingMessage =  MessageReq(opcode: WebsocketOpCode.OpPong.rawValue, message_id: "", group_id: 0, message: "", sent_time: 0)
                         self.onSend(message: pingMessage)
                     }else if obj.opcode == WebsocketOpCode.OpText.rawValue{
                         
-                        //if is a system message
-                        //calling hub 
-                        
-    //                    MessageViewModel.share.rooms
-                        print("received a new message : \(obj)")
-                        
                         if obj.message_type == 0{
-//                            BenHubState.shared.AlertMessage(sysImg: "", message: obj.content)
-//                            BenHubState.shared.AlertMessage(sysImg: "exclamationmark.circle", message: obj.content)
+                            //MARK: A system message
                             BenHubState.shared.AlertMessageWithUserInfo(message: obj.content, userInfo: obj.sender_info,type: .notification)
                         }else {
+                            //MARK: A user message
                             let newMessage = MessageInfo(id: obj.message_id, message: obj.content, sender_id: obj.sender_info.id, sent_time: obj.send_time)
                             MessageViewModel.shared.addNewMessage(roomID: obj.group_id, message: newMessage)
+                            
+        
+                            if MessageViewModel.shared.currentTalkingRoomID == 0 || MessageViewModel.shared.currentTalkingRoomID != obj.group_id{
+                                BenHubState.shared.AlertMessageWithUserInfo(message: obj.content, userInfo: obj.sender_info,type: .message)
+                            }
+                            
                         }
                     }
                     
@@ -152,10 +148,11 @@ class WebsocketManager : ObservableObject{
         }
     }
     
-    func ping(){
-        //Send the websocket message with ping opcode
-    }
-    
+//    func ping(){
+//        //Send the websocket message with ping opcode
+//
+//    }
+//
     
     private func decode<T : Decodable>(type : T.Type,obj : Data) throws -> T{
         do {

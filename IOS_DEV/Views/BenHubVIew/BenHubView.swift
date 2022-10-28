@@ -127,4 +127,34 @@ struct BenHubAlertWithFriendRequest : View {
                 .font(.system(size: 14,weight:.semibold))
         }
     }
+    
+}
+struct BenHubAlertWithMessage : View {
+    let user : SimpleUserInfo
+    let message : String
+    var body: some View{
+        HStack{
+            //UserAvatar
+            
+            //Message
+            AsyncImage(url: user.UserPhotoURL){ image in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                } placeholder: {
+                    ActivityIndicatorView()
+                }
+                .frame(width: 30,height:30)
+                .clipShape(Circle())
+                .clipped()
+            VStack(alignment:.leading,spacing: 8){
+                Text("收到新的訊息")
+                    .font(.system(size: 15, weight: .bold))
+                Text(message)
+                    .font(.system(size: 14,weight:.semibold))
+                    .lineLimit(1)
+            }
+
+        }
+    }
 }

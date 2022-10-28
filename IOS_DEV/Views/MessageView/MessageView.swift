@@ -8,39 +8,10 @@
 import SwiftUI
 import SDWebImageSwiftUI
 
-////User chatting list
-//struct ChatInfo : Identifiable {
-//    var id : UUID
-//    let user : MessageUser
-//    var messages : [Message]
-//    var hasUnrealMsg : Bool = false
-//}
-
-//Message record
-//struct Message : Identifiable {
-//    enum MessageType {
-//        case Sent,Recevied
-//    }
-//
-//    let id : UUID
-//    let date : Date
-//    let message : String
-//    let type : MessageType
-//
-//    init(_ text : String,type : MessageType,date:Date){
-//        self.date = date
-//        self.message = text
-//        self.type = type
-//    }
-//
-//    init(_ text : String,type : MessageType){
-//        self.init(text, type: type,date: Date())
-//    }
-//}
-
 class MessageViewModel : ObservableObject{
 //    @Published var ChatList = ChatInfo.simpleChat
     @Published var rooms : [ChatData] = []
+    @Published var currentTalkingRoomID : Int = 0 //0 means user not in any room
     static var shared = MessageViewModel() //share in whole app for now
 
     private init(){}
@@ -129,85 +100,10 @@ class MessageViewModel : ObservableObject{
         return result
     }
 }
-//
-//extension ChatInfo{
-//    static let simpleChat = [
-//        ChatInfo(id: UUID(), user: MessageUser(UserIcons:  UIImage(named: "icon1")!, UserName: "Charlie"), messages: [
-//            Message("在嗎?", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 3)),
-//            Message("有什麼事麼?", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 3)),
-//            Message("想問一下你有沒有看過我的手錶，我記得今天早上跟你出去的時候有戴著。", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 3)),
-//            Message("我記得你在吃飯的時候摘了下來，放到包包裡了。", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 3)),
-//            Message("喔，是嗎！我去看看喔", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 3)),
-//            Message("有了！我看到了，謝謝你🥰🥰🥰", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 3)),
-//            Message("要不要一起出去看電影？", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 1)),
-//            Message("可能要下週才有看～下週可以嗎", type: .Sent,date: Date(timeIntervalSinceNow: -86400)),
-//        ], hasUnrealMsg: false),
-//
-//        ChatInfo(id: UUID(), user: MessageUser(UserIcons: UIImage(named: "icon2")!, UserName: "Evans"), messages: [
-//            Message("你好！我是你班上的同學，有些事情想請教你，不知道會不會打擾到你", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 5)),
-//            Message("hi,你有遇到了什麼問題麼?", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 5)),
-//            Message("啊，就是今天上課的內容有些地方有些不了解", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 5)),
-//            Message("就是數學作業的第三題，我不太懂可以怎麼解。", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 4)),
-//            Message("我剛好做完數學作業，我看看題目喔，稍等一下～", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 4)),
-//            Message("好的！", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 3)),
-//            Message("這一題可能有些複雜，方便打電話嗎？", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 3)),
-//            Message("當然可以！", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 2)),
-//            Message("十分感謝你！！！", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 2)),
-//            Message("不客氣！！！", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 1)),
-//        ], hasUnrealMsg: true),
-//
-//        ChatInfo(id: UUID(), user: MessageUser(UserIcons: UIImage(named: "icon9")!, UserName: "Brazier"), messages: [
-//            Message("今天晚上要不要來聊聊他!", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 6)),
-//            Message("可以啊，什麼時候。", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 6)),
-//            Message("大概晚上10點左右", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 6)),
-//            Message("可能要在晚一點點", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 6)),
-//            Message("好，如果你好了就來我們discord群！。", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 6))
-//        ], hasUnrealMsg: false),
-//
-//        ChatInfo(id: UUID(), user: MessageUser(UserIcons: UIImage(named: "icon10")!, UserName: "Anderson"), messages: [
-//            Message("在幹嘛鴨", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 15)),
-//            Message("有空一起來打有些遊戲嗎?", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 15)),
-//            Message("等我一下喔！大概5分鐘左右", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 15)),
-//            Message("行！好了叫我,帶你飛 😎😎", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 15))
-//        ], hasUnrealMsg: true),
-//        ChatInfo(id: UUID(), user: MessageUser(UserIcons: UIImage(named: "icon2")!, UserName: "Alice"), messages: [
-//            Message("在幹嘛鴨", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 15)),
-//            Message("有空一起來打有些遊戲嗎?", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 15)),
-//            Message("等我一下喔！大概5分鐘左右", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 15)),
-//            Message("怎麼啦？", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 19))
-//        ], hasUnrealMsg: true),
-//        ChatInfo(id: UUID(), user: MessageUser(UserIcons: UIImage(named: "icon5")!, UserName: "咖椰"), messages: [
-//            Message("在幹嘛鴨", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 15)),
-//            Message("有空一起來打有些遊戲嗎?", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 15)),
-//            Message("等我一下喔！大概5分鐘左右", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 15)),
-//            Message("??????", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 25))
-//        ], hasUnrealMsg: false),
-//        ChatInfo(id: UUID(), user: MessageUser(UserIcons: UIImage(named: "icon4")!, UserName: "萊恩"), messages: [
-//            Message("在幹嘛鴨", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 15)),
-//            Message("有空一起來打有些遊戲嗎?", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 15)),
-//            Message("等我一下喔！大概5分鐘左右", type: .Sent,date: Date(timeIntervalSinceNow: -86400 * 15)),
-//            Message("🤔", type: .Recevied,date: Date(timeIntervalSinceNow: -86400 * 30))
-//        ], hasUnrealMsg: false),
-//    ]
-//}
-//
-//var tempMessage = [
-//    MessageUser(UserIcons:  UIImage(named: "icon1")!, UserName: "Phoenix Hunter"),
-//    MessageUser(UserIcons: UIImage(named: "icon2")!, UserName: "Blair Baxter"),
-//    MessageUser( UserIcons: UIImage(named: "icon3")!, UserName: "Alex Foster"),
-//    MessageUser(UserIcons: UIImage(named: "icon4")!, UserName: "Haiden Evans"),
-//    MessageUser(UserIcons: UIImage(named: "icon5")!, UserName: "Jackie Adams"),
-//    MessageUser(UserIcons: UIImage(named: "icon6")!, UserName: "Danny Hart"),
-//    MessageUser(UserIcons: UIImage(named: "icon7")!, UserName: "Val Keller"),
-//    MessageUser(UserIcons: UIImage(named: "icon8")!, UserName: "Ashley Hammond"),
-//    MessageUser(UserIcons: UIImage(named: "icon9")!, UserName: "Skylar Riddle"),
-//    MessageUser(UserIcons: UIImage(named: "icon10")!, UserName: "Reed Peterson"),
-//
-//
-//]
 
 struct ChattingView : View{
     @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var msgVM : MessageViewModel
     let chatInfo : ChatData
     let roomId : Int
 //    let messageID : Int
@@ -226,7 +122,6 @@ struct ChattingView : View{
                         getMessageView(width: proxy.size.width)
                             .padding(.horizontal)
                             .onChange(of: roomMessages.count){_ in
-
                                 if let msgID = roomMessages.last?.RoomUUID {
                                     //if not nil
                                     //scrolling to the msgID
@@ -270,15 +165,12 @@ struct ChattingView : View{
         )
         .navigationBarTitleDisplayMode(.inline)
         .accentColor(.white)
-        .onAppear(perform: {
-            
-//            UINavigationBar.appearance().tin
-//            msgVM.updateReadMark(false, info: chatInfo)
-//            UITextView.appearance().tintColor = .gray
-            //MARK: GET Room Record...
-//            getMessages()
-        }) //updated unread to read
-//        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .onAppear(){
+            self.msgVM.currentTalkingRoomID = roomId
+        }
+        .onDisappear(){
+            self.msgVM.currentTalkingRoomID = 0
+        }
         
     }
     
@@ -488,6 +380,7 @@ struct MessageView: View {
 //                                ZStack{
                                 NavigationLink(destination:ChattingView(chatInfo: msgVM.rooms[i],roomId: msgVM.rooms[i].id, roomMessages: $msgVM.rooms[i].messages)
                                     .environmentObject(userVM)
+                                    .environmentObject(msgVM)
                                 ){
                                     chatRow(info:msgVM.rooms[i])
                                         .navigationTitle("")
@@ -539,6 +432,8 @@ struct MessageView: View {
                 BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
             case .notification:
                 BenHubAlertWithFriendRequest(user: HubState.senderInfo!, message: HubState.message)
+            case .message:
+                BenHubAlertWithMessage(user: HubState.senderInfo!, message: HubState.message)
             }
         }
     }

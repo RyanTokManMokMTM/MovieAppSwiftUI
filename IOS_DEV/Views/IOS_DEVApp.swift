@@ -53,6 +53,7 @@ struct BenHubTest : View {
                 BenHubLoadingView(message: hubState.message)
             }
             .alert(isAlert: $hubState.isPresented){
+                
                 BenHubAlertView(message: hubState.message, sysImg: hubState.sysImg)
             }
         
