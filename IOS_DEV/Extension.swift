@@ -231,6 +231,29 @@ extension Date{
         
     }
     
+    func sendTimeString(dataStyle : DateFormatter.Style = .short) -> String {
+        //self = current class date
+        let formatter = DateFormatter()
+        formatter.dateStyle = dataStyle
+        let dayBetween = daysBetween(date: Date())
+        
+        if dayBetween == 0{
+            formatter.dateFormat = "HH:mm"
+            return formatter.string(from: self)
+        } else if dayBetween == 1 {
+            formatter.dateFormat = "HH:mm"
+            return "昨天" + formatter.string(from: self)
+        }else if dayBetween < 5 {
+            formatter.dateFormat = "HH:mm"
+            let weekDay = Calendar.current.component(.weekday, from: self) - 1
+            return formatter.weekdaySymbols[weekDay] + formatter.string(from: self)
+        }
+        
+        formatter.dateFormat = "yy/M/d h:m a"
+        return formatter.string(from: self)
+        
+    }
+    
     func daysBetween(date : Date) -> Int{
         let calender = Calendar.current
         let date1 = calender.startOfDay(for: self)

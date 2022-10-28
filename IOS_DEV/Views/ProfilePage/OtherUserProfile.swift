@@ -10,21 +10,29 @@ import SDWebImageSwiftUI
 
 
 struct OtherUserProfile: View {
-//    @Environment var userOwner : UserViewModel
+    
     @StateObject var userVM = UserViewModel()
     @StateObject var postVM = PostVM()
     @State private var isUserFollowing = false
-    @State private var follower : Int = -1
-    @State private var following : Int = -1
+//    @State private var follower : Int = -1
+//    @State private var following : Int = -1
+    @State private var friends : Int = -1
     @State private var posts : Int = -1
+    @State private var isFriendInfo : IsFriendResp? = nil
+    
+//    @State private var isFriend : Bool = false
+//    @State private var isSentReq : Bool = false
+//    @State private var fdReqID : Int = -1
+//    @State private var reqSender : Int = -1
     var userID : Int
+    var owner :Int
     var body: some View {
         GeometryReader{ proxy in
             let topEdge = proxy.safeAreaInsets.top
-            UserProfileView(topEdge: topEdge,isFollowing: $isUserFollowing,follower: $follower,following: $following,posts: $posts)
+            UserProfileView(topEdge: topEdge,isFollowing: $isUserFollowing,friends: $friends,posts: $posts,isFriendInfo: $isFriendInfo,owner:owner)
                 .ignoresSafeArea(.all, edges: .top)
-                .environmentObject(userVM)
                 .environmentObject(postVM)
+                .environmentObject(userVM)
         }
         .onAppear{
             if userVM.profile == nil {
@@ -34,19 +42,22 @@ struct OtherUserProfile: View {
 //                    print("profile get\(self.userVM.profile!.name)")
                     userVM.getUserPosts()
 //                    print("post  get")
-                    IsUserFollowing()
+//                    IsUserFollowing()
                     userVM.GetUserGenresSetting()
                 }
                 
             }
             getPostCount()
-            getFollower()
-            getFollowing()
+            getFriendCount()
+            getIsFriend()
+            //get is friend state
+//            getFollower()
+//            getFollowing()
             
         }
-        .onDisappear{
-            print("???\(self.userVM.profile!.UserCollection == nil)")
-        }
+//        .onDisappear{
+//            print("???\(self.userVM.profile!.UserCollection == nil)")
+//        }
 
     }
     
@@ -63,13 +74,13 @@ struct OtherUserProfile: View {
         }
     }
     
-    private func getFollower(){
-        let req = CountFollowedReq(user_id: userID)
-        APIService.shared.CountFollowedUser(req: req) { result in
+    private func getFriendCount(){
+        let req = CountFriendReq(user_id: userID)
+        APIService.shared.CountFriend(req: req) { result in
             switch result{
             case .success(let data):
                 print(data.total)
-                self.follower = data.total
+                self.friends = data.total
             case .failure(let err):
                 print(err.localizedDescription)
             }
@@ -77,33 +88,65 @@ struct OtherUserProfile: View {
         }
     }
     
-    private func getFollowing(){
-            let req = CountFollowingReq(user_id:  userID)
-            APIService.shared.CountFollowingUser(req: req) { result in
-                switch result{
-                case .success(let data):
-                    print(data.total)
-                    self.following = data.total
-                case .failure(let err):
-                    print(err.localizedDescription)
-                }
-                
-            }
-    }
-    
-    
-    func IsUserFollowing(){
-        let req = GetOneFriendReq(friend_id: self.userID)
-        APIService.shared.GetOneFriend(req: req){ result in
-            switch result {
+    private func getIsFriend(){
+        let req = IsFriendReq(friend_id: self.userID)
+        APIService.shared.IsFriend(req: req){ result in
+            switch result{
             case .success(let data):
-                self.isUserFollowing = data.is_friend
-                print(self.isUserFollowing)
+                self.isFriendInfo = data
+                
+//                self.isFriend = data.is_friend
+//                self.isSentReq = data.is_sent_request
+//                self.fdReqID = data.request?.request_id ?? -1
+//                self.reqSender = data.request?.sender_id ?? -1
             case .failure(let err):
+//                print(err.loc)
                 print(err.localizedDescription)
             }
         }
     }
+//
+//    private func getFollower(){
+//        let req = CountFollowedReq(user_id: userID)
+//        APIService.shared.CountFollowedUser(req: req) { result in
+//            switch result{
+//            case .success(let data):
+//                print(data.total)
+//                self.follower = data.total
+//            case .failure(let err):
+//                print(err.localizedDescription)
+//            }
+//
+//        }
+//    }
+//
+//    private func getFollowing(){
+//            let req = CountFollowingReq(user_id:  userID)
+//            APIService.shared.CountFollowingUser(req: req) { result in
+//                switch result{
+//                case .success(let data):
+//                    print(data.total)
+//                    self.following = data.total
+//                case .failure(let err):
+//                    print(err.localizedDescription)
+//                }
+//
+//            }
+//    }
+//
+//
+//    func IsUserFollowing(){
+//        let req = GetOneFriendReq(friend_id: self.userID)
+//        APIService.shared.GetOneFriend(req: req){ result in
+//            switch result {
+//            case .success(let data):
+//                self.isUserFollowing = data.is_friend
+//                print(self.isUserFollowing)
+//            case .failure(let err):
+//                print(err.localizedDescription)
+//            }
+//        }
+//    }
 }
 
 struct UserProfileView : View {
@@ -121,11 +164,11 @@ struct UserProfileView : View {
     @State private var isViewMovieList : Bool = false
     
     @Binding var isFollowing : Bool
-    
-    @Binding var follower : Int
-    @Binding var following : Int
+    @Binding var friends : Int
     @Binding var posts : Int
     
+    @Binding var isFriendInfo : IsFriendResp?
+    var owner : Int
     @Environment(\.dismiss) var dismiss
     var body: some View {
         ZStack(alignment:.top){
@@ -287,7 +330,7 @@ struct UserProfileView : View {
                                EmptyView()
                            }
         )
-
+        
         
     }
     
@@ -353,51 +396,92 @@ struct UserProfileView : View {
                         .bold()
                     Text("文章")
                 }
-                
                 VStack{
-                    Text(self.following == -1 ? "--" : self.following.description)
+                    Text(self.friends == -1 ? "--" : self.friends.description)
                         .bold()
-                    Text("關注")
-                }
-                
-                VStack{
-                    Text(self.following == -1 ? "--" : self.follower.description)
-                        .bold()
-                    Text("粉絲")
+                    Text("朋友")
                 }
 
                 Spacer()
                 
-                Button(action:{
-                    //TODO : Edite data
-                    withAnimation{
-                        self.isFollowing.toggle()
+                if isFriendInfo != nil {
+                    if isFriendInfo!.is_friend{
+                        HStack(spacing:8){
+                            Text("朋友")
+                                .foregroundColor(.gray )
+                                .font(.system(size: 12))
+                                .fontWeight(.semibold)
+                                .padding(8)
+                                .padding(.horizontal,5)
+                                .background(Color.clear.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+                                .overlay(RoundedRectangle(cornerRadius: 25).stroke().fill(Color.gray))
+                        }
                     }
-                    if self.isFollowing{
-                        followUser()
-                    }else {
-                        UnFollowUser()
-                    }
-                }){
-                    Text(self.isFollowing ? "已關注" : "關注")
-                        .fontWeight(.semibold)
-                        .padding(8)
-                        .background(self.isFollowing ? Color.clear.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)) : Color.red.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
-                        .overlay(RoundedRectangle(cornerRadius: 25).stroke().fill(self.isFollowing ? Color.white : Color.clear))
-//                        .overlay(RoundedRectangle(cornerRadius: 25).stroke())
-                }
-//                .buttonStyle(StaticButtonStyle())
-                .foregroundColor(.white)
+                    else if isFriendInfo!.is_sent_request {
+                        if isFriendInfo!.request!.sender_id == userVM.userID!{
+                            HStack(spacing:8){
+                                Button(action:{
+                                    accecpt(id: isFriendInfo!.request!.request_id)
+                                }){
+                                    Text("確認")
+                                        .foregroundColor(.white)
+                                        .font(.system(size: 12))
+                                        .fontWeight(.semibold)
+                                        .padding(8)
+                                        .padding(.horizontal,5)
+                                        .background( Color.blue.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+                    //                    .overlay(RoundedRectangle(cornerRadius: 25).stroke().fill(info.isFriend ? Color.gray : Color.clear))
+                                }.buttonStyle(.plain)
+                                
+                                Button(action:{
+    //                                decline(id: info.request_id)
+                                    decline(id: isFriendInfo!.request!.request_id)
+                                }) {
+                                    Text("拒絕")
+                                        .foregroundColor(.white)
+                                        .font(.system(size: 12))
+                                        .fontWeight(.semibold)
+                                        .padding(8)
+                                        .padding(.horizontal,5)
+                                        .background( Color.red.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+                                }.buttonStyle(.plain)
+                            
+                            }
+                        } else {
 
-                Button(action:{
-                    //TODO : Edite data
-                }){
-                    Text("訊息")
-                        .padding(8)
-                        .background(BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
-                        .overlay(RoundedRectangle(cornerRadius: 25).stroke())
+                            Button(action:{
+                                cancel(id: isFriendInfo!.request!.request_id)
+                            }){
+                                Text("取消交友邀請")
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 12))
+                                    .fontWeight(.semibold)
+                                    .padding(8)
+                                    .padding(.horizontal,5)
+                                    .background( Color.red.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+                            }.buttonStyle(.plain)
+                            
+                        }
+                        
+                    }
+                    else {
+                        Button(action:{
+                            addFriend()
+                        }){
+                            Text("加為好友")
+                                .foregroundColor(.white)
+                                .font(.system(size: 12))
+                                .fontWeight(.semibold)
+                                .padding(8)
+                                .padding(.horizontal,5)
+                                .background( Color.blue.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+            //                    .overlay(RoundedRectangle(cornerRadius: 25).stroke().fill(info.isFriend ? Color.gray : Color.clear))
+                        }.buttonStyle(.plain)
+                        
+                    }
+    //
                 }
-                .foregroundColor(.white)
+//
 
             }
             .font(.footnote)
@@ -408,41 +492,76 @@ struct UserProfileView : View {
        
     }
     
-    private func followUser(){
-        if self.userVM.profile == nil { return }
+    private func addFriend(){
         
-        let req = CreateNewFriendReq(friend_id: self.userVM.profile!.id)
-        APIService.shared.CreateNewFriend(req: req){ result in
+        let req = AddFriendReq(user_id: self.userVM.userID!)
+        APIService.shared.AddFriend(req: req){ result in
             switch result{
-            case .success(_):
-                print("User Followed")
-            case .failure(let err):
-                print(err.localizedDescription)
-                withAnimation{
-                    self.isFollowing.toggle()
+            case .success(let data):
+//                print(data.message)
+                if var info = self.isFriendInfo {
+                    info.is_sent_request = true
+                    info.request?.sender_id = data.sender
+                    info.request?.request_id = data.request_id
+                    self.isFriendInfo = info
                 }
-            }
-        }
-    }
-    
-    private func UnFollowUser(){
-        if self.userVM.profile == nil { return }
-        
-        let req = RemoveFriendReq(friend_id: self.userVM.profile!.id)
-        APIService.shared.RemoveFriend(req: req){ result in
-            switch result{
-            case .success(_):
-                print("User UnFollowed")
                 
             case .failure(let err):
                 print(err.localizedDescription)
-                withAnimation{
-                    self.isFollowing.toggle()
-                }
             }
         }
     }
     
+    private func accecpt(id : Int){
+        let req = FriendRequestAccecptReq(request_id: id)
+        APIService.shared.AccepctFriendRequest(req: req){ result in
+            switch result{
+            case .success(let data):
+                print(data.message)
+                if var info = self.isFriendInfo {
+                    info.is_sent_request = false
+                    info.is_friend = true
+                    self.isFriendInfo = info
+                }
+            case .failure(let err):
+                print(err.localizedDescription)
+            }
+        }
+    }
+    
+    private func decline(id : Int){
+        let req = FriendRequestDeclineReq(request_id: id)
+        APIService.shared.DeclineFriendRequest(req: req){ result in
+            switch result{
+            case .success(let data):
+                print(data.message)
+                if var info = self.isFriendInfo {
+                    info.is_sent_request = false
+                    info.is_friend = false
+                    self.isFriendInfo = info
+                }
+            case .failure(let err):
+                print(err.localizedDescription)
+            }
+        }
+    }
+    
+    private func cancel(id : Int){
+        let req = FriendRequestCancelReq(request_id: id)
+        APIService.shared.CancelFriendRequest(req: req){ result in
+            switch result{
+            case .success(let data):
+                print(data.message)
+                if var info = self.isFriendInfo {
+                    info.is_sent_request = false
+                    info.is_friend = false
+                    self.isFriendInfo = info
+                }
+            case .failure(let err):
+                print(err.localizedDescription)
+            }
+        }
+    }
 
     private func getHeaderHigth() -> CGFloat{
         //setting the height of the header
@@ -468,7 +587,7 @@ struct OtherPersonPostCardGridView : View{
             if userVM.profile!.UserCollection!.isEmpty{
                 VStack{
                     Spacer()
-                    Text("Not Post yet")
+                    Text("無文章")
                         .font(.system(size:15))
                         .foregroundColor(.gray)
                     Spacer()
@@ -520,7 +639,7 @@ struct OtherLikedPostCardGridView : View {
                 if userVM.profile!.UserLikedMovies!.isEmpty{
                     VStack{
                         Spacer()
-                        Text("You have't liked any movies yet!")
+                        Text("無喜歡電影")
                             .font(.system(size:15))
                             .foregroundColor(.gray)
                         Spacer()

@@ -13,7 +13,7 @@ struct UserLoginReq: Encodable{
     var password: String
 }
 
-struct UserSignInReq: Encodable{
+struct UserSignUpReq: Encodable{
     var name: String
     var email: String
     var password: String
@@ -28,11 +28,19 @@ struct UserUpdateAvatarReq  : Encodable{}
 
 struct UserUpdateCoverReq  : Encodable{}
 
-struct GetFollowingListReq {
+//struct GetFollowingListReq {
+//    let user_id : Int
+//}
+//
+//struct GetFollowedListReq {
+//    let user_id : Int
+//}
+
+struct CountFriendReq {
     let user_id : Int
 }
 
-struct GetFollowedListReq {
+struct GetFriendListReq {
     let user_id : Int
 }
 
@@ -43,19 +51,27 @@ struct UserLoginResp : Decodable{
 }
 
 
-struct UserSignInResp: Decodable{
-    var id: Int
-    var name: String
-    var email: String
+struct UserSignUpResp: Decodable{
+    var token: String
+    var expired : Int
 }
 
-struct GetFollowingListResp : Decodable {
-    let following : [SimpleUserInfo]
+//struct GetFollowingListResp : Decodable {
+//    let following : [SimpleUserInfo]
+//}
+//
+//struct GetFollowedListResp : Decodable {
+//    let followed : [SimpleUserInfo]
+//}
+
+struct CountFriendResp : Decodable {
+    let total : Int
 }
 
-struct GetFollowedListResp : Decodable {
-    let followed : [SimpleUserInfo]
+struct GetFriendListResp : Decodable {
+    let friends : [SimpleUserInfo]
 }
+
 
 struct UserProfileUpdateResp  : Decodable{}
 

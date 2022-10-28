@@ -144,6 +144,7 @@ struct SignInView: View   {
                 SignUpView(backToSignIn: $isSignUp)
                     .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .trailing)))
                     .zIndex(1)
+                    .environmentObject(userVM)
             }
         }
 //        .ignoresSafeArea(.keyboard)

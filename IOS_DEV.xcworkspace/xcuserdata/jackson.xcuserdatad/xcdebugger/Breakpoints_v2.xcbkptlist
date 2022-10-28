@@ -126,8 +126,8 @@
             filePath = "IOS_DEV/Views/ProfilePage/personProfile.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1636"
-            endingLineNumber = "1636"
+            startingLineNumber = "1656"
+            endingLineNumber = "1656"
             landmarkName = "profile()"
             landmarkType = "7">
          </BreakpointContent>

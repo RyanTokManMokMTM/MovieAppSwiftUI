@@ -12,12 +12,24 @@ import Kingfisher
 import Combine //used to add a pulisher to a state variable
 
 struct PersonProfileView : View{
+    @StateObject var HubState : BenHubState = BenHubState.shared
     var body: some View{
         
         GeometryReader{proxy in
             let topEdge = proxy.safeAreaInsets.top
             personProfile(topEdge: topEdge)
                 .ignoresSafeArea(.all, edges: .top)
+        }
+        .wait(isLoading: $HubState.isWait){
+            BenHubLoadingView(message: HubState.message)
+        }
+        .alert(isAlert: $HubState.isPresented){
+            switch HubState.type{
+            case .normal,.system_message:
+                BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
+            case .notification:
+                BenHubAlertWithFriendRequest(user: HubState.senderInfo!, message: HubState.message)
+            }
         }
     }
 }
@@ -742,7 +754,7 @@ struct PersonPostCardGridView : View{
             if userVM.profile!.UserCollection!.isEmpty{
                 VStack{
                     Spacer()
-                    Text("Not Post yet")
+                    Text("無文章")
                         .font(.system(size:15))
                         .foregroundColor(.gray)
                     Spacer()
@@ -797,7 +809,7 @@ struct LikedPostCardGridView : View {
                 if userVM.profile!.UserLikedMovies!.isEmpty{
                     VStack{
                         Spacer()
-                        Text("You have't liked any movies yet!")
+                        Text("無喜歡電影")
                             .font(.system(size:15))
                             .foregroundColor(.gray)
                         Spacer()
@@ -1352,8 +1364,8 @@ struct PersonPostTabBar : View{
 }
 
 struct personProfile: View {
-    @EnvironmentObject var userVM : UserViewModel
-    @EnvironmentObject var postVM : PostVM
+    @EnvironmentObject private var userVM : UserViewModel
+    @EnvironmentObject private var postVM : PostVM
     @State private var isEditProfile : Bool = false
     @State private var isSetting : Bool = false
     @State private var isAddingList : Bool = false
@@ -1370,8 +1382,9 @@ struct personProfile: View {
     @State private var listIndex : Int = 0
     @State private var isViewMovieList : Bool = false
     
-    @State private var follower : Int = 0
-    @State private var following : Int = 0
+//    @State private var follower : Int = 0
+//    @State private var following : Int = 0
+    @State private var friends : Int = 0
     @State private var posts : Int = 0
     
     var body: some View {
@@ -1623,16 +1636,23 @@ struct personProfile: View {
                 }
                 
                 VStack{
-                    Text(self.following.description)
+                    Text(self.friends.description)
                         .bold()
-                    Text("關注")
+                    Text("朋友")
                 }
                 
-                VStack{
-                    Text(self.follower.description)
-                        .bold()
-                    Text("粉絲")
-                }
+                
+//                VStack{
+//                    Text(self.following.description)
+//                        .bold()
+//                    Text("關注")
+//                }
+//
+//                VStack{
+//                    Text(self.follower.description)
+//                        .bold()
+//                    Text("粉絲")
+//                }
 
                 Spacer()
                 
@@ -1676,9 +1696,10 @@ struct personProfile: View {
         }
         .padding(.horizontal)
         .onAppear{
-            getFollowing()
-            getFollower()
+//            getFollowing()
+//            getFollower()
             getPostCount()
+            getFriendCount()
         }
        
     }
@@ -1696,32 +1717,46 @@ struct personProfile: View {
         }
     }
     
-    private func getFollower(){
-        let req = CountFollowedReq(user_id: self.userVM.profile!.id)
-        APIService.shared.CountFollowedUser(req: req) { result in
+    private func getFriendCount(){
+        let req = CountFriendReq(user_id: self.userVM.profile!.id)
+        APIService.shared.CountFriend(req: req) { result in
             switch result{
             case .success(let data):
                 print(data.total)
-                self.follower = data.total
+                self.friends = data.total
             case .failure(let err):
                 print(err.localizedDescription)
             }
             
         }
     }
-    private func getFollowing(){
-            let req = CountFollowingReq(user_id: self.userVM.profile!.id)
-            APIService.shared.CountFollowingUser(req: req) { result in
-                switch result{
-                case .success(let data):
-                    print(data.total)
-                    self.following = data.total
-                case .failure(let err):
-                    print(err.localizedDescription)
-                }
-                
-            }
-    }
+    
+//    private func getFollower(){
+//        let req = CountFollowedReq(user_id: self.userVM.profile!.id)
+//        APIService.shared.CountFollowedUser(req: req) { result in
+//            switch result{
+//            case .success(let data):
+//                print(data.total)
+//                self.follower = data.total
+//            case .failure(let err):
+//                print(err.localizedDescription)
+//            }
+//
+//        }
+//    }
+//    private func getFollowing(){
+//            let req = CountFollowingReq(user_id: self.userVM.profile!.id)
+//            APIService.shared.CountFollowingUser(req: req) { result in
+//                switch result{
+//                case .success(let data):
+//                    print(data.total)
+//                    self.following = data.total
+//                case .failure(let err):
+//                    print(err.localizedDescription)
+//                }
+//
+//            }
+//    }
     
     private func getHeaderHigth() -> CGFloat{
         //setting the height of the header
@@ -1736,6 +1771,6 @@ struct personProfile: View {
         let progress = -(offset + 40 ) / 70
         return -offset > 40  ?  progress : 0
     }
-
+    
 }
 

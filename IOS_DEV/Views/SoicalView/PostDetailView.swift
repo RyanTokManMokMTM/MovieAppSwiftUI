@@ -59,7 +59,7 @@ struct PostDetailView: View {
         .background(Color("appleDark").edgesIgnoringSafeArea(.all))
         .contentShape(Rectangle())
         .background(
-            NavigationLink(destination:OtherUserProfile(userID: shownUserID)
+            NavigationLink(destination:OtherUserProfile(userID: shownUserID, owner: userVM.userID!)
                             .navigationTitle("")
                             .navigationBarHidden(true)
                             .navigationBarBackButtonHidden(true)
@@ -70,7 +70,7 @@ struct PostDetailView: View {
         
         )
         .onAppear{
-            IsUserFollowing()
+//            IsUserFollowing()
             GetPostComments()
         }
         
@@ -155,38 +155,38 @@ struct PostDetailView: View {
                 
                 Spacer()
                 
-                if self.postVM.selectedPost!.user_info.id != self.userVM.profile!.id {
-                    Button(action:{
-    //                    withAnimation{
-                        withAnimation{
-                            self.isUserFollowing.toggle()
-                        }
-                        if self.isUserFollowing{
-                            followUser()
-                        }else {
-                            UnFollowUser()
-                        }
-                            //TODO: Update following state
-    //                    }
-                    }){
-                        Text(self.isUserFollowing ? "已關注" : "關注")
-                            .foregroundColor(.white)
-                            .font(.system(size: 14))
-                            .padding(5)
-                            .padding(.horizontal,5)
-                            .background(
-                                ZStack{
-                                    if self.isUserFollowing  {
-                                        BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners))
-                                            .overlay(RoundedRectangle(cornerRadius: 25).stroke().fill(self.isUserFollowing ? Color.white : Color.clear))
-                                    }else {
-                                        Color.red.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners))
-                                    }
-                                }
-                            )
-                            
-                    }
-                }
+//                if self.postVM.selectedPost!.user_info.id != self.userVM.userID! {
+//                    Button(action:{
+//    //                    withAnimation{
+////                        withAnimation{
+////                            self.isUserFollowing.toggle()
+////                        }
+////                        if self.isUserFollowing{
+////                            followUser()
+////                        }else {
+////                            UnFollowUser()
+////                        }
+//                            //TODO: Update following state
+//    //                    }
+//                    }){
+//                        Text("未知狀態")
+//                            .foregroundColor(.white)
+//                            .font(.system(size: 14))
+//                            .padding(5)
+//                            .padding(.horizontal,5)
+//                            .background(
+//                                ZStack{
+//                                    if self.isUserFollowing  {
+//                                        BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners))
+//                                            .overlay(RoundedRectangle(cornerRadius: 25).stroke().fill(self.isUserFollowing ? Color.white : Color.clear))
+//                                    }else {
+//                                        Color.red.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners))
+//                                    }
+//                                }
+//                            )
+//
+//                    }
+//                }
 //                else {
 //                    Button(action:{
 //                        //TODO: MODIFY THE POST
@@ -202,10 +202,10 @@ struct PostDetailView: View {
             .padding(.horizontal,5)
             .frame(width:UIScreen.main.bounds.width,height:50)
             .background(Color("appleDark").edgesIgnoringSafeArea(.all))
-            .onAppear{
-                print(self.userVM.profile!.name)
-                print(self.postVM.followingData.count)
-            }
+//            .onAppear{
+//                print(self.userVM.profile!.name)
+//                print(self.postVM.followingData.count)
+//            }
         }
     
     
@@ -369,49 +369,49 @@ struct PostDetailView: View {
         }
     }
         
-    private func followUser(){
-        let req = CreateNewFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
-        APIService.shared.CreateNewFriend(req: req){ result in
-            switch result{
-            case .success(_):
-                print("User Followed")
-            case .failure(let err):
-                print(err.localizedDescription)
-                withAnimation{
-                    self.isUserFollowing.toggle()
-                }
-            }
-        }
-    }
-    
-    private func UnFollowUser(){
-        let req = RemoveFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
-        APIService.shared.RemoveFriend(req: req){ result in
-            switch result{
-            case .success(_):
-                print("User UnFollowed")
-                
-            case .failure(let err):
-                print(err.localizedDescription)
-                withAnimation{
-                    self.isUserFollowing.toggle()
-                }
-            }
-        }
-    }
-    
-    func IsUserFollowing(){
-        let req = GetOneFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
-        APIService.shared.GetOneFriend(req: req){ result in
-            switch result {
-            case .success(let data):
-                self.isUserFollowing = data.is_friend
-                print(self.isUserFollowing)
-            case .failure(let err):
-                print(err.localizedDescription)
-            }
-        }
-    }
+//    private func followUser(){
+//        let req = CreateNewFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
+//        APIService.shared.CreateNewFriend(req: req){ result in
+//            switch result{
+//            case .success(_):
+//                print("User Followed")
+//            case .failure(let err):
+//                print(err.localizedDescription)
+//                withAnimation{
+//                    self.isUserFollowing.toggle()
+//                }
+//            }
+//        }
+//    }
+//    
+//    private func UnFollowUser(){
+//        let req = RemoveFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
+//        APIService.shared.RemoveFriend(req: req){ result in
+//            switch result{
+//            case .success(_):
+//                print("User UnFollowed")
+//                
+//            case .failure(let err):
+//                print(err.localizedDescription)
+//                withAnimation{
+//                    self.isUserFollowing.toggle()
+//                }
+//            }
+//        }
+//    }
+//    
+//    func IsUserFollowing(){
+//        let req = GetOneFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
+//        APIService.shared.GetOneFriend(req: req){ result in
+//            switch result {
+//            case .success(let data):
+//                self.isUserFollowing = data.is_friend
+//                print(self.isUserFollowing)
+//            case .failure(let err):
+//                print(err.localizedDescription)
+//            }
+//        }
+//    }
     
     private func CreatePostComment(){
         if message.isEmpty { return }

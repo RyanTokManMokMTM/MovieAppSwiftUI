@@ -113,9 +113,12 @@ class PostVM : ObservableObject {
     }
     
     func getPostIndexFromFollowList(postId : Int) -> Int {
-        return self.followingData.firstIndex{
+        let id  = self.followingData.firstIndex{
             $0.id == postId
         } ?? -1
+        
+        print(id)
+        return id
     }
     
     func getPostIndexFromDiscoveryList(postId : Int) -> Int {

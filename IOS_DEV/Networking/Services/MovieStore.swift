@@ -12,6 +12,7 @@ import BottomSheet
 
 
 let SERVER_HOST = "http://127.0.0.1:8000"
+let SERVER_WS = "ws://127.0.0.1:8000/ws"
 
 class MovieStore: MovieService {
     static let shared = MovieStore()
@@ -250,7 +251,6 @@ class MovieStore: MovieService {
 }
 
 class APIService : ServerAPIServerServiceInterface{
-
     static let shared = APIService()
     private init(){
     } //signleton mode
@@ -337,7 +337,7 @@ class APIService : ServerAPIServerServiceInterface{
         
     }
     
-    func UserSignUp(req: UserSignInReq, completion: @escaping (Result<UserSignInResp, Error>) -> ()) {
+    func UserSignUp(req : UserSignUpReq,completion : @escaping (Result<UserSignUpResp,Error>)->()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.UserSignup.apiUri) else{
             completion(.failure(APIError.badUrl))
             return
@@ -415,22 +415,62 @@ class APIService : ServerAPIServerServiceInterface{
         
         PostAndDecode(req: request, completion: completion)
     }
-
-    func CountFollowingUser(req: CountFollowingReq, completion: @escaping (Result<CountFollowingResp, Error>) -> ()) {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CountFollowingUser.apiUri + req.user_id.description) else{
-            completion(.failure(APIError.badUrl))
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-//        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        FetchAndDecode(request: request, completion: completion)
-    }
+//
+//    func CountFollowingUser(req: CountFollowingReq, completion: @escaping (Result<CountFollowingResp, Error>) -> ()) {
+//        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CountFollowingUser.apiUri + req.user_id.description) else{
+//            completion(.failure(APIError.badUrl))
+//            return
+//        }
+//
+//        var request = URLRequest(url: url)
+//        request.httpMethod = "GET"
+//        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+////        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+//        FetchAndDecode(request: request, completion: completion)
+//    }
+//
+//    func CountFollowedUser(req: CountFollowedReq, completion: @escaping (Result<CountFollowedResp, Error>) -> ()) {
+//        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CountFollowedUser.apiUri + req.user_id.description) else {
+//            completion(.failure(APIError.badUrl))
+//            return
+//        }
+//
+//        var request = URLRequest(url : url)
+//        request.httpMethod = "GET"
+//        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+////        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+//        FetchAndDecode(request: request, completion: completion)
+//    }
+//
+//    func GetUserFollowingList(req: GetFollowingListReq,completion : @escaping (Result<GetFollowingListResp,Error>) -> ()){
+//        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetUserFollowingList.apiUri + req.user_id.description) else {
+//            completion(.failure(APIError.badUrl))
+//            return
+//        }
+//
+//        var request = URLRequest(url : url)
+//        request.httpMethod = "GET"
+//        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+////        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+//        FetchAndDecode(request: request, completion: completion)
+//    }
+//
+//    func GetUserFollowedList(req : GetFollowedListReq,completion : @escaping (Result<GetFollowedListResp,Error>) -> ()){
+//        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetUserFollowedList.apiUri + req.user_id.description) else {
+//            completion(.failure(APIError.badUrl))
+//            return
+//        }
+//
+//        var request = URLRequest(url : url)
+//        request.httpMethod = "GET"
+//        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+////        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+//        FetchAndDecode(request: request, completion: completion)
+//    }
     
-    func CountFollowedUser(req: CountFollowedReq, completion: @escaping (Result<CountFollowedResp, Error>) -> ()) {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CountFollowedUser.apiUri + req.user_id.description) else {
+    //MARK: Update API
+    func CountFriend(req : CountFriendReq,completion: @escaping (Result<CountFriendResp,Error>)->()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CountFriend.apiUri + req.user_id.description) else {
             completion(.failure(APIError.badUrl))
             return
         }
@@ -438,12 +478,11 @@ class APIService : ServerAPIServerServiceInterface{
         var request = URLRequest(url : url)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-//        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         FetchAndDecode(request: request, completion: completion)
     }
     
-    func GetUserFollowingList(req: GetFollowingListReq,completion : @escaping (Result<GetFollowingListResp,Error>) -> ()){
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetUserFollowingList.apiUri + req.user_id.description) else {
+    func GetFriendList(req : GetFriendListReq,completion: @escaping (Result<GetFriendListResp,Error>)->()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetFriendList.apiUri + req.user_id.description) else {
             completion(.failure(APIError.badUrl))
             return
         }
@@ -451,20 +490,6 @@ class APIService : ServerAPIServerServiceInterface{
         var request = URLRequest(url : url)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-//        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        FetchAndDecode(request: request, completion: completion)
-    }
-    
-    func GetUserFollowedList(req : GetFollowedListReq,completion : @escaping (Result<GetFollowedListResp,Error>) -> ()){
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetUserFollowedList.apiUri + req.user_id.description) else {
-            completion(.failure(APIError.badUrl))
-            return
-        }
-        
-        var request = URLRequest(url : url)
-        request.httpMethod = "GET"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-//        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         FetchAndDecode(request: request, completion: completion)
     }
     
@@ -1074,8 +1099,8 @@ class APIService : ServerAPIServerServiceInterface{
     }
     
     //TODO: FRIEND
-    func CreateNewFriend(req: CreateNewFriendReq, completion: @escaping (Result<CreateNewFriendResp, Error>) -> ()) {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreateNewFriend.apiUri) else {
+    func AddFriend(req : AddFriendReq, completion: @escaping (Result<AddFriendResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.AddFriend.apiUri) else {
             completion(.failure(APIError.badUrl))
             return
         }
@@ -1084,20 +1109,58 @@ class APIService : ServerAPIServerServiceInterface{
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        
         do{
-            let bodyData = try Encoder.encode(req)
-            request.httpBody = bodyData
+            let  bodyData = try Encoder.encode(req)
+            request.httpBody =  bodyData
         } catch {
             completion(.failure(APIError.badEncoding))
+            return
+        }
+        PostAndDecode(req: request, completion: completion)
+    }
+    func RemoveFriend(req : RemoveFriendReq, completion: @escaping (Result<RemoveFriendResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.RemoveFriend.apiUri) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        do{
+            let  bodyData = try Encoder.encode(req)
+            request.httpBody =  bodyData
+        } catch {
+            completion(.failure(APIError.badEncoding))
+            return
         }
         
         PostAndDecode(req: request, completion: completion)
-        
     }
-    
-    func RemoveFriend(req: RemoveFriendReq, completion: @escaping (Result<RemoveFriendResp, Error>) -> ()) {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.RemoveFriend.apiUri) else {
+    func AccepctFriendRequest(req : FriendRequestAccecptReq, completion: @escaping (Result<FriendRequestAcceptResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.AcceptFriendRequest.apiUri) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        do{
+            let  bodyData = try Encoder.encode(req)
+            request.httpBody =  bodyData
+        } catch {
+            completion(.failure(APIError.badEncoding))
+            return
+        }
+
+        PostAndDecode(req: request, completion: completion)
+
+    }
+    func DeclineFriendRequest(req : FriendRequestDeclineReq, completion: @escaping (Result<FriendRequestDeclineResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.DeclineFriendRequest.apiUri) else {
             completion(.failure(APIError.badUrl))
             return
         }
@@ -1106,19 +1169,54 @@ class APIService : ServerAPIServerServiceInterface{
         request.httpMethod = "PATCH"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        
         do{
-            let bodyData = try Encoder.encode(req)
-            request.httpBody = bodyData
+            let  bodyData = try Encoder.encode(req)
+            request.httpBody =  bodyData
         } catch {
             completion(.failure(APIError.badEncoding))
+            return
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    func CancelFriendRequest(req : FriendRequestCancelReq, completion: @escaping (Result<FriendRequestCancelResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CancelFriendRequest.apiUri) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        //data
+        do{
+            let  bodyData = try Encoder.encode(req)
+            request.httpBody =  bodyData
+        } catch {
+            completion(.failure(APIError.badEncoding))
+            return
         }
         
         PostAndDecode(req: request, completion: completion)
     }
     
-    func GetOneFriend(req: GetOneFriendReq, completion: @escaping (Result<GetOneFriendResp, Error>) -> ()) {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetOneFriend.apiUri + req.friend_id.description) else {
+    func GetFriendRequest(completion: @escaping (Result<GetFriendRequestListResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetFriendRequest.apiUri) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
+    func IsFriend(req: IsFriendReq, completion: @escaping (Result<IsFriendResp, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.IsFriend.apiUri + req.friend_id.description) else {
             completion(.failure(APIError.badUrl))
             return
         }
@@ -1129,9 +1227,182 @@ class APIService : ServerAPIServerServiceInterface{
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         FetchAndDecode(request: request, completion: completion)
-        
     }
+    
+    
+//    func CreateNewFriend(req: CreateNewFriendReq, completion: @escaping (Result<CreateNewFriendResp, Error>) -> ()) {
+//        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreateNewFriend.apiUri) else {
+//            completion(.failure(APIError.badUrl))
+//            return
+//        }
+//        
+//        var request = URLRequest(url: url)
+//        request.httpMethod = "POST"
+//        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+//        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+//        
+//        do{
+//            let bodyData = try Encoder.encode(req)
+//            request.httpBody = bodyData
+//        } catch {
+//            completion(.failure(APIError.badEncoding))
+//        }
+//        
+//        PostAndDecode(req: request, completion: completion)
+//        
+//    }
+//    
+//    func RemoveFriend(req: RemoveFriendReq, completion: @escaping (Result<RemoveFriendResp, Error>) -> ()) {
+//        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.RemoveFriend.apiUri) else {
+//            completion(.failure(APIError.badUrl))
+//            return
+//        }
+//        
+//        var request = URLRequest(url: url)
+//        request.httpMethod = "PATCH"
+//        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+//        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+//        
+//        do{
+//            let bodyData = try Encoder.encode(req)
+//            request.httpBody = bodyData
+//        } catch {
+//            completion(.failure(APIError.badEncoding))
+//        }
+//        
+//        PostAndDecode(req: request, completion: completion)
+//    }
+//    
+//    func GetOneFriend(req: GetOneFriendReq, completion: @escaping (Result<GetOneFriendResp, Error>) -> ()) {
+//        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetOneFriend.apiUri + req.friend_id.description) else {
+//            completion(.failure(APIError.badUrl))
+//            return
+//        }
+//        
+//        var request = URLRequest(url: url)
+//        request.httpMethod = "GET"
+//        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+//        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+//        
+//        FetchAndDecode(request: request, completion: completion)
+//        
+//    }
+    
+    //MARK: --Room/Group
+    func CreateRoom(req : CreateRoomReq,completion: @escaping (Result<CreateRoomResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreateRoom.apiUri) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        //data
+        do{
+            let  bodyData = try Encoder.encode(req)
+            request.httpBody =  bodyData
+        } catch {
+            completion(.failure(APIError.badEncoding))
+            return
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    func DeleteRoom(req : DeleteRoomReq,completion: @escaping (Result<DeleteRoomResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.DeleteRoom.apiUri) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        //data
+        do{
+            let  bodyData = try Encoder.encode(req)
+            request.httpBody =  bodyData
+        } catch {
+            completion(.failure(APIError.badEncoding))
+            return
+        }
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    func JoinRoom(req : JoinRoomReq,completion: @escaping (Result<JoinRoomResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.JoinRoom.apiUri + req.room_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    func LeaveRoom(req : LeaveRoomReq,completion: @escaping (Result<LeaveRoomResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.LeaveRoom.apiUri + req.room_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    func GetRoomMember(req : GetRoomMembersReq,completion: @escaping (Result<GetRoomMembersResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetRoomMember.apiUri + req.room_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
 
+    func GetUserRooms(completion: @escaping (Result<GetUserRoomsResp, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetUserRooms.apiUri) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
+    //MARK: --Message
+    //TODO: Message
+    func GetRoomMessage(req : GetRoomMessageReq,completion: @escaping (Result<GetRoomMessageResp,Error>) -> ()){
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetRoomMessage.apiUri + req.room_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
+    
     //MARK: --API HEPLER
     private func FetchAndDecode<ResponseType : Decodable>(request : URLRequest,params : [String:String]? = nil,completion : @escaping (Result<ResponseType,Error>) -> ()){
         
@@ -1190,7 +1461,6 @@ class APIService : ServerAPIServerServiceInterface{
                 if let result = try? self.Decoder.decode(ResponseType.self, from: data){
                     DispatchQueue.main.async {
                         completion(.success(result))
-    //                    print("[DEBUG] DATA IS FETCHED SUCCESSFULLY")
                     }
                 }else{
                     let errRes = try self.Decoder.decode(ErrorResp.self, from: data)

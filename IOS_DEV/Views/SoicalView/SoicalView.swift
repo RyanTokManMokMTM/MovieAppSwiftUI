@@ -15,9 +15,9 @@ enum TabItem : String{
 }
 
 struct SoicalView: View {
+    @StateObject var HubState : BenHubState = BenHubState.shared
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
-    @EnvironmentObject var HubState : BenHubState
     var namespace : Namespace.ID
     var body: some View {
         GeometryReader{ proxy in
@@ -35,7 +35,7 @@ struct SoicalView: View {
 
                     }
                     .environmentObject(postVM)
-                    .environmentObject(HubState)
+                  
 //                    .animation(.easeOut(duration: 0.2), value: self.postVM.index)
                     .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                     .frame(width: proxy.size.width)
@@ -43,7 +43,17 @@ struct SoicalView: View {
                 .frame(alignment: .top)
             }
         }
-      
+        .wait(isLoading: $HubState.isWait){
+            BenHubLoadingView(message: HubState.message)
+        }
+        .alert(isAlert: $HubState.isPresented){
+            switch HubState.type{
+            case .normal,.system_message:
+                BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
+            case .notification:
+                BenHubAlertWithFriendRequest(user: HubState.senderInfo!, message: HubState.message)
+            }
+        }
 
     }
 }

@@ -34,16 +34,18 @@ protocol ServerAPIServerServiceInterface {
     
     //TODO: USER
     func UserLogin(req : UserLoginReq,completion: @escaping (Result<UserLoginResp,Error>)->())
-    func UserSignUp(req : UserSignInReq,completion : @escaping (Result<UserSignInResp,Error>)->())
+    func UserSignUp(req : UserSignUpReq,completion : @escaping (Result<UserSignUpResp,Error>)->())
     func GetUserProfile(token : String,completion : @escaping (Result<Profile,Error>) -> ())
     func GetUserProfileById(userID : Int,completion : @escaping (Result<Profile,Error>) -> ())
     func UpdateUserProfile(req : UserProfileUpdateReq, completion: @escaping (Result<UserProfileUpdateResp,Error>) -> ())
     func UploadImage(imgData : Data,uploadType: UploadImageType, completion: @escaping (Result<UploadImageResp,Error>) -> ())
-    
-    func CountFollowingUser(req: CountFollowingReq, completion : @escaping (Result<CountFollowingResp,Error>) -> ())
-    func CountFollowedUser(req : CountFollowedReq, completion : @escaping (Result<CountFollowedResp,Error>) -> ())
-    func GetUserFollowingList(req: GetFollowingListReq,completion : @escaping (Result<GetFollowingListResp,Error>) -> ())
-    func GetUserFollowedList(req : GetFollowedListReq,completion : @escaping (Result<GetFollowedListResp,Error>) -> ())
+        
+    func CountFriend(req : CountFriendReq,completion: @escaping (Result<CountFriendResp,Error>)->())
+    func GetFriendList(req : GetFriendListReq,completion: @escaping (Result<GetFriendListResp,Error>)->())
+//    func CountFollowingUser(req: CountFollowingReq, completion : @escaping (Result<CountFollowingResp,Error>) -> ())
+//    func CountFollowedUser(req : CountFollowedReq, completion : @escaping (Result<CountFollowedResp,Error>) -> ())
+//    func GetUserFollowingList(req: GetFollowingListReq,completion : @escaping (Result<GetFollowingListResp,Error>) -> ())
+//    func GetUserFollowedList(req : GetFollowedListReq,completion : @escaping (Result<GetFollowedListResp,Error>) -> ())
     //Conennection check
     
     //TODO: USER GENRES SETTING
@@ -98,16 +100,34 @@ protocol ServerAPIServerServiceInterface {
     func IsCommentLiked(req : IsCommentLikedReq,completion : @escaping (Result<IsCommentLikedResp,Error>) -> ())
     func CountCommentLikes(req : CountCommentLikesReq,completion : @escaping (Result<CountCommentLikesResp,Error>) -> ())
     
-    //TODO: Friend
-    func CreateNewFriend(req : CreateNewFriendReq, completion: @escaping (Result<CreateNewFriendResp,Error>) -> ())
+    //TODO: Friend -Updated
+    func AddFriend(req : AddFriendReq, completion: @escaping (Result<AddFriendResp,Error>) -> ())
     func RemoveFriend(req : RemoveFriendReq, completion: @escaping (Result<RemoveFriendResp,Error>) -> ())
-    func GetOneFriend(req :GetOneFriendReq, completion: @escaping (Result<GetOneFriendResp,Error>) -> ())
+    func AccepctFriendRequest(req : FriendRequestAccecptReq, completion: @escaping (Result<FriendRequestAcceptResp,Error>) -> ())
+    func DeclineFriendRequest(req : FriendRequestDeclineReq, completion: @escaping (Result<FriendRequestDeclineResp,Error>) -> ())
+    func CancelFriendRequest(req : FriendRequestCancelReq, completion: @escaping (Result<FriendRequestCancelResp,Error>) -> ())
+    func GetFriendRequest(completion: @escaping (Result<GetFriendRequestListResp,Error>) -> ())
     
+    //MARK: Need a api check is friend
+    func IsFriend(req : IsFriendReq,completion: @escaping (Result<IsFriendResp,Error>) -> ())
+
     //TODO: MOVIE
     func GetMovieCardInfoByGenre(genre: GenreType, completion :@escaping (Result<MoviePageListByGenreResp, Error>) -> ())
     
     func GetMovieLikedCount(req : CountMovieLikesReq, completion: @escaping (Result<CountMovieLikesResp,Error>) -> ())
     func GetMovieCollectedCount(req : CountMovieCollectedReq,completion: @escaping (Result<CountMovieCollectedResp,Error>) -> ())
+    
+    
+    //TODO: Group/Room
+    func CreateRoom(req : CreateRoomReq,completion: @escaping (Result<CreateRoomResp,Error>) -> ())
+    func DeleteRoom(req : DeleteRoomReq,completion: @escaping (Result<DeleteRoomResp,Error>) -> ())
+    func JoinRoom(req : JoinRoomReq,completion: @escaping (Result<JoinRoomResp,Error>) -> ())
+    func LeaveRoom(req : LeaveRoomReq,completion: @escaping (Result<LeaveRoomResp,Error>) -> ())
+    func GetRoomMember(req : GetRoomMembersReq,completion: @escaping (Result<GetRoomMembersResp,Error>) -> ())
+    func GetUserRooms(completion: @escaping (Result<GetUserRoomsResp,Error>) -> ())
+    
+    //TODO: Message
+    func GetRoomMessage(req : GetRoomMessageReq,completion: @escaping (Result<GetRoomMessageResp,Error>) -> ())
     
     //Searching and playground
 //    TODO - Person data format
@@ -179,10 +199,12 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     case UserProfile //Done
     case UserInfo //Haven't test yet
     case UserUpdateProfile
-    case CountFollowingUser
-    case CountFollowedUser
-    case GetUserFollowingList
-    case GetUserFollowedList
+    case CountFriend
+    case GetFriendList
+//    case CountFollowingUser
+//    case CountFollowedUser
+//    case GetUserFollowingList
+//    case GetUserFollowedList
     
     //MARK: LIKED MOVIE API
     case CreateLikedMovie
@@ -239,13 +261,28 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     case CountCommentLikes
     
     //MARK: Friend API
-    case CreateNewFriend
+    case AddFriend
     case RemoveFriend
-    case GetOneFriend
+    case AcceptFriendRequest
+    case DeclineFriendRequest
+    case CancelFriendRequest
+    case GetFriendRequest
+    case IsFriend
     
     //MARK: USER GENRES
     case UpdateUserGenre
     case GetUserGenre
+    
+    //MARK: Room
+    case CreateRoom
+    case DeleteRoom
+    case JoinRoom
+    case LeaveRoom
+    case GetRoomMember
+    case GetUserRooms
+    
+    //MARK: Message
+    case GetRoomMessage
     
     var apiUri : String{
         switch self {
@@ -257,10 +294,9 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
         case .UserProfile: return "/user/profile"
         case .UserInfo: return "/user/info/" //"/user/info/:id"
         case .UserUpdateProfile: return "/user/profile"
-        case .CountFollowingUser: return "/user/following/" //user_id
-        case .CountFollowedUser: return "/user/followed/" //user_Id
-        case .GetUserFollowingList : return "/user/following/list/"
-        case .GetUserFollowedList : return "/user/followed/list/"
+        case .CountFriend: return "/user/friends/count/" //user/friends/count/:id
+        case .GetFriendList: return "/user/friends/list/" //user/friends/list/:id
+
             
         case .GetMoviesInfoByGenre: return "/movies/list/"
         case .GetMovieGenrensByMovieID: return "/movies/genres/"
@@ -309,13 +345,26 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
         case .IsCommentLiked: return "/liked/comment/"
         case .CountCommentLikes: return "/liked/comment/count/"
         
-            
-        case .CreateNewFriend: return "/friend"
-        case .RemoveFriend: return "/friend"
-        case .GetOneFriend: return "/friend/" //:friend_id
+
+        case .AddFriend: return "/friend"
+        case .RemoveFriend : return "/friend"
+        case .AcceptFriendRequest: return "/friend/request/accept"
+        case .DeclineFriendRequest: return "/friend/request/decline"
+        case .CancelFriendRequest: return "/friend/request/cancel"
+        case .GetFriendRequest: return "/friend/requests"
+        case .IsFriend: return "/friend/" //friend/:id
             
         case .UpdateUserGenre: return "/user/genres"
         case .GetUserGenre: return "/user/genres/"
+            
+        case .CreateRoom: return "/room"
+        case .DeleteRoom: return "/room"
+        case .JoinRoom: return "/room/join/" //room/join/:id
+        case .LeaveRoom: return "/room/leave/" //room/leave/:id
+        case .GetRoomMember: return "/room/members/" //room/members/:id
+        case .GetUserRooms: return "/room/rooms"
+            
+        case .GetRoomMessage: return "/message/"
 
         }
     }

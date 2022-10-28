@@ -141,6 +141,7 @@ struct HomeTabButton : View {
 
 struct MovieListView: View {
     //Manager this in a class
+    @StateObject var HubState : BenHubState = BenHubState.shared
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var postVM : PostVM
     
@@ -163,6 +164,18 @@ struct MovieListView: View {
                 MoviePage()
             }
             .background(Color("DarkMode2"))
+            .wait(isLoading: $HubState.isWait){
+                BenHubLoadingView(message: HubState.message)
+            }
+            .alert(isAlert: $HubState.isPresented){
+                switch HubState.type{
+                case .normal,.system_message:
+                    BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
+                case .notification:
+                    BenHubAlertWithFriendRequest(user: HubState.senderInfo!, message: HubState.message)
+                }
+            }
+            
     }
     
     @ViewBuilder

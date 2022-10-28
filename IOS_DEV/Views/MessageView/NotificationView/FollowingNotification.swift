@@ -9,46 +9,38 @@ import SwiftUI
 import SDWebImageSwiftUI
 
 
-struct SimpleUserInfoTemp : Identifiable {
-    var id : String =  UUID().uuidString
-    var name : String
-    var avatar : String
-    var isFriend : Bool
-    var followingTime : Date
-    var UserPhotoURL: URL {
-        return URL(string: avatar)!
-    }
-
-}
-
-var TempUser : [SimpleUserInfoTemp] = [
-    SimpleUserInfoTemp(name: "jackson_tmm", avatar: "https://upload.cc/i1/2022/08/31/IdXtkZ.jpeg", isFriend: false, followingTime: Date.now),
-    SimpleUserInfoTemp(name: "TomxD", avatar: "https://upload.cc/i1/2022/08/31/Fz4how.jpeg", isFriend: true, followingTime: Date.now),
-    SimpleUserInfoTemp(name: "Alice.g", avatar: "https://upload.cc/i1/2022/08/31/0EA7rd.jpeg", isFriend: false, followingTime: Date.now),
-    SimpleUserInfoTemp(name: "M.DAS", avatar: "https://upload.cc/i1/2022/08/31/qXuNME.jpeg", isFriend: true, followingTime:  Date.now),
-    SimpleUserInfoTemp(name: "瑪麗", avatar: "https://upload.cc/i1/2022/08/31/4FzITC.jpeg", isFriend: false, followingTime:  Date.now),
-    SimpleUserInfoTemp(name: "小白", avatar: "https://upload.cc/i1/2022/07/03/MJIXkd.jpeg", isFriend: false, followingTime:  Date.now)
-]
-
 
 struct FollowingNotification: View {
+    @EnvironmentObject private var notificationVM : NotificationVM
     @Binding var isShowView : Bool
     var body: some View {
-        NotificationView(isShowView:$isShowView,topTitle: "關注"){
-            List(){
-                ForEach(TempUser){ info in
-                    FollowingCell(info: info)
-                        .listRowBackground(Color("DarkMode2"))
-                }
-            }.listStyle(.plain)
+        NotificationView(isShowView:$isShowView,topTitle: "好友邀請"){
+            VStack{
+                List(){
+                    if self.notificationVM.friendRequest.isEmpty {
+                        Text("暫無通知")
+                            .listRowBackground(Color("DarkMode2"))
+                    }else {
+                        ForEach(self.notificationVM.friendRequest,id: \.request_id){ info in
+                            FollowingCell(info: info)
+                                .listRowBackground(Color("DarkMode2"))
+                        }
+                    }
+                }.listStyle(.plain)
+                
+            }
+        }
+        .onAppear{
+            notificationVM.GetFriendRequests()
+            
         }
         .background(Color("DarkMode2"))
     }
     
     @ViewBuilder
-    private func FollowingCell(info : SimpleUserInfoTemp) -> some View{
+    private func FollowingCell(info : FriendRequest) -> some View{
         HStack(){
-            WebImage(url: info.UserPhotoURL)
+            WebImage(url: info.sender.UserPhotoURL)
                 .resizable()
                 .indicator(.activity)
                 .transition(.fade(duration: 0.5))
@@ -58,24 +50,106 @@ struct FollowingNotification: View {
 
             
             VStack(alignment:.leading,spacing: 8){
-                Text(info.name)
-                    .font(.system(size: 16,weight: .semibold))
+                Text(info.sender.name)
+                    .font(.system(size: 16,weight: .bold))
                     .foregroundColor(.white)
                     .lineLimit(1)
+                    
                 
-                Text("開始關注您 \(info.followingTime.dateDescriptiveString())")
-                    .font(.system(size: 14))
+                Text("於\(info.sendTime.dateDescriptiveString())請求加您為好友")
+                    .font(.system(size: 12))
                     .foregroundColor(.gray)
             }
             .padding(.leading,5)
             Spacer()
-            Text(info.isFriend ? "朋友" : "關注")
-                .foregroundColor(info.isFriend ? .gray : .white)
-                .font(.system(size: 12))
-                .fontWeight(.semibold)
-                .padding(8)
-                .background(info.isFriend ? Color.clear.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)) : Color.red.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
-                .overlay(RoundedRectangle(cornerRadius: 25).stroke().fill(info.isFriend ? Color.gray : Color.clear))
+            
+            if info.state == 1 {
+                HStack(spacing:8){
+                    Button(action:{
+                        accecpt(id: info.request_id)
+                    }){
+                        Text("確認")
+                            .foregroundColor(.white)
+                            .font(.system(size: 12))
+                            .fontWeight(.semibold)
+                            .padding(8)
+                            .padding(.horizontal,5)
+                            .background( Color.blue.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+        //                    .overlay(RoundedRectangle(cornerRadius: 25).stroke().fill(info.isFriend ? Color.gray : Color.clear))
+                    }.buttonStyle(.plain)
+                    
+                    Button(action:{
+                        decline(id: info.request_id)
+                    }) {
+                        Text("拒絕")
+                            .foregroundColor(.white)
+                            .font(.system(size: 12))
+                            .fontWeight(.semibold)
+                            .padding(8)
+                            .padding(.horizontal,5)
+                            .background( Color.red.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+                    }.buttonStyle(.plain)
+                
+
+    //                    .overlay(RoundedRectangle(cornerRadius: 25).stroke().fill(info.isFriend ? Color.gray : Color.clear))
+                }
+            }else if info.state == 2{
+                HStack(spacing:8){
+                    Text("朋友")
+                        .foregroundColor(.gray )
+                        .font(.system(size: 12))
+                        .fontWeight(.semibold)
+                        .padding(8)
+                        .padding(.horizontal,5)
+                        .background(Color.clear.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+                        .overlay(RoundedRectangle(cornerRadius: 25).stroke().fill(Color.gray))
+                }
+            }
+        
+//            Text(info.isFriend ? "朋友" : "關注")
+//                .foregroundColor(info.isFriend ? .gray : .white)
+//                .font(.system(size: 12))
+//                .fontWeight(.semibold)
+//                .padding(8)
+//                .background(info.isFriend ? Color.clear.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)) : Color.red.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+//                .overlay(RoundedRectangle(cornerRadius: 25).stroke().fill(info.isFriend ? Color.gray : Color.clear))
+        }
+    }
+    
+    private func accecpt(id : Int){
+        let req = FriendRequestAccecptReq(request_id: id)
+        APIService.shared.AccepctFriendRequest(req: req){ result in
+            switch result{
+            case .success(let data):
+                print(data.message)
+                
+                if let idx = self.notificationVM.friendRequest.firstIndex(where: { info in
+                    return info.request_id == id
+                }) {
+                    self.notificationVM.friendRequest[idx].state = 2
+                }
+            case .failure(let err):
+                print(err.localizedDescription)
+            }
+        }
+    }
+    
+    private func decline(id : Int){
+        let req = FriendRequestDeclineReq(request_id: id)
+        APIService.shared.DeclineFriendRequest(req: req){ result in
+            switch result{
+            case .success(let data):
+                print(data.message)
+                if let idx = self.notificationVM.friendRequest.firstIndex(where: { info in
+                    return info.request_id == id
+                }) {
+                    DispatchQueue.main.async {
+                        self.notificationVM.friendRequest.remove(at: idx)
+                    }
+                }
+            case .failure(let err):
+                print(err.localizedDescription)
+            }
         }
     }
 }

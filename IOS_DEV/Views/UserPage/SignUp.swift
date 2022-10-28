@@ -11,6 +11,7 @@ import SwiftUI
 
 
 struct SignUpView: View {
+    @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var HubState : BenHubState
     @Binding var backToSignIn : Bool
     
@@ -127,16 +128,19 @@ struct SignUpView: View {
 
     
     func Register(){
-        let signInData = UserSignInReq(name: self.name, email: self.email, password: self.password)
+        let signUpData = UserSignUpReq(name: self.name, email: self.email, password: self.password)
         
-        APIService.shared.UserSignUp(req: signInData){ (result) in
+        APIService.shared.UserSignUp(req: signUpData){ (result) in
             print(result)
             
             switch result {
-            case .success:
+            case .success(let data):
                 withAnimation{
                     self.HubState.isWait = false
                     self.HubState.AlertMessage(sysImg: "checkmark.circle.fill", message: "註冊成功!")
+//                    UserDefaults.standard.set(data.token, forKey: "userToken") //storing token
+//                    UserDefaults.standard.set(data.expired, forKey: "tokenExpired") //storing token expired time
+//                    GetUserProfile(token: data.token)
                     self.backToSignIn = false
                 }
             case .failure(let err):
@@ -149,6 +153,33 @@ struct SignUpView: View {
             
         }
 
+    }
+    func GetUserProfile(token : String) {
+        APIService.shared.GetUserProfile(token: token){ (result) in
+            switch result{
+            case .success(let profile):
+//                ErrorAlert = false
+
+                self.userVM.setUserInfo(info: profile)
+//                UserDefaults.standard.set(self.remember ? email : "", forKey: "userEmail")
+//                UserDefaults.standard.set(self.remember ? password : "", forKey: "userPassword")
+                
+                
+                    withAnimation{
+                        self.HubState.isWait = false
+                        self.userVM.isLogIn.toggle()
+//                        self.backToHome.toggle()
+                        
+                    }
+                HubState.AlertMessage(sysImg: "checkmark.circle.fill", message: "登入成功!")
+            case .failure(let err):
+
+                withAnimation{
+                    HubState.isWait = false
+                    HubState.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
+                }
+            }
+        }
     }
     
 }

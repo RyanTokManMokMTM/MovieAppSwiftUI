@@ -10,7 +10,8 @@ import SDWebImageSwiftUI
 
 struct CardFlowLayout: View {
     @EnvironmentObject var postVM : PostVM
-    @EnvironmentObject var HubState : BenHubState
+    @EnvironmentObject var userVM : UserViewModel
+    @StateObject var HubState : BenHubState = BenHubState.shared
     var body: some View {
         FlowLayoutView(list: self.postVM.postData, columns: 2,HSpacing: 5,VSpacing: 10){ info in
             CardPostView(Id:self.postVM.getPostIndexFromDiscoveryList(postId: info.id)){
@@ -26,6 +27,7 @@ struct CardFlowLayout: View {
             NavigationLink(destination:
                             PostDetailView(postForm: .AllPost, isFromProfile: false)
                             .environmentObject(postVM)
+                            .environmentObject(userVM)
                             .navigationBarTitle("")
                             .navigationTitle("")
                             .navigationBarBackButtonHidden(true)
@@ -47,13 +49,13 @@ struct CardFlowLayout: View {
                 postVM.initAllData = false
             }
         }
-        .wait(isLoading: $HubState.isWait){
-            BenHubLoadingView(message: HubState.message)
-        }
-        .alert(isAlert: $HubState.isPresented){
-            BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
-        }
-        
+//        .wait(isLoading: $HubState.isWait){
+//            BenHubLoadingView(message: HubState.message)
+//        }
+//        .alert(isAlert: $HubState.isPresented){
+//            BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
+//        }
+//
 
     }
     

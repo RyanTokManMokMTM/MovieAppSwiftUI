@@ -30,7 +30,7 @@ struct IOS_DEVApp: App {
 }
 
 struct BenHubTest : View {
-    @StateObject var hubState = BenHubState()
+    @StateObject var hubState = BenHubState.shared
     var body : some View {
         ZStack(){
             NavigationView{

@@ -34,7 +34,7 @@ class MovieDetailManager : ObservableObject {
 
 struct MovieHomePage: View {
     @EnvironmentObject var userVM : UserViewModel
-    @EnvironmentObject var HubState : BenHubState
+    @StateObject var HubState : BenHubState = BenHubState.shared
     @StateObject var StateManager  = SeachingViewStateManager()
     @StateObject var postVM = PostVM()
 
@@ -70,6 +70,15 @@ struct MovieHomePage: View {
                                         
                                     }
                                     .tag(0)
+//                                    .wait(isLoading: $HubState.isWait){
+//                                        BenHubLoadingView(message: HubState.message)
+//                                    }
+//                                    .alert(isAlert: $HubState.isPresented){
+//                                        BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
+//
+//                                    }
+                                
+                                
                                 
                                 SoicalView(namespace: namespace)
                                     .navigationTitle("")
@@ -88,6 +97,13 @@ struct MovieHomePage: View {
                                         
                                     }
                                     .tag(1)
+//                                    .wait(isLoading: $HubState.isWait){
+//                                        BenHubLoadingView(message: HubState.message)
+//                                    }
+//                                    .alert(isAlert: $HubState.isPresented){
+//                                        BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
+//
+//                                    }
                                 
                                                     
                                 MessageView()
@@ -105,6 +121,13 @@ struct MovieHomePage: View {
                                         
                                     }
                                     .tag(2)
+//                                    .wait(isLoading: $HubState.isWait){
+//                                        BenHubLoadingView(message: HubState.message)
+//                                    }
+//                                    .alert(isAlert: $HubState.isPresented){
+//                                        BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
+//
+//                                    }
                                 
                                 
                                 PersonProfileView()
@@ -124,6 +147,13 @@ struct MovieHomePage: View {
                                         
                                     }
                                     .tag(3)
+//                                    .wait(isLoading: $HubState.isWait){
+//                                        BenHubLoadingView(message: HubState.message)
+//                                    }
+//                                    .alert(isAlert: $HubState.isPresented){
+//                                        BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
+//
+//                                    }
                                 
                             }
                             .accentColor(.white)
@@ -141,7 +171,7 @@ struct MovieHomePage: View {
 //                    .environmentObject(DragAndDropPreview) //here due to bottomSheet need to use to update some state
                     .environmentObject(postVM)
                     .environmentObject(userVM)
-                    .environmentObject(HubState)
+//                    .environmentObject(HubState)
 
                 }
 //                .ignoresSafeArea(.keyboard, edges: .bottom)
@@ -154,6 +184,7 @@ struct MovieHomePage: View {
                     UITabBar.appearance().isTranslucent = false
                     UITabBar.appearance().backgroundColor = UIColor(named:"DarkMode2")
              }
+            
         }
 //            .onRotate { newOrientation in
 //                if Appdelegate.orientationLock == .landscape {

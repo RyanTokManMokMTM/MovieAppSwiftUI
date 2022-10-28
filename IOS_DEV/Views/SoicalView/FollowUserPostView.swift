@@ -11,7 +11,7 @@ import SDWebImageSwiftUI
 struct FollowUserPostView: View {
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
-    @EnvironmentObject var HubState : BenHubState
+    @StateObject var HubState : BenHubState = BenHubState.shared
     @State private var isShowMovieDetail = false
     @State private var movieId = -1
     
@@ -61,7 +61,7 @@ struct FollowUserPostView: View {
             }
         )
         .background(
-            NavigationLink(destination:OtherUserProfile(userID: shownUserID)
+            NavigationLink(destination:OtherUserProfile(userID: shownUserID,owner: userVM.userID!)
                             .navigationTitle("")
                             .navigationBarHidden(true)
                             .navigationBarBackButtonHidden(true)
@@ -83,12 +83,12 @@ struct FollowUserPostView: View {
                 postVM.initFollowing = false
             }
         }
-        .wait(isLoading: $HubState.isWait){
-            BenHubLoadingView(message: HubState.message)
-        }
-        .alert(isAlert: $HubState.isPresented){
-            BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
-        }
+//        .wait(isLoading: $HubState.isWait){
+//            BenHubLoadingView(message: HubState.message)
+//        }
+//        .alert(isAlert: $HubState.isPresented){
+//            BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
+//        }
         
 
     }

@@ -62,8 +62,8 @@ extension View {
                     .transition(AnyTransition.move(edge: .top).combined(with: .opacity))
                     .zIndex(1)
                     .onAppear{
-                        print("???")
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5){
+//                        print("???")
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2){
                             print("disappear")
                             withAnimation{
                                 isAlert.wrappedValue = false
@@ -98,6 +98,31 @@ struct BenHubAlertView : View {
         HStack(spacing:8){
             Image(systemName: sysImg)
                 .imageScale(.medium)
+            Text(message)
+                .font(.system(size: 14,weight:.semibold))
+        }
+    }
+}
+
+struct BenHubAlertWithFriendRequest : View {
+    let user : SimpleUserInfo
+    let message : String
+    var body: some View{
+        HStack{
+            //UserAvatar
+            
+            //Message
+            AsyncImage(url: user.UserPhotoURL){ image in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                } placeholder: {
+                    ActivityIndicatorView()
+                }
+                .frame(width: 30,height:30)
+                .clipShape(Circle())
+                .clipped()
+            
             Text(message)
                 .font(.system(size: 14,weight:.semibold))
         }

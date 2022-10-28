@@ -9,7 +9,7 @@ import SwiftUI
 import AVKit
 
 struct HomePage: View {
-    @State private var HubState : BenHubState = BenHubState()
+    @StateObject private var HubState : BenHubState = BenHubState.shared
     @State private var ServerInternalError : Bool = false //for checking server connected
     @ObservedObject private var networkingService = NetworkingService.shared
     @AppStorage("userToken") private var userToken : String = ""
@@ -41,12 +41,18 @@ struct HomePage: View {
                         .environmentObject(HubState)
                         .environment(\.colorScheme, .dark)
                         .zIndex(1)
+                        .onAppear(){
+                            //get chat room info and connected to ws
+                            MessageViewModel.shared.GetUserRooms()
+                            WebsocketManager.shared.connect()
+                        }
 
                 }
             }
             .navigationTitle("")
             .navigationBarHidden(true)
             .navigationBarTitle("")
+            .accentColor(.white)
         }
         .navigationViewStyle(.stack)
 //        .onAppear{
