@@ -12,6 +12,7 @@ class MessageViewModel : ObservableObject{
 //    @Published var ChatList = ChatInfo.simpleChat
     @Published var rooms : [ChatData] = []
     @Published var currentTalkingRoomID : Int = 0 //0 means user not in any room
+//    @Published var isInit = false
     static var shared = MessageViewModel() //share in whole app for now
 
     private init(){}
@@ -27,10 +28,14 @@ class MessageViewModel : ObservableObject{
     }
     
     func GetUserRooms(){
+//        if isInit {
+//            return
+//        }
         APIService.shared.GetUserRooms(){result in
             switch result{
             case .success(let data):
                 print(data.rooms)
+//                self.isInit = true
                 self.rooms = data.rooms
             case .failure(let err):
                 print(err)
@@ -40,9 +45,21 @@ class MessageViewModel : ObservableObject{
     
     //Update read flag
     func updateReadMark(_ newValue : Bool ,info : ChatData) {
-//        if let index = self.rooms.firstIndex(where: {$0.RoomUUID == info.RoomUUID}){
-//            self.ChatList[index].hasUnrealMsg = newValue
-//        }
+        
+        APIService.shared.SetIsRead(req: SetIsReadReq(room_id: info.id)){ result in
+            switch result{
+            case .success(_):
+                if let index = self.rooms.firstIndex(where: { $0.id == info.id}){
+                    DispatchQueue.main.async {
+                        self.rooms[index].is_read = newValue
+                    }
+                }
+            case .failure(let err):
+                print(err.localizedDescription)
+            }
+        }
+        //Calling api
+
     }
     
     func addNewMessage(roomID : Int, message : MessageInfo){
@@ -128,8 +145,6 @@ struct ChattingView : View{
                                     scrollTo(messageID: msgID, shouldAnima: true, scrollViewReader: reader)
                                 }
                             }
-               
- 
                             .onAppear(){
 //
                                 if let messageID = roomMessages.last?.RoomUUID{
@@ -167,6 +182,7 @@ struct ChattingView : View{
         .accentColor(.white)
         .onAppear(){
             self.msgVM.currentTalkingRoomID = roomId
+            self.msgVM.updateReadMark(true,info: chatInfo)
         }
         .onDisappear(){
             self.msgVM.currentTalkingRoomID = 0
@@ -381,6 +397,7 @@ struct MessageView: View {
                                 NavigationLink(destination:ChattingView(chatInfo: msgVM.rooms[i],roomId: msgVM.rooms[i].id, roomMessages: $msgVM.rooms[i].messages)
                                     .environmentObject(userVM)
                                     .environmentObject(msgVM)
+                                    
                                 ){
                                     chatRow(info:msgVM.rooms[i])
                                         .navigationTitle("")
@@ -420,6 +437,8 @@ struct MessageView: View {
         }
         .fullScreenCover(isPresented: $newChat){
             NewChatView(isNewChat: $newChat)
+                .environmentObject(userVM)
+                .environmentObject(msgVM)
         }
         .accentColor(.white)
         .background(Color("DarkMode2").edgesIgnoringSafeArea(.all))
@@ -441,6 +460,7 @@ struct MessageView: View {
 
 struct chatRow : View{
 //    var info : ChatInfo
+    @EnvironmentObject private var userVM : UserViewModel
     var info : ChatData
     var body: some View{
         HStack(alignment:.center,spacing: 8){
@@ -455,8 +475,9 @@ struct chatRow : View{
             .clipShape(Circle())
             .clipped()
             .overlay(alignment: .topTrailing) {
+                //not read and sender exist and not sender
                 Circle()
-                    .foregroundColor(.red)
+                    .foregroundColor(!self.info.is_read && self.info.last_sender_id != 0 && self.info.last_sender_id != self.userVM.userID! ? .blue : .clear)
                     .frame(width: 10, height: 10)
             }
 

@@ -24,7 +24,9 @@ struct LeaveRoomReq{
 struct GetRoomMembersReq{
     let room_id : Int
 }
-
+struct SetIsReadReq {
+    let room_id : Int
+}
 
 struct CreateRoomResp : Decodable{
     let room_id : Int
@@ -39,6 +41,8 @@ struct GetRoomMembersResp : Decodable {
     let members : [SimpleUserInfo]
 }
 
+struct SetIsReadResp : Decodable {}
+
 struct GetUserRoomsResp : Decodable{
     let rooms : [ChatData]
 }
@@ -47,6 +51,8 @@ struct ChatData : Decodable, Identifiable{
     let id : Int
     let users : [SimpleUserInfo]
     var messages : [MessageInfo]
+    var last_sender_id : Int
+    var is_read : Bool
 }
 
 struct MessageInfo : Decodable,Identifiable{

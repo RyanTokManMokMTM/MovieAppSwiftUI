@@ -42,6 +42,7 @@ protocol ServerAPIServerServiceInterface {
         
     func CountFriend(req : CountFriendReq,completion: @escaping (Result<CountFriendResp,Error>)->())
     func GetFriendList(req : GetFriendListReq,completion: @escaping (Result<GetFriendListResp,Error>)->())
+    func GetFriendRoomList(completion: @escaping (Result<GetFriendRoomListResp,Error>)->())
 //    func CountFollowingUser(req: CountFollowingReq, completion : @escaping (Result<CountFollowingResp,Error>) -> ())
 //    func CountFollowedUser(req : CountFollowedReq, completion : @escaping (Result<CountFollowedResp,Error>) -> ())
 //    func GetUserFollowingList(req: GetFollowingListReq,completion : @escaping (Result<GetFollowingListResp,Error>) -> ())
@@ -125,6 +126,7 @@ protocol ServerAPIServerServiceInterface {
     func LeaveRoom(req : LeaveRoomReq,completion: @escaping (Result<LeaveRoomResp,Error>) -> ())
     func GetRoomMember(req : GetRoomMembersReq,completion: @escaping (Result<GetRoomMembersResp,Error>) -> ())
     func GetUserRooms(completion: @escaping (Result<GetUserRoomsResp,Error>) -> ())
+    func SetIsRead(req : SetIsReadReq,completion: @escaping (Result<SetIsReadResp,Error>) -> ())
     
     //TODO: Message
     func GetRoomMessage(req : GetRoomMessageReq,completion: @escaping (Result<GetRoomMessageResp,Error>) -> ())
@@ -201,6 +203,7 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     case UserUpdateProfile
     case CountFriend
     case GetFriendList
+    case GetFriendRoomList
 //    case CountFollowingUser
 //    case CountFollowedUser
 //    case GetUserFollowingList
@@ -280,6 +283,7 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     case LeaveRoom
     case GetRoomMember
     case GetUserRooms
+    case SetIsRead
     
     //MARK: Message
     case GetRoomMessage
@@ -296,6 +300,7 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
         case .UserUpdateProfile: return "/user/profile"
         case .CountFriend: return "/user/friends/count/" //user/friends/count/:id
         case .GetFriendList: return "/user/friends/list/" //user/friends/list/:id
+        case .GetFriendRoomList: return "/user/friends/room"
 
             
         case .GetMoviesInfoByGenre: return "/movies/list/"
@@ -363,6 +368,7 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
         case .LeaveRoom: return "/room/leave/" //room/leave/:id
         case .GetRoomMember: return "/room/members/" //room/members/:id
         case .GetUserRooms: return "/room/rooms"
+        case .SetIsRead: return "/room/" //room/:id/read
             
         case .GetRoomMessage: return "/message/"
 

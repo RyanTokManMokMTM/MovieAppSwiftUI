@@ -126,6 +126,31 @@ class WebsocketManager : ObservableObject{
                             let newMessage = MessageInfo(id: obj.message_id, message: obj.content, sender_id: obj.sender_info.id, sent_time: obj.send_time)
                             MessageViewModel.shared.addNewMessage(roomID: obj.group_id, message: newMessage)
                             
+                            
+                            let index = MessageViewModel.shared.FindChatRoom(roomID: obj.group_id)
+                            if index != -1 {
+                                MessageViewModel.shared.rooms[index].last_sender_id = obj.sender_info.id
+                                
+                                if MessageViewModel.shared.currentTalkingRoomID == obj.group_id {
+                                    print("inside the room")
+                                    MessageViewModel.shared.rooms[index].is_read = true
+                                    
+                                    //MARK: is set false by default
+                                    //MARK: and user is now in the room
+                                    //MARK: so we need to change the is_read field to true
+                                    APIService.shared.SetIsRead(req: SetIsReadReq(room_id: obj.group_id)){ reuslt in
+                                        switch reuslt{
+                                        case .success(_):
+                                            print("read state is updated")
+                                        case .failure(let err):
+                                            print(err.localizedDescription)
+                                        }
+                                    }
+                                }else {
+                                    MessageViewModel.shared.rooms[index].is_read = false
+                                }
+                            }
+                            
         
                             if MessageViewModel.shared.currentTalkingRoomID == 0 || MessageViewModel.shared.currentTalkingRoomID != obj.group_id{
                                 BenHubState.shared.AlertMessageWithUserInfo(message: obj.content, userInfo: obj.sender_info,type: .message)

@@ -7,74 +7,315 @@
 
 import SwiftUI
 
-var temp : [SimpleUserInfo] = [
-    SimpleUserInfo(id:1,name: "jackson_tmm", avatar: "/FCD87869-5D05-4B8C-8C6A-5DD560B311B5.jpeg"),
-    SimpleUserInfo(id:2,name: "TomxD", avatar: "/B4989329-7F9B-4974-989C-667C50C0FA81.jpeg"),
-    SimpleUserInfo(id:3, name: "Alice.g", avatar: "/defaultAvatar.jpeg"),
-    SimpleUserInfo(id:4, name: "M.DAS", avatar: "/FCD87869-5D05-4B8C-8C6A-5DD560B311B5.jpeg"),
-]
-
 
 
 struct NewChatView: View {
-    @State private var friends : [SimpleUserInfo] = temp
+    @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var msgVM : MessageViewModel
+    @State private var friends : [FriendInfo] = []
     @Binding var isNewChat : Bool
     var body: some View {
-        GeometryReader{ proxy in
-            ZStack{
-                VStack(alignment:.leading){
-                    VStack{
-                        HStack(){
-                            Button(action:{
-                                withAnimation{
-                                    self.isNewChat = false
+        NavigationView {
+            GeometryReader{ proxy in
+                ZStack{
+                    VStack(alignment:.leading){
+                        VStack{
+                            HStack(){
+                                Button(action:{
+                                    withAnimation{
+                                        self.isNewChat = false
+                                    }
+                                }){
+                                    Text("取消")
+                                        .foregroundColor(.white)
+                                        .font(.system(size: 14))
                                 }
-                            }){
-                                Text("取消")
-                                    .foregroundColor(.white)
+                                Spacer()
+                                Text("新聊天")
                                     .font(.system(size: 14))
+                                Spacer()
+                                
                             }
-                            Spacer()
-                            Text("新聊天")
-                                .font(.system(size: 14))
-                            Spacer()
-                            
+                            .font(.system(size: 14))
+                            .padding(.horizontal,10)
+                            .padding(.bottom,10)
                         }
-                        .font(.system(size: 14))
-                        .padding(.horizontal,10)
-                        .padding(.bottom,10)
-                    }
-                    .frame(width: UIScreen.main.bounds.width, height: proxy.safeAreaInsets.top + 30,alignment: .bottom)
-//                    .background(Color("appleDark"))
-//                    Divider()
+                        .frame(width: UIScreen.main.bounds.width, height: proxy.safeAreaInsets.top + 30,alignment: .bottom)
+    //                    .background(Color("appleDark"))
+    //                    Divider()
+                        
+                        List(friends, id:\.id){ info in
+                            NavigationLink(destination: NewChattingView(chatInfo: ChatData(id: info.id, users: [info.info], messages: [], last_sender_id: 0, is_read: false), roomId: info.id)
+                                .environmentObject(userVM)
+                                .environmentObject(msgVM)
+                            ){
+                                HStack{
+                                    AsyncImage(url: info.info.UserPhotoURL){ image in
+                                        image
+                                            .resizable()
+                                            .scaledToFill()
+                                    } placeholder: {
+                                        ActivityIndicatorView()
+                                    }
+                                    .frame(width: 40,height:40)
+                                    .clipShape(Circle())
+                                    .clipped()
                     
-                    List(friends, id:\.id){    info in
-                        HStack{
-                            AsyncImage(url: info.UserPhotoURL){ image in
-                                image
-                                    .resizable()
-                                    .scaledToFill()
-                            } placeholder: {
-                                ActivityIndicatorView()
+                                    
+                                    Text(info.info.name)
+                                        .bold()
+                                        .font(.system(size: 16))
+                                }
+                                .padding(.vertical,5)
                             }
-                            .frame(width: 40,height:40)
-                            .clipShape(Circle())
-                            .clipped()
-            
-                            
-                            Text(info.name)
-                                .bold()
-                                .font(.system(size: 16))
-                        }
-                        .padding(.vertical,5)
+                        
 
-                    }.listStyle(.plain)
+                        }.listStyle(.plain)
+                        
+                    }
+                    .edgesIgnoringSafeArea(.all)
                     
                 }
-                .edgesIgnoringSafeArea(.all)
-                
             }
+            .onAppear{
+                APIService.shared.GetFriendRoomList(){ result in
+                    switch result{
+                    case .success(let data):
+                        self.friends = data.lists
+                    case .failure(let err):
+                        print(err.localizedDescription)
+                    }
+                }
+            }
+            .navigationBarTitle("")
+            .navigationTitle("")
+            .navigationBarHidden(true)
+            
         }
     }
 }
 
+struct NewChattingView : View{
+    @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var msgVM : MessageViewModel
+    let chatInfo : ChatData
+    let roomId : Int
+//    let messageID : Int
+    @State private var roomMessages : [MessageInfo] = []
+    private let colum = [GridItem(.flexible(minimum: 10))]
+    
+    @State private var message : String = ""
+    @FocusState private var isFocus
+    
+    @State private var scrollToMessageID : UUID?
+    var body: some View{
+        VStack{
+            GeometryReader{proxy in
+                ScrollView{
+                    ScrollViewReader{reader in
+                        getMessageView(width: proxy.size.width)
+                            .padding(.horizontal)
+                            .onChange(of: roomMessages.count){_ in
+                                if let msgID = roomMessages.last?.RoomUUID {
+                                    //if not nil
+                                    //scrolling to the msgID
+                                    scrollTo(messageID: msgID, shouldAnima: true, scrollViewReader: reader)
+                                }
+                            }
+                            .onAppear(){
+//
+                                if let messageID = roomMessages.last?.RoomUUID{
+                                    scrollTo(messageID: messageID, anchor: .bottom,shouldAnima: false, scrollViewReader: reader)
+                                }
+                            }
+                    }
+                    
+                }
+            }
+            
+            //            .background(Color("appleDark"))
+            
+            ToolBar()
+        }
+//        .ignoresSafeArea(.all,edges: .bottom)
+        .padding(.top,1)
+        .navigationBarItems(leading:HStack{
+            AsyncImage(url: chatInfo.users[0].UserPhotoURL){ image in
+                image
+                    .resizable()
+                    .scaledToFill()
+            } placeholder: {
+                ActivityIndicatorView()
+            }
+            .frame(width: 40,height:40)
+            .clipShape(Circle())
+            .clipped()
+
+            Text(chatInfo.users[0].name)
+                .font(.system(size:16))
+            }.padding(.trailing)
+        )
+        .navigationBarTitleDisplayMode(.inline)
+        .accentColor(.white)
+        .onAppear(){
+//            print(chatInfo.users[0].name)
+//            self.msgVM.currentTalkingRoomID = roomId
+        }
+        .onDisappear(){
+//            self.msgVM.currentTalkingRoomID = 0
+        }
+        
+    }
+    
+
+    @ViewBuilder
+    func ToolBar() -> some View{
+        VStack{
+            HStack{
+                TextField("訊息",text:$message)
+                    .padding(.horizontal)
+                    .frame(height:37)
+                    .background(BlurView())
+                    .clipShape(RoundedRectangle(cornerRadius: 13))
+                    .focused($isFocus)
+                
+                //Send Button
+                Button(action:{
+                    //send the message
+                    sendMessage()
+                }){
+                    Image(systemName: "paperplane.fill")
+                        .foregroundColor( .white)
+                        .frame(width: 37, height: 37)
+                        .background(
+                            Circle()
+                                .foregroundColor( .blue)
+                        )
+                        .disabled(message.isEmpty)
+                }
+            }
+            .frame(height: 37)
+        }
+        .padding()
+        .background(.thickMaterial)
+    }
+    
+    @ViewBuilder
+    func getMessageView(width : CGFloat) -> some View{
+        
+        LazyVGrid(columns: colum,spacing:0){
+            let sectionMsg = MessageViewModel.shared.messageGrouping(for: roomMessages)
+            ForEach(sectionMsg.indices,id:\.self){ sectionIndex in
+                let groupingMessage = sectionMsg[sectionIndex]
+                
+                if !groupingMessage.isEmpty {
+                    Section(header:MessageHeader(firstMessage: groupingMessage.first!)){
+                        ForEach(groupingMessage,id:\.RoomUUID){msg in
+                            let isRecevied = msg.sender_id != self.userVM.userID!
+                            HStack{
+                                ZStack{
+                                    HStack{
+                                        if isRecevied{
+                                            AsyncImage(url: chatInfo.users[0].UserPhotoURL){ image in
+                                                image
+                                                    .resizable()
+                                                    .scaledToFill()
+                                            } placeholder: {
+                                                ActivityIndicatorView()
+                                            }
+                                            .frame(width: 35, height: 35, alignment: .center)
+                                            .clipShape(Circle())
+                                            .clipped()
+                                        }
+                                        
+                                        if isRecevied{
+                                            HStack(alignment:.bottom){
+                                                Text(msg.message)
+                                                    .font(.system(size:15))
+                                                    .padding(.horizontal)
+                                                    .padding(.vertical,12)
+                                                    .background(isRecevied ? Color("appleDark").opacity(0.85) : Color.blue.opacity(0.9))
+                                                    .cornerRadius(13)
+                                                Text(msg.SendTime.sendTimeString())
+                                                    .foregroundColor(.gray)
+                                                    .font(.system(size: 12,weight: .regular))
+                                                    .padding(.horizontal,3)
+                                            }
+                                                
+                                        }else {
+                                            HStack(alignment:.bottom){
+                                                Text(msg.SendTime.sendTimeString())
+                                                    .foregroundColor(.gray)
+                                                    .font(.system(size: 12,weight: .regular))
+                                                    .padding(.horizontal,3)
+                                                Text(msg.message)
+                                                    .font(.system(size:15))
+                                                    .padding(.horizontal)
+                                                    .padding(.vertical,12)
+                                                    .background(isRecevied ? Color("appleDark").opacity(0.85) : Color.blue.opacity(0.9))
+                                                    .cornerRadius(13)
+                                            }
+                                        }
+
+                                        
+                                                
+                                        
+
+                                    }
+                                }
+                                .frame(width: width * 0.7, alignment: isRecevied ? .leading : .trailing)
+                                .padding(.vertical,8)
+
+                            }
+                            .frame(maxWidth:.infinity,alignment: isRecevied ? .leading : .trailing)
+                            .id(msg.RoomUUID)
+                        }
+                    }
+                }
+            }
+            
+            
+
+
+        }
+    }
+    
+    func sendMessage() {
+        if self.message.isEmpty{
+            return
+        }
+        
+        if let newMessage = MessageViewModel.shared.sendMessage(message, sender: self.userVM.userID!, in: self.chatInfo){
+            //set the message to empty
+            message = ""
+            print(newMessage)
+            
+            //after created, auto scroll to the message by id
+            self.scrollToMessageID = newMessage.RoomUUID
+        }
+    }
+    
+    func scrollTo(messageID : UUID,anchor : UnitPoint? = nil,shouldAnima : Bool,scrollViewReader : ScrollViewProxy){
+        DispatchQueue.main.async {
+            withAnimation(shouldAnima ? .easeIn : nil){
+                scrollViewReader.scrollTo(messageID, anchor: anchor)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    func MessageHeader(firstMessage msg: MessageInfo) -> some View{
+        ZStack{
+            Text(msg.SendTime.dateDescriptiveString(dataStyle: .medium))
+                .foregroundColor(.gray)
+                .font(.system(size: 14,weight: .regular))
+                .frame(width: 120)
+                .padding(.vertical,5)
+//                .background(Capsule().foregroundColor(Color("appleDark")))
+                
+        }
+        .padding(.vertical)
+        .frame(maxWidth:.infinity)
+    }
+
+}

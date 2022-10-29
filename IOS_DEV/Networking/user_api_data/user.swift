@@ -72,6 +72,15 @@ struct GetFriendListResp : Decodable {
     let friends : [SimpleUserInfo]
 }
 
+struct GetFriendRoomListResp : Decodable {
+    let lists : [FriendInfo]
+}
+
+struct FriendInfo : Decodable,Identifiable {
+    let id : Int
+    let info : SimpleUserInfo
+}
+
 
 struct UserProfileUpdateResp  : Decodable{}
 

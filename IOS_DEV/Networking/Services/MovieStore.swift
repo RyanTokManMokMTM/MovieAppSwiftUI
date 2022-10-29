@@ -493,6 +493,19 @@ class APIService : ServerAPIServerServiceInterface{
         FetchAndDecode(request: request, completion: completion)
     }
     
+    func GetFriendRoomList(completion: @escaping (Result<GetFriendRoomListResp,Error>)->()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetFriendRoomList.apiUri) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url : url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
     //MARK: --USER GENRES SETTING
     func UpdateUserGenre(req : UpdateUserGenreReq, completion : @escaping (Result<UpdateUserGenreResp,Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.UpdateUserGenre.apiUri) else{
@@ -1400,6 +1413,20 @@ class APIService : ServerAPIServerServiceInterface{
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         FetchAndDecode(request: request, completion: completion)
+    }
+    
+    func SetIsRead(req: SetIsReadReq, completion: @escaping (Result<SetIsReadResp, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.SetIsRead.apiUri + req.room_id.description + "/read" ) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        PostAndDecode(req: request, completion: completion)
     }
     
     
