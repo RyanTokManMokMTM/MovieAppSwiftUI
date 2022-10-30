@@ -74,6 +74,28 @@ extension View {
             }
         }
     }
+    
+    func notify<Content : View>(isAlert : Binding<Bool>,@ViewBuilder content : () -> Content) -> some View{
+        ZStack(alignment:.bottom){
+            self
+            
+//            if isAlert.wrappedValue {
+//                BenHub(type:.Alert,content: content)
+//                    .transition(AnyTransition.move(edge: .top).combined(with: .opacity))
+//                    .zIndex(1)
+//                    .onAppear{
+////                        print("???")
+//                        DispatchQueue.main.asyncAfter(deadline: .now() + 2){
+//                            print("disappear")
+//                            withAnimation{
+//                                isAlert.wrappedValue = false
+//                                print(isAlert.wrappedValue)
+//                            }
+//                        }
+//                    }
+//            }
+        }
+    }
 }
 
 

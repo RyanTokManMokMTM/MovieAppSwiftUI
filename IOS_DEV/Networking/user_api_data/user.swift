@@ -53,7 +53,7 @@ struct UserLoginResp : Decodable{
 
 struct UserSignUpResp: Decodable{
     var token: String
-    var expired : Int
+    var expired_time : Int
 }
 
 //struct GetFollowingListResp : Decodable {

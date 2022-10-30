@@ -45,7 +45,7 @@ struct NewChatView: View {
     //                    Divider()
                         
                         List(friends, id:\.id){ info in
-                            NavigationLink(destination: NewChattingView(chatInfo: ChatData(id: info.id, users: [info.info], messages: [], last_sender_id: 0, is_read: false), roomId: info.id)
+                            NavigationLink(destination: NewChattingView(chatUserInfo: info.info, roomId: info.id)
                                 .environmentObject(userVM)
                                 .environmentObject(msgVM)
                             ){
@@ -96,9 +96,10 @@ struct NewChatView: View {
 }
 
 struct NewChattingView : View{
-    @EnvironmentObject var userVM : UserViewModel
-    @EnvironmentObject var msgVM : MessageViewModel
-    let chatInfo : ChatData
+    @EnvironmentObject private var userVM : UserViewModel
+    @EnvironmentObject private var msgVM : MessageViewModel
+    var chatUserInfo : SimpleUserInfo
+    @State private var chatInfo : ChatData? = nil
     let roomId : Int
 //    let messageID : Int
     @State private var roomMessages : [MessageInfo] = []
@@ -140,7 +141,7 @@ struct NewChattingView : View{
 //        .ignoresSafeArea(.all,edges: .bottom)
         .padding(.top,1)
         .navigationBarItems(leading:HStack{
-            AsyncImage(url: chatInfo.users[0].UserPhotoURL){ image in
+            AsyncImage(url: chatUserInfo.UserPhotoURL){ image in
                 image
                     .resizable()
                     .scaledToFill()
@@ -151,22 +152,33 @@ struct NewChattingView : View{
             .clipShape(Circle())
             .clipped()
 
-            Text(chatInfo.users[0].name)
+            Text(chatUserInfo.name)
                 .font(.system(size:16))
             }.padding(.trailing)
         )
         .navigationBarTitleDisplayMode(.inline)
         .accentColor(.white)
         .onAppear(){
-//            print(chatInfo.users[0].name)
-//            self.msgVM.currentTalkingRoomID = roomId
+            msgVM.currentTalkingRoomID = roomId
+            GetRoomInfo()
+        }.onDisappear(){
+            msgVM.currentTalkingRoomID = 0
         }
-        .onDisappear(){
-//            self.msgVM.currentTalkingRoomID = 0
-        }
+
         
     }
     
+    private func GetRoomInfo(){
+        APIService.shared.GetRoomInfo(req: GetRoomInfoReq(roome_id: roomId)){ result in
+            switch result {
+            case .success(let data):
+                self.chatInfo = data.info
+                self.roomMessages = data.info.messages
+            case .failure(let err):
+                print(err.localizedDescription)
+            }
+        }
+    }
 
     @ViewBuilder
     func ToolBar() -> some View{
@@ -216,7 +228,7 @@ struct NewChattingView : View{
                                 ZStack{
                                     HStack{
                                         if isRecevied{
-                                            AsyncImage(url: chatInfo.users[0].UserPhotoURL){ image in
+                                            AsyncImage(url: self.chatUserInfo.UserPhotoURL){ image in
                                                 image
                                                     .resizable()
                                                     .scaledToFill()
@@ -254,6 +266,17 @@ struct NewChattingView : View{
                                                     .padding(.vertical,12)
                                                     .background(isRecevied ? Color("appleDark").opacity(0.85) : Color.blue.opacity(0.9))
                                                     .cornerRadius(13)
+                                                
+                                                AsyncImage(url: self.userVM.profile!.UserPhotoURL){ image in
+                                                    image
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                } placeholder: {
+                                                    ActivityIndicatorView()
+                                                }
+                                                .frame(width: 35, height: 35, alignment: .center)
+                                                .clipShape(Circle())
+                                                .clipped()
                                             }
                                         }
 
@@ -281,16 +304,17 @@ struct NewChattingView : View{
     }
     
     func sendMessage() {
-        if self.message.isEmpty{
+        if self.message.isEmpty || self.chatInfo == nil{
             return
         }
-        
-        if let newMessage = MessageViewModel.shared.sendMessage(message, sender: self.userVM.userID!, in: self.chatInfo){
+
+     
+        if let newMessage = MessageViewModel.shared.sendMessage(message, sender: self.userVM.userID!, in: self.chatInfo!){
             //set the message to empty
             message = ""
             print(newMessage)
-            
-            //after created, auto scroll to the message by id
+
+            self.roomMessages.append(newMessage)
             self.scrollToMessageID = newMessage.RoomUUID
         }
     }
@@ -311,8 +335,6 @@ struct NewChattingView : View{
                 .font(.system(size: 14,weight: .regular))
                 .frame(width: 120)
                 .padding(.vertical,5)
-//                .background(Capsule().foregroundColor(Color("appleDark")))
-                
         }
         .padding(.vertical)
         .frame(maxWidth:.infinity)

@@ -1399,6 +1399,20 @@ class APIService : ServerAPIServerServiceInterface{
         FetchAndDecode(request: request, completion: completion)
     }
     
+    func GetRoomInfo(req : GetRoomInfoReq,completion: @escaping (Result<GetRoomInfoResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetRoomInfo.apiUri + req.roome_id.description) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
     //MARK: --Message
     //TODO: Message
     func GetRoomMessage(req : GetRoomMessageReq,completion: @escaping (Result<GetRoomMessageResp,Error>) -> ()){
@@ -1446,7 +1460,7 @@ class APIService : ServerAPIServerServiceInterface{
             component.queryItems = query
         }
         
-        guard let url = component.url else {
+        guard let _ = component.url else {
             completion(.failure(APIError.invalidEndpoint))
             return
         }

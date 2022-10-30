@@ -124,11 +124,12 @@ class WebsocketManager : ObservableObject{
                         }else {
                             //MARK: A user message
                             let newMessage = MessageInfo(id: obj.message_id, message: obj.content, sender_id: obj.sender_info.id, sent_time: obj.send_time)
-                            MessageViewModel.shared.addNewMessage(roomID: obj.group_id, message: newMessage)
                             
                             
+                            //MARK: This may change....
                             let index = MessageViewModel.shared.FindChatRoom(roomID: obj.group_id)
                             if index != -1 {
+                                
                                 MessageViewModel.shared.rooms[index].last_sender_id = obj.sender_info.id
                                 
                                 if MessageViewModel.shared.currentTalkingRoomID == obj.group_id {
@@ -149,13 +150,30 @@ class WebsocketManager : ObservableObject{
                                 }else {
                                     MessageViewModel.shared.rooms[index].is_read = false
                                 }
+                                
+                                MessageViewModel.shared.addNewMessage(roomID: obj.group_id, message: newMessage)
+                            } else {
+                                //we need to get the room info first?
+                                APIService.shared.GetRoomInfo(req: GetRoomInfoReq(roome_id: obj.group_id)){ result in
+                                    switch result{
+                                    case .success(let data):
+                                        var chatData = data.info
+                                        chatData.messages.append(newMessage)
+                                        
+                                        //put into vm
+                                        MessageViewModel.shared.rooms.append(chatData)
+                                    case .failure(let err):
+                                        print(err.localizedDescription)
+                                    }
+                                }
                             }
                             
-        
+                                
                             if MessageViewModel.shared.currentTalkingRoomID == 0 || MessageViewModel.shared.currentTalkingRoomID != obj.group_id{
                                 BenHubState.shared.AlertMessageWithUserInfo(message: obj.content, userInfo: obj.sender_info,type: .message)
                             }
                             
+            
                         }
                     }
                     

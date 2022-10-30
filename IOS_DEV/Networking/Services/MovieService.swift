@@ -126,7 +126,9 @@ protocol ServerAPIServerServiceInterface {
     func LeaveRoom(req : LeaveRoomReq,completion: @escaping (Result<LeaveRoomResp,Error>) -> ())
     func GetRoomMember(req : GetRoomMembersReq,completion: @escaping (Result<GetRoomMembersResp,Error>) -> ())
     func GetUserRooms(completion: @escaping (Result<GetUserRoomsResp,Error>) -> ())
+    func GetRoomInfo(req : GetRoomInfoReq,completion: @escaping (Result<GetRoomInfoResp,Error>) -> ())
     func SetIsRead(req : SetIsReadReq,completion: @escaping (Result<SetIsReadResp,Error>) -> ())
+    
     
     //TODO: Message
     func GetRoomMessage(req : GetRoomMessageReq,completion: @escaping (Result<GetRoomMessageResp,Error>) -> ())
@@ -283,6 +285,7 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     case LeaveRoom
     case GetRoomMember
     case GetUserRooms
+    case GetRoomInfo
     case SetIsRead
     
     //MARK: Message
@@ -369,6 +372,7 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
         case .GetRoomMember: return "/room/members/" //room/members/:id
         case .GetUserRooms: return "/room/rooms"
         case .SetIsRead: return "/room/" //room/:id/read
+        case .GetRoomInfo: return "/room/" //room/:id
             
         case .GetRoomMessage: return "/message/"
 

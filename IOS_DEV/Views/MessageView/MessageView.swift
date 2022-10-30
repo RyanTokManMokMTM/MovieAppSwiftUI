@@ -7,15 +7,37 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
+import Combine
 
 class MessageViewModel : ObservableObject{
 //    @Published var ChatList = ChatInfo.simpleChat
-    @Published var rooms : [ChatData] = []
+    @Published var rooms : [ChatData]  = []
+    
     @Published var currentTalkingRoomID : Int = 0 //0 means user not in any room
-//    @Published var isInit = false
+    @Published var isInit = false
+    var sortedChat : [ChatData] {
+        var toBeSort = rooms
+        toBeSort.sort(by: { ( first, second) in
+            if first.last_sent != nil && second.last_sent != nil {
+                return first.last_sent! > second.last_sent!
+            }
+            
+            return false
+        })
+        
+        return toBeSort
+    }
+    
+    func findIndex(roomId : Int) -> Int{
+        let idx = rooms.firstIndex(where: {$0.id == roomId})
+        return idx!
+    }
+
     static var shared = MessageViewModel() //share in whole app for now
 
-    private init(){}
+    private init(){
+        self.rooms = []
+    }
     
     func FindChatRoom(roomID : Int) -> Int{
         if let index = rooms.firstIndex(where: {
@@ -28,14 +50,15 @@ class MessageViewModel : ObservableObject{
     }
     
     func GetUserRooms(){
-//        if isInit {
-//            return
-//        }
+        if isInit {
+            return
+        }
+        
         APIService.shared.GetUserRooms(){result in
             switch result{
             case .success(let data):
                 print(data.rooms)
-//                self.isInit = true
+                self.isInit = true
                 self.rooms = data.rooms
             case .failure(let err):
                 print(err)
@@ -77,18 +100,19 @@ class MessageViewModel : ObservableObject{
     }
     
     func sendMessage(_ text : String,sender : Int, in chat : ChatData) -> MessageInfo?{
+        let message = MessageInfo(id: UUID().uuidString, message: text, sender_id: sender, sent_time: Int(Date().timeIntervalSince1970))
         if let index = self.rooms.firstIndex(where: {$0.id == chat.id}){
-            //find that gay in the list
-//            let message = Message(text, type: .Sent)
-//            self.ChatList[index].messages.append(message)
-            let message = MessageInfo(id: UUID().uuidString, message: text, sender_id: sender, sent_time: Int(Date().timeIntervalSince1970))
             self.rooms[index].messages.append(message)
-            //calling websocket send function
             let req = MessageReq(opcode: WebsocketOpCode.OpText.rawValue, message_id: message.id, group_id: chat.id, message: message.message, sent_time: message.sent_time)
             WebsocketManager.shared.onSend(message: req)
             return message //create a new message instace
         }
-        return nil
+        
+        
+        self.rooms.append(chat)
+        let req = MessageReq(opcode: WebsocketOpCode.OpText.rawValue, message_id: message.id, group_id: chat.id, message: message.message, sent_time: message.sent_time)
+        WebsocketManager.shared.onSend(message: req)
+        return message //create a new message instace
     }
     
     func messageGrouping(for messages : [MessageInfo]) ->[[MessageInfo]]{
@@ -119,8 +143,8 @@ class MessageViewModel : ObservableObject{
 }
 
 struct ChattingView : View{
-    @EnvironmentObject var userVM : UserViewModel
-    @EnvironmentObject var msgVM : MessageViewModel
+    @EnvironmentObject private var userVM : UserViewModel
+    @EnvironmentObject private var msgVM : MessageViewModel
     let chatInfo : ChatData
     let roomId : Int
 //    let messageID : Int
@@ -277,7 +301,20 @@ struct ChattingView : View{
                                                     .padding(.vertical,12)
                                                     .background(isRecevied ? Color("appleDark").opacity(0.85) : Color.blue.opacity(0.9))
                                                     .cornerRadius(13)
+                                                
+                                                AsyncImage(url: self.userVM.profile!.UserPhotoURL){ image in
+                                                    image
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                } placeholder: {
+                                                    ActivityIndicatorView()
+                                                }
+                                                .frame(width: 35, height: 35, alignment: .center)
+                                                .clipShape(Circle())
+                                                .clipped()
                                             }
+                                            
+                                            
                                         }
 
                                         
@@ -392,38 +429,47 @@ struct MessageView: View {
                         
 //                    if self.msgVM.rooms != nil {
                         List(){
-                            ForEach(0..<MessageViewModel.shared.rooms.count, id: \.self){i in
+                            //Sort by last_message time!
+                            ForEach(msgVM.sortedChat, id: \.id){ info in
 //                                ZStack{
-                                NavigationLink(destination:ChattingView(chatInfo: msgVM.rooms[i],roomId: msgVM.rooms[i].id, roomMessages: $msgVM.rooms[i].messages)
+                                NavigationLink(destination:ChattingView(chatInfo: info,roomId: info.id, roomMessages: $msgVM.rooms[msgVM.FindChatRoom(roomID: info.id)].messages)
                                     .environmentObject(userVM)
                                     .environmentObject(msgVM)
-                                    
+
                                 ){
-                                    chatRow(info:msgVM.rooms[i])
+                                    chatRow(info:info)
                                         .navigationTitle("")
                                         .navigationBarHidden(true)
-                                        
+
                                 }
-//                                }
                                 .listRowBackground(Color("DarkMode2"))
-
-                                //                                .swipeActions(edge: .leading,allowsFullSwipe: true){
-                                //                                    Button(action:{
-                                //                                        self.msgVM.updateReadMark(!info.hasUnrealMsg, info: info)
-                                //                                    }){
-                                //                                        if info.hasUnrealMsg{
-                                //                                            Label("Read", image: "text.bubble")
-                                //                                        }else{
-                                //                                            Label("Unread", image: "circle.fill")
-                                //                                        }
-                                //                                    }
-                                //                                    .tint(.blue)
-                                //                                }
-
+                                .swipeActions(edge: .trailing,allowsFullSwipe: true){
+                                    Button(action:{
+                                        self.msgVM.rooms.remove(at: self.msgVM.findIndex(roomId: info.id))
+                                        
+                                        //TODO: Here we need to update server side too
+                                        
+                                    }){
+                                        Text("刪除")
+                                            .fontWeight(.semibold)
+                                    }
+                                    .tint(.red)
+                                    
+                                    if !info.is_read {
+                                        Button(action:{
+                                            self.msgVM.rooms[self.msgVM.findIndex(roomId: info.id)].is_read = true
+                                            
+                                            //TODO: Here we need to update server side too
+                                            
+                                        }){
+                                           Text("已讀")
+                                                .fontWeight(.semibold)
+                                        }
+                                        .tint(.blue)
+                                    }
+                                    
+                                }
                             }
-//                            .onDelete(perform: { indexSet in
-//                                self.msgVM.ChatList.remove(atOffsets: indexSet)
-//                            })
                         }
                         .listStyle(.plain)
                         .padding(.top)
@@ -464,21 +510,26 @@ struct chatRow : View{
     var info : ChatData
     var body: some View{
         HStack(alignment:.center,spacing: 8){
-            AsyncImage(url: info.users[0].UserPhotoURL){ image in
-                image
-                    .resizable()
-                    .scaledToFill()
-            } placeholder: {
-                ActivityIndicatorView()
-            }
-            .frame(width: 45,height:45)
+//            AsyncImage(url: info.users[0].UserPhotoURL){ image in
+//                image
+//                    .resizable()
+//                    .scaledToFill()
+//            } placeholder: {
+//                ActivityIndicatorView()
+//            }
+//            .frame(width: 45,height:45)
+//            .clipShape(Circle())
+//            .clipped()
+            WebImage(url: info.users[0].UserPhotoURL)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: 45, height: 45, alignment: .center)
             .clipShape(Circle())
-            .clipped()
             .overlay(alignment: .topTrailing) {
                 //not read and sender exist and not sender
                 Circle()
                     .foregroundColor(!self.info.is_read && self.info.last_sender_id != 0 && self.info.last_sender_id != self.userVM.userID! ? .blue : .clear)
-                    .frame(width: 10, height: 10)
+                    .frame(width: 12, height: 12)
             }
 
 

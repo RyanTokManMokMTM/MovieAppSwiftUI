@@ -134,7 +134,7 @@ struct SignUpView: View {
             print(result)
             
             switch result {
-            case .success(let data):
+            case .success(_):
                 withAnimation{
                     self.HubState.isWait = false
                     self.HubState.AlertMessage(sysImg: "checkmark.circle.fill", message: "註冊成功!")

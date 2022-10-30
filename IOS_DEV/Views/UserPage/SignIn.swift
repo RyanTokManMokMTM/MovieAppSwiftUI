@@ -200,12 +200,12 @@ struct SignInView: View   {
                 UserDefaults.standard.set(self.remember ? password : "", forKey: "userPassword")
                 
                 
-                    withAnimation{
-                        self.HubState.isWait = false
-                        self.userVM.isLogIn.toggle()
+                withAnimation{
+                    self.HubState.isWait = false
+                    self.userVM.isLogIn.toggle()
 //                        self.backToHome.toggle()
-                        
-                    }
+                    
+                }
                 HubState.AlertMessage(sysImg: "checkmark.circle.fill", message: "登入成功!")
             case .failure(let err):
 

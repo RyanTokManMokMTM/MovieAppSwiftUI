@@ -27,6 +27,10 @@ struct GetRoomMembersReq{
 struct SetIsReadReq {
     let room_id : Int
 }
+struct GetRoomInfoReq {
+    let roome_id : Int
+}
+
 
 struct CreateRoomResp : Decodable{
     let room_id : Int
@@ -47,12 +51,26 @@ struct GetUserRoomsResp : Decodable{
     let rooms : [ChatData]
 }
 
+struct GetRoomInfoResp : Decodable {
+    let info : ChatData
+}
+
 struct ChatData : Decodable, Identifiable{
     let id : Int
     let users : [SimpleUserInfo]
     var messages : [MessageInfo]
     var last_sender_id : Int
     var is_read : Bool
+    
+    var last_sent : Date? { //for sorting the chat room
+        let last_message = messages.last ?? nil
+        print(last_message)
+        if last_message == nil {
+            return nil
+        }
+        
+        return last_message!.SendTime
+    }
 }
 
 struct MessageInfo : Decodable,Identifiable{
