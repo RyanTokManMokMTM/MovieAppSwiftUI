@@ -97,12 +97,23 @@ struct CommentNotificationView: View {
                         .foregroundColor(.gray)
                 }
                 
-                Text(info.comment_info.comment)
-                    .lineLimit(1)
-                    .font(.system(size: 12))
-                    .foregroundColor(.white)
-                
-                if info.type == 2{
+                if info.type == 1{
+                    HStack(spacing:5){
+                        BlurView().clipShape(CustomeConer(width: 10, height: 20, coners: .allCorners)).frame(width: 5, height: 20)
+                        
+                        Text(info.comment_info.comment)
+                            .lineLimit(1)
+                            .font(.system(size: 12))
+                            .foregroundColor(.gray)
+                    }
+                }
+                else if info.type == 2{
+                    Text(info.comment_info.comment)
+                        .lineLimit(1)
+                        .font(.system(size: 12))
+                        .foregroundColor(.white)
+                    
+                    
                     HStack(spacing:5){
                         BlurView().clipShape(CustomeConer(width: 10, height: 20, coners: .allCorners)).frame(width: 5, height: 20)
                         
@@ -111,27 +122,25 @@ struct CommentNotificationView: View {
                             .font(.system(size: 12))
                             .foregroundColor(.gray)
                     }
-                    
-                    Button(action:{
-                        //TODO: toggle the message view
-                        
-                    }){
-                        HStack(spacing:5){
-                            Image(systemName: "message")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 12)
-                            Text("回覆")
-                                .font(.system(size: 12))
-                        }
-                        .foregroundColor(.white)
-                        .frame(width: 80, height: 25)
-                        .background(BlurView().clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
-                        .padding(.top,5)
-                    }
-                    .buttonStyle(.plain)
-                    
                 }
+                Button(action:{
+                    //TODO: toggle the message view
+                    
+                }){
+                    HStack(spacing:5){
+                        Image(systemName: "message")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 12)
+                        Text("回覆")
+                            .font(.system(size: 12))
+                    }
+                    .foregroundColor(.white)
+                    .frame(width: 80, height: 25)
+                    .background(BlurView().clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
+                    .padding(.top,5)
+                }
+                .buttonStyle(.plain)
             }
             .padding(.leading,5)
             
