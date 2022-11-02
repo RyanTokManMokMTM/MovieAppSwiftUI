@@ -12,9 +12,14 @@ struct CreateCommentReq : Encodable {
     let comment : String
 }
 
-struct CreateReplyCommentReq : Encodable {
+struct CreateReplyCommentReq {
     let post_id : Int
     let comment_id : Int
+    let info : ReplyCommentBody
+}
+
+struct ReplyCommentBody : Encodable {
+    let parent_id : Int
     let comment : String
 }
 
@@ -71,7 +76,12 @@ struct CommentInfo : Decodable,Identifiable{
     let comment : String
     let update_at : Int
     var reply_comments : Int
-    var replys : [CommentInfo]? //can be empty
+    var is_liked : Bool
+    var comment_likes_count : Int
+    let parent_comment_id : Int
+    let reply_id : Int
+    let reply_to : SimpleUserInfo
+    var replys : [CommentInfo]? //can be empty //same parent comment id
     
     var comment_time : Date{
         return Date(timeIntervalSince1970: TimeInterval(update_at))

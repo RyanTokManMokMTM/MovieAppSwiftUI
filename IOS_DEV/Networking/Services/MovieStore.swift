@@ -961,6 +961,8 @@ class APIService : ServerAPIServerServiceInterface{
         
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
         FetchAndDecode(request: request, completion: completion)
     }
@@ -977,8 +979,9 @@ class APIService : ServerAPIServerServiceInterface{
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
+        
         do{
-            let  bodyData = try Encoder.encode(req)
+            let  bodyData = try Encoder.encode(req.info)
             request.httpBody =  bodyData
         } catch {
             completion(.failure(APIError.badEncoding))
@@ -997,6 +1000,8 @@ class APIService : ServerAPIServerServiceInterface{
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         FetchAndDecode(request: request, completion: completion)
     }
@@ -1441,6 +1446,35 @@ class APIService : ServerAPIServerServiceInterface{
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         PostAndDecode(req: request, completion: completion)
+    }
+    
+    //MARK: --Notification
+    func GetLikesNotification(completion: @escaping (Result<GetLikesNotificationsResq, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetLikesNotification.apiUri ) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        FetchAndDecode(request: request, completion: completion)
+    }
+    
+    func GetCommentNotification(completion: @escaping (Result<GetCommentNotificationsResq, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetCommentNotification.apiUri) else {
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        FetchAndDecode(request: request, completion: completion)
     }
     
     

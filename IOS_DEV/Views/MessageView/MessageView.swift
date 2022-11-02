@@ -57,7 +57,7 @@ class MessageViewModel : ObservableObject{
         APIService.shared.GetUserRooms(){result in
             switch result{
             case .success(let data):
-                print(data.rooms)
+//                print(data.rooms)
                 self.isInit = true
                 self.rooms = data.rooms
             case .failure(let err):
@@ -584,6 +584,7 @@ struct MessageHeaderTab : View{
                             .navigationTitle("")
                             .navigationBarTitle("")
                             .navigationBarHidden(true)
+                            .environmentObject(notificationVM)
                            ,isActive: $isShowLikesNotification){
                 ZStack(alignment:.topTrailing){
                     tabButton(systemIcon: "heart.circle.fill", iconColor: .red, buttonText: "點讚"){
@@ -591,15 +592,15 @@ struct MessageHeaderTab : View{
                             self.isShowLikesNotification = true
                         }
                     }
-                    
-                    Text("10")
-                        .font(.system(size: 12,weight: .medium))
-                        .frame(width: 20, height: 20)
-                        .background(
-                            Circle()
-                                .fill(Color.red)
-                        )
-                        .offset(x: 5, y: -5)
+
+//                    Text("10")
+//                        .font(.system(size: 12,weight: .medium))
+//                        .frame(width: 20, height: 20)
+//                        .background(
+//                            Circle()
+//                                .fill(Color.red)
+//                        )
+//                        .offset(x: 5, y: -5)
                 }
             }
             
@@ -613,20 +614,20 @@ struct MessageHeaderTab : View{
                             .environmentObject(notificationVM)
                            ,isActive: $isShowFollowingNotification){
                 ZStack(alignment:.topTrailing){
-                    tabButton(systemIcon: "person.fill", iconColor: .blue, buttonText: "新增追蹤"){
+                    tabButton(systemIcon: "person.fill", iconColor: .blue, buttonText: "好友邀請"){
                         withAnimation{
                             self.isShowFollowingNotification = true
                         }
                     }
-                    
-                    Text("8")
-                        .font(.system(size: 12,weight: .medium))
-                        .frame(width: 20, height: 20)
-                        .background(
-                            Circle()
-                                .fill(Color.red)
-                        )
-                        .offset(x: 5, y: -5)
+
+//                    Text("8")
+//                        .font(.system(size: 12,weight: .medium))
+//                        .frame(width: 20, height: 20)
+//                        .background(
+//                            Circle()
+//                                .fill(Color.red)
+//                        )
+//                        .offset(x: 5, y: -5)
                 }
             }
             
@@ -637,6 +638,7 @@ struct MessageHeaderTab : View{
                             .navigationTitle("")
                             .navigationBarTitle("")
                             .navigationBarHidden(true)
+                            .environmentObject(notificationVM)
                            ,isActive: $isShowCommentNotification){
                 ZStack(alignment:.topTrailing){
                     tabButton(systemIcon: "paperplane.fill", iconColor: .orange, buttonText: "評論"){
@@ -644,15 +646,15 @@ struct MessageHeaderTab : View{
                             self.isShowCommentNotification = true
                         }
                     }
-                    
-                    Text("1")
-                        .font(.system(size: 12,weight: .medium))
-                        .frame(width: 20, height: 20)
-                        .background(
-                            Circle()
-                                .fill(Color.red)
-                        )
-                        .offset(x: 5, y: -5)
+
+//                    Text("1")
+//                        .font(.system(size: 12,weight: .medium))
+//                        .frame(width: 20, height: 20)
+//                        .background(
+//                            Circle()
+//                                .fill(Color.red)
+//                        )
+//                        .offset(x: 5, y: -5)
                 }
             }
             Spacer()

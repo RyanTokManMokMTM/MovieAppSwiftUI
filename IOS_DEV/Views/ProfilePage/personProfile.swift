@@ -1587,12 +1587,10 @@ struct personProfile: View {
                 VStack(alignment:.leading){
                     Text(userVM.profile!.name).bold()
                         .font(.title2)
-//                    HStack(spacing:2){
-//                        Text("MID:")
-//                        Text(userVM.user.MID)
-//                    }
-//                    .font(.caption)
-//                    .foregroundColor(Color.white.opacity(0.8))
+                    
+                    Text("@\(userVM.profile!.name)")
+                        .font(.caption)
+                        .foregroundColor(Color.gray)
                     
                 }
                 

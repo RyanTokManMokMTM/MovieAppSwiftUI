@@ -315,7 +315,7 @@ struct FollowPostCell : View {
                         
                         Image(systemName: self.postVM.followingData[Id].is_post_liked ?  "heart.fill" : "heart")
                             .imageScale(.medium)
-                            .foregroundColor(self.postVM.followingData[Id].is_post_liked ? .red : .gray)
+                            .foregroundColor(self.postVM.followingData[Id].is_post_liked ? .red : .white)
                         
                     }
                     

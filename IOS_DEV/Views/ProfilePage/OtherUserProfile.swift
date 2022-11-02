@@ -341,6 +341,11 @@ struct UserProfileView : View {
                         .font(.title2)
                         .redacted(reason: self.userVM.isLoadingProfile ? .placeholder : [])
                     
+                    Text("@\(userVM.profile?.name ?? ""))")
+                        .font(.caption)
+                        .foregroundColor(Color.gray)
+                        .redacted(reason: self.userVM.isLoadingProfile ? .placeholder : [])
+                    
                 }
                 
                 Spacer()

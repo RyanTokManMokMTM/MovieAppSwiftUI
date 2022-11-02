@@ -133,6 +133,10 @@ protocol ServerAPIServerServiceInterface {
     //TODO: Message
     func GetRoomMessage(req : GetRoomMessageReq,completion: @escaping (Result<GetRoomMessageResp,Error>) -> ())
     
+    //TODO: Notification
+    func GetLikesNotification(completion: @escaping (Result<GetLikesNotificationsResq,Error>) -> ())
+    func GetCommentNotification(completion: @escaping (Result<GetCommentNotificationsResq,Error>) -> ())
+    
     //Searching and playground
 //    TODO - Person data format
     func fetchActors(page : Int ,completion : @escaping (Result<PersonInfoResponse,Error>) ->  ())
@@ -291,6 +295,10 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     //MARK: Message
     case GetRoomMessage
     
+    //MARK: Notification
+    case GetLikesNotification
+    case GetCommentNotification
+    
     var apiUri : String{
         switch self {
         case .HealthCheck: return "/ping"
@@ -373,9 +381,10 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
         case .GetUserRooms: return "/room/rooms"
         case .SetIsRead: return "/room/" //room/:id/read
         case .GetRoomInfo: return "/room/" //room/:id
-            
         case .GetRoomMessage: return "/message/"
 
+        case .GetLikesNotification: return "/notification/likes"
+        case .GetCommentNotification: return "/notification/comments"
         }
     }
 }
