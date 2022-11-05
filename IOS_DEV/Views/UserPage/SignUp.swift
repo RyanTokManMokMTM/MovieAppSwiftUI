@@ -155,7 +155,7 @@ struct SignUpView: View {
 
     }
     func GetUserProfile(token : String) {
-        APIService.shared.GetUserProfile(token: token){ (result) in
+        APIService.shared.GetUserProfile(){ (result) in
             switch result{
             case .success(let profile):
 //                ErrorAlert = false

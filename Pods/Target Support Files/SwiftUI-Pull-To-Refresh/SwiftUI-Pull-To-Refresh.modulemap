@@ -1,0 +1,6 @@
+framework module SwiftUI_Pull_To_Refresh {
+  umbrella header "SwiftUI-Pull-To-Refresh-umbrella.h"
+
+  export *
+  module * { export * }
+}

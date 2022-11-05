@@ -25,6 +25,7 @@ struct PostDetailView: View {
     @State private var message : String = ""
     @FocusState private var isFocues : Bool
     
+    
     @State private var isTapToLike : Bool = false
     @State private var isShowUserProfile : Bool = false
     @State private var shownUserID : Int = 0
@@ -42,6 +43,7 @@ struct PostDetailView: View {
     @State private var placeHolder : String = ""
     @State private var isReply : Bool = false
     
+    @Binding var postInfo : Post
     var body: some View {
         ZStack(alignment: .top){
             VStack(spacing:0){
@@ -72,9 +74,10 @@ struct PostDetailView: View {
         )
         .onAppear{
 //            IsUserFollowing()
+            print(postInfo)
             GetPostComments()
         }
-        
+
         
     }
     
@@ -129,14 +132,14 @@ struct PostDetailView: View {
                 
                 
                 Group {
-                    WebImage(url:self.postVM.selectedPost!.user_info.UserPhotoURL)
+                    WebImage(url:postInfo.user_info.UserPhotoURL)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 40, height: 40)
                         .clipShape(Circle())
         //                .matchedGeometryEffect(id: postData.user_info.user_avatar, in: namespace)
                     
-                    Text(self.postVM.selectedPost!.user_info.name)
+                    Text(postInfo.user_info.name)
                         .font(.system(size: 14, weight: .semibold))
         //                .matchedGeometryEffect(id: postData.user_info.id, in: namespace)
                 }
@@ -146,8 +149,8 @@ struct PostDetailView: View {
                         return
                     }
                     
-                    if postVM.selectedPost!.user_info.id != userVM.userID {
-                        self.shownUserID = self.postVM.selectedPost!.user_info.id
+                    if postInfo.user_info.id != userVM.userID {
+                        self.shownUserID = postInfo.user_info.id
                         withAnimation{
                             self.isShowUserProfile = true
                         }
@@ -215,7 +218,7 @@ struct PostDetailView: View {
         VStack(spacing:5){
             ZStack(alignment:.topTrailing){
                 //                TabView(selection:$index){
-                WebImage(url: self.postVM.selectedPost!.post_movie_info.PosterURL)
+                WebImage(url: postInfo.post_movie_info.PosterURL)
                     .placeholder(Image(systemName: "photo")) //
                     .resizable()
                     .indicator(.activity)
@@ -234,7 +237,7 @@ struct PostDetailView: View {
                             }
                         }
                         
-                        if !self.postVM.selectedPost!.is_post_liked {
+                        if !postInfo.is_post_liked {
                             //liked the post
                             LikePost()
                         }
@@ -288,22 +291,22 @@ struct PostDetailView: View {
     func PostContent() -> some View{
    
             //Jump to the detail view
-        NavigationLink(destination: MovieDetailView(movieId: self.postVM.selectedPost!.post_movie_info.id, isShowDetail: $isShowMoreDetail)
+        NavigationLink(destination: MovieDetailView(movieId: postInfo.post_movie_info.id, isShowDetail: $isShowMoreDetail)
                         .environmentObject(postVM)
                        ,isActive: $isShowMoreDetail){
-            Text("#\(self.postVM.selectedPost!.post_movie_info.title)")
+            Text("#\(postInfo.post_movie_info.title)")
                 .font(.system(size: 15))
                 .foregroundColor(.red)
         }
 
             
-        Text(self.postVM.selectedPost!.post_title)
+        Text(postInfo.post_title)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(.white)
 //                .matchedGeometryEffect(id: postData.post_title, in: namespace)
                 .multilineTextAlignment(.leading)
         
-        Text(self.postVM.selectedPost!.post_desc)
+        Text(postInfo.post_desc)
             .font(.system(size: 15,weight: .regular))
                 .multilineTextAlignment(.leading)
                 .lineSpacing(8)
@@ -318,7 +321,7 @@ struct PostDetailView: View {
 //            .foregroundColor(.blue)
 //            .font(.system(size: 15,weight: .semibold))
         
-        Text("Posted at \(self.postVM.selectedPost!.post_at.dateDescriptiveString())")
+        Text("於\(postInfo.post_at.dateDescriptiveString())發佈")
             .foregroundColor(Color(uiColor: .systemGray2))
                 .font(.caption2)
             
@@ -328,7 +331,7 @@ struct PostDetailView: View {
     
     @ViewBuilder
     func CommentView() -> some View{
-        Text("留言 : \(self.postVM.selectedPost!.post_comment_count)")
+        Text("留言 : \(postInfo.post_comment_count)")
             .foregroundColor(.white)
             .font(.system(size: 14,weight: .medium))
         
@@ -354,14 +357,14 @@ struct PostDetailView: View {
                     Spacer()
                 }
             }else {
-                ForEach(self.$commentInfos,id:\.id){ info in
+                ForEach(self.$commentInfos,id:\.id){ comment in
 //                    commentCell(comment: info)
-//                    commentCell(comment: info, isLoadingReply: $isLoadingReply, replyCommentId: $replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo, postInfo: self.postVM.selectedPost!)
+                    commentCell(postInfo: $postInfo, comment: comment, isLoadingReply: $isLoadingReply, replyCommentId: $replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo)
                 }
                 
                 HStack{
                     Spacer()
-                    Text("The End ~ ")
+                    Text("沒有評論了唷~ ")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.gray)
                         .padding(.vertical,8)
@@ -371,53 +374,9 @@ struct PostDetailView: View {
         }
     }
         
-//    private func followUser(){
-//        let req = CreateNewFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
-//        APIService.shared.CreateNewFriend(req: req){ result in
-//            switch result{
-//            case .success(_):
-//                print("User Followed")
-//            case .failure(let err):
-//                print(err.localizedDescription)
-//                withAnimation{
-//                    self.isUserFollowing.toggle()
-//                }
-//            }
-//        }
-//    }
-//    
-//    private func UnFollowUser(){
-//        let req = RemoveFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
-//        APIService.shared.RemoveFriend(req: req){ result in
-//            switch result{
-//            case .success(_):
-//                print("User UnFollowed")
-//                
-//            case .failure(let err):
-//                print(err.localizedDescription)
-//                withAnimation{
-//                    self.isUserFollowing.toggle()
-//                }
-//            }
-//        }
-//    }
-//    
-//    func IsUserFollowing(){
-//        let req = GetOneFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
-//        APIService.shared.GetOneFriend(req: req){ result in
-//            switch result {
-//            case .success(let data):
-//                self.isUserFollowing = data.is_friend
-//                print(self.isUserFollowing)
-//            case .failure(let err):
-//                print(err.localizedDescription)
-//            }
-//        }
-//    }
-    
     private func CreatePostComment(){
         if message.isEmpty { return }
-        let postId =  self.postVM.selectedPost!.id
+        let postId =  postInfo.id
         let req = CreateCommentReq(comment: self.message)
 //        print(postId)
         APIService.shared.CreatePostComment(postId: postId, req: req){ result in
@@ -428,12 +387,7 @@ struct PostDetailView: View {
                                              comment: self.message, update_at: data.create_at, reply_comments: 0, is_liked: false, comment_likes_count: 0, parent_comment_id: 0,reply_id: 0,reply_to: SimpleUserInfo(id: 0, name: "", avatar: ""))
                 
                 self.commentInfos.insert(newComment, at: 0)
-                //this will change??
-//                DispatchQueue.main.async {
-//                    self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)].post_comment_count += 1
-//                }
-                print(self.postVM.getPostIndexFromFollowList(postId: postId))
-                self.postVM.selectedPost!.post_comment_count += 1
+                postInfo.post_comment_count += 1
                 self.message.removeAll()
                 self.rootCommentId = -1
             case .failure(let err):
@@ -446,17 +400,11 @@ struct PostDetailView: View {
     private func CreatePostReplyMessge(){
         let index = commentInfos.firstIndex{$0.id == self.replyCommentId}
         guard let index = index else { return }
-
-        let postId = self.postVM.selectedPost!.id
-        
-//        let req = CreateReplyCommentReq(post_id: self.postVM.postData[self.postVM.getPostIndexFromDiscoveryList(postId: postId)].id, comment_id: self.replyCommentId, info: self.message)
-        let req = CreateReplyCommentReq(post_id: self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)].id, comment_id: self.replyCommentId, info: ReplyCommentBody(parent_id: self.rootCommentId, comment: self.message))
+     
+        let req = CreateReplyCommentReq(post_id: self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postInfo.id)].id, comment_id: self.replyCommentId, info: ReplyCommentBody(parent_id: self.rootCommentId, comment: self.message))
         APIService.shared.CreateReplyComment(req: req){ result in
             switch result {
             case .success(let data):
-//                let newComment = CommentInfo(id: data.id, user_info:
-//                                                CommentUser(id: self.userVM.profile!.id, name: self.userVM.profile!.name, avatar: self.userVM.profile!.avatar ?? ""),
-//                                             comment: self.message, update_at: data.create_at, reply_comments: 0, is_liked: false, comment_likes_count: 0)
                 let newComment = CommentInfo(id: data.id, user_info:
                                                 CommentUser(id: self.userVM.profile!.id, name: self.userVM.profile!.name, avatar: self.userVM.profile!.avatar ?? ""),
                                              comment: self.message, update_at: data.create_at, reply_comments: 0, is_liked: false, comment_likes_count: 0, parent_comment_id: self.rootCommentId,reply_id: self.replyCommentId, reply_to: SimpleUserInfo(id: self.replyTo!.id, name: self.replyTo!.name, avatar: self.replyTo!.avatar))
@@ -465,7 +413,7 @@ struct PostDetailView: View {
                     self.commentInfos[index].replys = []
                 }
                 self.commentInfos[index].replys!.append(newComment)
-                self.postVM.selectedPost!.post_comment_count += 1
+                self.postVM.selectedPostInfo.post_comment_count += 1
                 self.replyCommentId = -1
                 self.message.removeAll()
                 self.isReply = false
@@ -483,7 +431,7 @@ struct PostDetailView: View {
     
     private func GetPostComments(){
         self.isLoadingComment = true
-        let postId = self.postVM.selectedPost!.id
+        let postId = postInfo.id
         APIService.shared.GetPostComments(postId: postId){ result in
             self.isLoadingComment = false
             switch result {
@@ -515,16 +463,16 @@ struct PostDetailView: View {
     }
     
     private func LikePost(){
-        self.postVM.selectedPost!.is_post_liked = true
-        self.postVM.selectedPost!.post_like_count += 1
-        let req = CreatePostLikesReq(post_id: self.postVM.selectedPost!.id)
+        postInfo.is_post_liked = true
+        postInfo.post_like_count += 1
+        let req = CreatePostLikesReq(post_id: postInfo.id)
         APIService.shared.CreatePostLikes(req: req){ result in
             switch result {
             case .success(_):
                 print("post likes")
             case .failure(let err):
-                self.postVM.selectedPost!.is_post_liked = false
-                self.postVM.selectedPost!.post_like_count += 1
+                postInfo.is_post_liked = false
+                postInfo.post_like_count += 1
                 print(err.localizedDescription)
             
             }
@@ -536,7 +484,7 @@ struct PostDetailView: View {
         //if post from post data -> get post from post data
         //else get from user profile
         print(self.postForm)
-        let postId = self.postVM.selectedPost!.id
+        let postId = postInfo.id
         let index : Int
         switch postForm {
         case .AllPost:
@@ -549,355 +497,6 @@ struct PostDetailView: View {
         }
     }
 }
-//
-//struct PostDetailViewTopBar : View {
-//    @Binding var isShowUserProfile : Bool
-//    @Binding var userID : Int
-//    @Binding var isFollowing : Bool
-//
-//    @EnvironmentObject var postVM : PostVM
-//    @EnvironmentObject var userVM : UserViewModel
-////    var postData : Post
-////    @Binding var isShow : Bool
-//
-//    var body: some View{
-//        HStack(alignment:.center){
-//            Button(action:{
-//                withAnimation(){
-//                    self.postVM.isShowPostDetail = false
-//                }
-//            }){
-//                Image(systemName: "chevron.left")
-//                    .imageScale(.large)
-//                    .foregroundColor(.white)
-//
-//
-//            }
-//            .padding(.horizontal,5)
-//
-//
-//            Group {
-//                WebImage(url:self.postVM.selectedPost!.user_info.UserPhotoURL)
-//                    .resizable()
-//                    .aspectRatio(contentMode: .fill)
-//                    .frame(width: 40, height: 40)
-//                    .clipShape(Circle())
-//    //                .matchedGeometryEffect(id: postData.user_info.user_avatar, in: namespace)
-//
-//                Text(self.postVM.selectedPost!.user_info.name)
-//                    .font(.system(size: 14, weight: .semibold))
-//    //                .matchedGeometryEffect(id: postData.user_info.id, in: namespace)
-//            }
-//            .onTapGesture{
-//                if postVM.selectedPost!.user_info.id != userVM.userID {
-//                    self.userID = self.postVM.selectedPost!.user_info.id
-//                    withAnimation{
-//                        self.isShowUserProfile = true
-//                    }
-//                }
-//            }
-//
-//            Spacer()
-//
-//            if self.postVM.selectedPost!.user_info.id != self.userVM.profile!.id{
-//                Button(action:{
-////                    withAnimation{
-//                    withAnimation{
-//                        self.isFollowing.toggle()
-//                    }
-//                    if self.isFollowing{
-//                        followUser()
-//                    }else {
-//                        UnFollowUser()
-//                    }
-//                        //TODO: Update following state
-////                    }
-//                }){
-//                    Text(self.isFollowing ? "已關注" : "關注")
-//                        .foregroundColor(.white)
-//                        .font(.system(size: 14))
-//                        .padding(5)
-//                        .padding(.horizontal,5)
-//                        .background(
-//                            ZStack{
-//                                if self.isFollowing  {
-//                                    BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners))
-//                                        .overlay(RoundedRectangle(cornerRadius: 25).stroke().fill(self.isFollowing ? Color.white : Color.clear))
-//                                }else {
-//                                    Color.red.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners))
-//                                }
-//                            }
-//                        )
-//
-//                }
-//            }else {
-//                Button(action:{
-//                    //TODO: MODIFY THE POST
-//                }){
-//                    Image(systemName: "ellipsis")
-//                        .foregroundColor(.white)
-//                        .imageScale(.large)
-//                }
-//            }
-//
-//        }
-////        .edgesIgnoringSafeArea(.all)
-//        .padding(.horizontal,5)
-//        .frame(width:UIScreen.main.bounds.width,height:50)
-//        .background(Color("appleDark").edgesIgnoringSafeArea(.all))
-//        .onAppear{
-//            print(self.userVM.profile!.name)
-//            print(self.postVM.followingData.count)
-//        }
-//    }
-//
-//    private func followUser(){
-//        let req = CreateNewFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
-//        APIService.shared.CreateNewFriend(req: req){ result in
-//            switch result{
-//            case .success(_):
-//                print("User Followed")
-//            case .failure(let err):
-//                print(err.localizedDescription)
-//                withAnimation{
-//                    self.isFollowing.toggle()
-//                }
-//            }
-//        }
-//    }
-//
-//    private func UnFollowUser(){
-//        let req = RemoveFriendReq(friend_id: self.postVM.selectedPost!.user_info.id)
-//        APIService.shared.RemoveFriend(req: req){ result in
-//            switch result{
-//            case .success(_):
-//                print("User UnFollowed")
-//
-//            case .failure(let err):
-//                print(err.localizedDescription)
-//                withAnimation{
-//                    self.isFollowing.toggle()
-//                }
-//            }
-//        }
-//    }
-//}
-//
-//struct PostDetailDescView : View {
-//    @EnvironmentObject var userVM : UserViewModel
-//    @EnvironmentObject var postVM : PostVM
-//    @State private var index = 0
-//    @State private var isShowMoreDetail : Bool = false
-//
-//
-//    @Binding var isLoadingComment : Bool
-//    @Binding var commentInfos : [CommentInfo]
-//    var body: some View {
-//        VStack(spacing:5){
-//            ZStack(alignment:.topTrailing){
-//                //                TabView(selection:$index){
-//                WebImage(url: self.postVM.selectedPost!.post_movie_info.PosterURL)
-//                    .placeholder(Image(systemName: "photo")) //
-//                    .resizable()
-//                    .indicator(.activity)
-//                    .transition(.fade(duration: 0.5))
-//                    .aspectRatio(contentMode: .fit)
-////                    .matchedGeometryEffect(id: self.postVM.selectedPost!.id.description, in: namespace)
-//                    .frame(width: UIScreen.main.bounds.width)
-//                //maxinum image is 10
-//                Text("\(index + 1)/1")
-//                    .font(.system(size: 12, weight: .semibold))
-//                    .padding(8)
-//                    .padding(.horizontal,5)
-//                    .background(BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 20, height: 20, coners: .allCorners)))
-//                    .offset(x: -10, y: 10)
-//    //                .overlay(RoundedRectangle(cornerRadius: 25).stroke())
-//            }
-//            .frame(height: UIScreen.main.bounds.height / 2.2)
-//
-//
-//            HStack(spacing:5){
-//                ForEach(1..<2){i in
-//                    Circle()
-//                        .fill(self.index + 1 == i ? .red : .gray)
-//                        .frame(width: 5, height: 5)
-//                        .scaleEffect(self.index + 1 == i ? 1.2 : 0.9)
-//                        .animation(.spring())
-//                }
-//            }
-//            VStack{
-//                VStack(alignment: .leading, spacing:8){
-//                    PostContent()
-//                    CommentView()
-//                        .edgesIgnoringSafeArea(.all)
-//                }
-//            }
-//            .padding(.horizontal)
-//            .padding(.top)
-//
-//        }
-////        .edgesIgnoringSafeArea(.all)
-//    }
-//
-//
-//
-//
-//    @ViewBuilder
-//    func PostContent() -> some View{
-//
-//            //Jump to the detail view
-//        NavigationLink(destination: MovieDetailView(movieId: self.postVM.selectedPost!.post_movie_info.id, isShowDetail: $isShowMoreDetail)
-//                        .environmentObject(postVM)
-//                       ,isActive: $isShowMoreDetail){
-//            Text("#\(self.postVM.selectedPost!.post_movie_info.title)")
-//                .font(.system(size: 15))
-//                .foregroundColor(.red)
-//        }
-//
-//
-//        Text(self.postVM.selectedPost!.post_title)
-//                .font(.system(size: 16, weight: .semibold))
-//                .foregroundColor(.white)
-////                .matchedGeometryEffect(id: postData.post_title, in: namespace)
-//                .multilineTextAlignment(.leading)
-//
-//        Text(self.postVM.selectedPost!.post_desc)
-//            .font(.system(size: 15,weight: .regular))
-//                .multilineTextAlignment(.leading)
-//                .lineSpacing(8)
-//
-////        //Testing only
-////            HStack{
-////                Text("#劇透")
-////                Text("#電影劇情分享")
-//////                Text("#奇異博士")
-//////                Text("#漫威")
-////            }
-////            .foregroundColor(.blue)
-////            .font(.system(size: 15,weight: .semibold))
-//
-//        Text("Posted at \(self.postVM.selectedPost!.post_at.dateDescriptiveString())")
-//            .foregroundColor(Color(uiColor: .systemGray2))
-//                .font(.caption2)
-//
-//            PostViewDivider
-//
-//    }
-//
-//    @ViewBuilder
-//    func CommentView() -> some View{
-//        Text("Comments : \(commentInfos.count)")
-//            .foregroundColor(.white)
-//            .font(.system(size: 14,weight: .medium))
-//
-//        //All Comment
-//        PostViewDivider
-//        if self.isLoadingComment {
-////            Spacer()
-//            HStack{
-//                ActivityIndicatorView()
-//                Text("Loading...")
-//                    .font(.system(size:14))
-//            }
-//            .frame(maxWidth:.infinity,alignment: .center)
-//        }else {
-//            if self.commentInfos.isEmpty {
-//                HStack{
-//                    Spacer()
-//                    Image(systemName: "text.bubble")
-//                        .imageScale(.medium)
-//                        .foregroundColor(.gray)
-//                    Text("沒有評論,趕緊霸佔一樓空位!")
-//                        .font(.system(size: 12, weight: .semibold))
-//                        .foregroundColor(.gray)
-//                    Spacer()
-//                }
-//            }else {
-//                ForEach(self.commentInfos,id:\.id){ info in
-//                    commentCell(comment: info)
-//                }
-//
-//                HStack{
-//                    Spacer()
-//                    Text("The End ~ ")
-//                        .font(.system(size: 12, weight: .semibold))
-//                        .foregroundColor(.gray)
-//                        .padding(.vertical,8)
-//                    Spacer()
-//                }
-//            }
-//        }
-//    }
-//
-//    @ViewBuilder
-//    private func commentCell(comment : CommentInfo) ->  some View {
-//        HStack(alignment:.top){
-////                HStack(alignment:.center){
-//            WebImage(url:comment.user_info.UserPhotoURL)
-//                    .resizable()
-//                    .aspectRatio(contentMode: .fill)
-//                    .frame(width: 35, height: 35)
-//                    .clipShape(Circle())
-//                    .padding(.vertical,3)
-//
-//                VStack(alignment:.leading,spacing: 3){
-//                    HStack{
-//                        Text(comment.user_info.name)
-//                            .font(.system(size: 14, weight: .semibold))
-//                            .foregroundColor(Color(uiColor: .systemGray))
-//
-//                        if self.postVM.selectedPost!.user_info.id == comment.user_info.id {
-//                            Text("Author")
-//                                .font(.system(size: 12, weight: .semibold))
-//                                .foregroundColor(Color(uiColor: .lightGray))
-//                                .padding(3)
-//                                .padding(.horizontal,5)
-//                                .background(BlurView().clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
-//                        }
-//                    }
-//
-//
-//                    Text(comment.comment)
-//                        .multilineTextAlignment(.leading)
-//                        .font(.system(size: 12, weight: .semibold))
-//
-//                    HStack{
-//                        Text(comment.comment_time.dateDescriptiveString())
-//                            .foregroundColor(.gray)
-//                            .font(.system(size: 11))
-//
-//                        Text("Reply")
-//                            .foregroundColor(.gray)
-//                            .font(.system(size: 11,weight:.semibold))
-//                    }
-//                }
-//
-////                }
-//            Spacer()
-//
-//            Image(systemName: "heart")
-//                .imageScale(.small)
-//
-//        }
-//
-//        PostViewDivider
-//            .padding(.vertical,5)
-//    }
-//
-//    private func GetPostComments(){
-//        self.isLoadingComment = true
-//        APIService.shared.GetPostComments(postId: self.postVM.selectedPost!.id){ result in
-//            self.isLoadingComment = false
-//            switch result {
-//            case .success(let data):
-//                self.commentInfos = data.comments
-//            case .failure(let err):
-//                print("get comment failed : \(err.localizedDescription)")
-//            }
-//        }
-//    }
-//}
-
 
 var PostViewDivider : some View {
     

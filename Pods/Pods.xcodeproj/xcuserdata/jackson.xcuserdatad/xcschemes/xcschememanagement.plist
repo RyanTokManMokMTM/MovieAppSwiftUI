@@ -89,6 +89,11 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
+		<key>SwiftUI-Pull-To-Refresh.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+		</dict>
 		<key>SwiftUIPager.xcscheme</key>
 		<dict>
 			<key>isShown</key>

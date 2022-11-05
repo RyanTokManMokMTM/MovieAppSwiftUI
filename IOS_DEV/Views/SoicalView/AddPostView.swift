@@ -223,7 +223,9 @@ struct PostButton : View {
             if title.isEmpty || desc.isEmpty{
                 return
             }
-           
+            
+            //TODO: Not Add to the VM directly,but refershing the view instead
+            
             postVM.CreatePost(title: title, desc: desc, movie: movieInfo, user: userVM.profile!){
                 //TODO: SENDING REQUEST! - IGNORE
                 withAnimation{

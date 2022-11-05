@@ -27,6 +27,44 @@ struct IOS_DEVApp: App {
     }
 }
 
+struct TestShape : View {
+    @State private var start = false
+    @State private var isAnimate = false
+    var body : some View {
+        VStack(spacing:0){
+            DrawShape()
+                .trim(from: 0, to: start ? 1 : 0.1)
+                .stroke(Color.gray, style: StrokeStyle(lineWidth: 5, lineCap:.round , lineJoin: .round))
+                .rotationEffect(Angle(degrees: self.isAnimate ? 0 : -360))
+                .animation(self.isAnimate ? Animation.linear(duration: 2.0).repeatForever(autoreverses: false) : .default)
+
+        }
+        .frame(width: 1, height: 1)
+//            .background(Color.red)
+            .onAppear(){
+                withAnimation{
+                    start = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){
+                        self.isAnimate = true
+                    }
+                }
+            }
+    }
+}
+
+struct DrawShape : Shape {
+    func path(in rect: CGRect) -> Path {
+//        print(rect)
+        return Path{ path in
+            let mid = rect.width / 2
+            
+            path.move(to: CGPoint(x: mid - 10, y: 0))
+            path.addArc(center: CGPoint(x: mid, y: 0), radius: 10, startAngle: .init(degrees: -180), endAngle: .init(degrees: 120), clockwise: false)
+        }
+    }
+}
+
+
 struct BenHubTest : View {
     @StateObject var hubState = BenHubState.shared
     var body : some View {

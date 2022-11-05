@@ -12,30 +12,41 @@ struct CardFlowLayout: View {
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
     @StateObject var HubState : BenHubState = BenHubState.shared
+    @State private var refershState : RefershState = RefershState(started: false, released: false, Ended: false)
     var body: some View {
-        FlowLayoutView(list: self.postVM.postData, columns: 2,HSpacing: 5,VSpacing: 10){ info in
-            CardPostView(Id:self.postVM.getPostIndexFromDiscoveryList(postId: info.id)){
-                    self.postVM.selectedPost = info
-                    withAnimation{
-                        self.postVM.isShowPostDetail.toggle()
+        FlowLayoutWithPullView(list: self.postVM.postData, columns: 2,HSpacing: 5,VSpacing: 10,refershSate: $refershState,onRefersh: {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3){
+                print("Loading done....")
+            }
+        }){ info in
+                
+                CardPostView(postInfo: self.$postVM.postData[self.postVM.getPostIndexFromDiscoveryList(postId: info.id)]){
+                    DispatchQueue.main.async {
+                        self.postVM.selectedPostInfo = info
+                        withAnimation{
+                            self.postVM.isShowPostDetail.toggle()
+                        }
                     }
                 }
+        
         }
         .frame(maxWidth:.infinity)
         .background(Color("DarkMode2").frame(maxWidth:.infinity))
         .background(
             NavigationLink(destination:
-                            PostDetailView(postForm: .AllPost, isFromProfile: false)
-                            .environmentObject(postVM)
-                            .environmentObject(userVM)
-                            .navigationBarTitle("")
-                            .navigationTitle("")
-                            .navigationBarBackButtonHidden(true)
-                            .navigationBarHidden(true)
+                            PostDetailView(postForm: .AllPost, isFromProfile: false,postInfo: self.$postVM.selectedPostInfo)
+                .environmentObject(postVM)
+                .environmentObject(userVM)
+                .navigationBarTitle("")
+                .navigationTitle("")
+                .navigationBarBackButtonHidden(true)
+                .navigationBarHidden(true)
                            , isActive: self.$postVM.isShowPostDetail){
-                EmptyView()
-                
-            }
+                               EmptyView()
+                               
+                               
+                           }
+            
         )
         .onAppear{
             if postVM.initAllData {

@@ -190,6 +190,7 @@ if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/PromisesObjC/FBLPromises.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SDWebImage/SDWebImage.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SDWebImageSwiftUI/SDWebImageSwiftUI.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/SwiftUI-Pull-To-Refresh/SwiftUI_Pull_To_Refresh.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SwiftUIPager/SwiftUIPager.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/nanopb/nanopb.framework"
 fi
@@ -208,6 +209,7 @@ if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/PromisesObjC/FBLPromises.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SDWebImage/SDWebImage.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SDWebImageSwiftUI/SDWebImageSwiftUI.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/SwiftUI-Pull-To-Refresh/SwiftUI_Pull_To_Refresh.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SwiftUIPager/SwiftUIPager.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/nanopb/nanopb.framework"
 fi

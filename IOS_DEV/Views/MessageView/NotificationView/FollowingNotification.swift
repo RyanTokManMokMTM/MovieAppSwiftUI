@@ -12,6 +12,7 @@ import SDWebImageSwiftUI
 
 struct FollowingNotification: View {
     @EnvironmentObject private var notificationVM : NotificationVM
+    @EnvironmentObject private var userVM : UserViewModel
     @Binding var isShowView : Bool
     var body: some View {
         NotificationView(isShowView:$isShowView,topTitle: "好友邀請"){
@@ -32,10 +33,26 @@ struct FollowingNotification: View {
         }
         .onAppear{
             notificationVM.GetFriendRequests()
+            UpdateNotificatin()
             
         }
         .background(Color("DarkMode2"))
     }
+    
+    private func UpdateNotificatin(){
+        
+        APIService.shared.ResetFriendNotification(){ result in
+            switch result{
+            case .success(_):
+                DispatchQueue.main.async {
+                    self.userVM.profile?.notification_info?.friend_notification_count = 0
+                }
+            case .failure(let err ):
+                print(err.localizedDescription)
+            }
+        }
+    }
+    
     
     @ViewBuilder
     private func FollowingCell(info : FriendRequest) -> some View{
@@ -126,7 +143,10 @@ struct FollowingNotification: View {
                 if let idx = self.notificationVM.friendRequest.firstIndex(where: { info in
                     return info.request_id == id
                 }) {
-                    self.notificationVM.friendRequest[idx].state = 2
+                    DispatchQueue.main.async {
+                        self.notificationVM.friendRequest[idx].state = 2
+                    }
+                  
                 }
             case .failure(let err):
                 print(err.localizedDescription)

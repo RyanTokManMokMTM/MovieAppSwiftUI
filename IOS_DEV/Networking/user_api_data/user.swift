@@ -7,6 +7,11 @@
 
 import Foundation
 
+
+struct ResetFriendNotificationResp : Decodable{}
+struct ResetCommentNotificationResp : Decodable {}
+struct ResetLikesNotificationResp : Decodable {}
+
 /// RESQUEST
 struct UserLoginReq: Encodable{
     var email: String
@@ -104,11 +109,12 @@ struct Profile : Decodable{
     var email : String
     var avatar : String?
     var cover : String?
+    var notification_info : NotificationInfo? //
     
     //Empty for first login
     //Get data when the first time load the personal page
-    var UserCollection : [Post]? //if no datas ,is a empty list
-    var UserLikedMovies : [LikedMovieCard]? //if no datas ,is a empty list
+    var UserCollection : [Post]?//if no datas ,is a empty list
+    var UserLikedMovies : [LikedMovieCard]?//if no datas ,is a empty list
     var UserCustomList : [CustomListInfo]?
     var UserGenrePrerences :[GenreTypeInfo]? // if no datas ,is a empty list
     
@@ -119,5 +125,38 @@ struct Profile : Decodable{
         return URL(string:"\(SERVER_HOST)/resources\(cover ?? "")" )!
     }
     
+    var totol_notification : Int {
+        return (notification_info?.comment_notification_count ?? 0) + (notification_info?.friend_notification_count ?? 0) + (notification_info?.likes_notification_count ?? 0)
+    }
     
+}
+
+struct NotificationInfo : Decodable {
+    var friend_notification_count : Int
+    var likes_notification_count : Int
+    var comment_notification_count : Int
+    
+    var friend_count : String {
+        if friend_notification_count <= 99 {
+            return "\(friend_notification_count)"
+        }else {
+            return "99+"
+        }
+    }
+    
+    var comment_count : String {
+        if comment_notification_count <= 99 {
+            return "\(comment_notification_count)"
+        }else {
+            return "99+"
+        }
+    }
+    
+    var likes_count : String {
+        if likes_notification_count <= 99 {
+            return "\(likes_notification_count)"
+        }else {
+            return "99+"
+        }
+    }
 }

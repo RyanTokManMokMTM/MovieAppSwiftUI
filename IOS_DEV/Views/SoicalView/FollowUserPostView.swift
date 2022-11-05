@@ -126,19 +126,28 @@ struct FollowPostCell : View {
     @ViewBuilder
     func UserInfoCell() -> some View{
         HStack(alignment:.center){
+            //TODO: Fix this one !! out of range !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! coz the id problem
             WebImage(url:self.postVM.followingData[Id].user_info.UserPhotoURL)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 35, height: 35)
                     .clipShape(Circle())
 
-            HStack(alignment:.center, spacing:10){
-                Text(self.postVM.followingData[Id].user_info.name)
-                    .font(.system(size: 16, weight: .semibold))
-                Text(self.postVM.followingData[Id].post_at.dateDescriptiveString())
+            
+            VStack(alignment:.leading){
+                HStack(alignment:.center, spacing:10){
+                    Text(self.postVM.followingData[Id].user_info.name)
+                        .font(.system(size: 16, weight: .semibold))
+                    
+                    Text(self.postVM.followingData[Id].post_at.dateDescriptiveString())
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                }
+                Text("@\(self.postVM.followingData[Id].user_info.name)")
                     .font(.caption)
                     .foregroundColor(.gray)
             }
+            
             Spacer()
             //TODO: Coming Soone???
 //            Button(action: {

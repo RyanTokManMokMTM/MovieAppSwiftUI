@@ -65,6 +65,7 @@ PODS:
   - SDWebImage/Core (5.11.1)
   - SDWebImageSwiftUI (2.0.2):
     - SDWebImage (~> 5.10)
+  - SwiftUI-Pull-To-Refresh (1.1.8)
   - SwiftUIPager (2.4.0)
 
 DEPENDENCIES:
@@ -73,6 +74,7 @@ DEPENDENCIES:
   - GoogleSignIn
   - Kingfisher
   - SDWebImageSwiftUI
+  - SwiftUI-Pull-To-Refresh (~> 1.1.8)
   - SwiftUIPager
 
 SPEC REPOS:
@@ -94,6 +96,7 @@ SPEC REPOS:
     - PromisesObjC
     - SDWebImage
     - SDWebImageSwiftUI
+    - SwiftUI-Pull-To-Refresh
     - SwiftUIPager
 
 SPEC CHECKSUMS:
@@ -114,8 +117,9 @@ SPEC CHECKSUMS:
   PromisesObjC: 3113f7f76903778cf4a0586bd1ab89329a0b7b97
   SDWebImage: a7f831e1a65eb5e285e3fb046a23fcfbf08e696d
   SDWebImageSwiftUI: 8a3923c95108312b03a599ec1498754af55a6819
+  SwiftUI-Pull-To-Refresh: 7fc669ef0f611e1442a2935e186fa139ed70ec74
   SwiftUIPager: 06833fb6991ffa64d096ee4a9fc0d32edd495f49
 
-PODFILE CHECKSUM: d311283face58aca7cc7377f0f1455c6ade22462
+PODFILE CHECKSUM: 2d8175c502e2b9864d69a4abe6cdc1472f0f25e4
 
 COCOAPODS: 1.11.3

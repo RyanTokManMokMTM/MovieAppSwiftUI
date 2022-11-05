@@ -126,7 +126,7 @@ struct BenHubAlertView : View {
     }
 }
 
-struct BenHubAlertWithFriendRequest : View {
+struct BenHubAlertWithUserInfo : View {
     let user : SimpleUserInfo
     let message : String
     var body: some View{

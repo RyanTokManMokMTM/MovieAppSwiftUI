@@ -45,6 +45,7 @@ import SDWebImageSwiftUI
 struct CommentNotificationView: View {
     @Binding var isShowView : Bool
     @EnvironmentObject private var notificationVM : NotificationVM
+    @EnvironmentObject private var userVM : UserViewModel
     var body: some View {
         NotificationView(isShowView:$isShowView,topTitle: "留言"){
             List(){
@@ -63,8 +64,26 @@ struct CommentNotificationView: View {
         .background(Color("DarkMode2"))
         .onAppear(){
             self.notificationVM.GetCommentNotification()
+            UpdateNotificatin()
         }
     }
+    
+    private func UpdateNotificatin(){
+        
+        APIService.shared.ResetCommentNotification(){ result in
+            switch result{
+            case .success(_):
+                DispatchQueue.main.async {
+                    self.userVM.profile?.notification_info?.comment_notification_count = 0
+                }
+            case .failure(let err ):
+                print(err.localizedDescription)
+            }
+            
+        }
+        
+    }
+    
     
     @ViewBuilder
     private func CommentCell(info : CommentNotification) -> some View {

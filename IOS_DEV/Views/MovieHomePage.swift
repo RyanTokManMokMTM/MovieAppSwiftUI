@@ -70,15 +70,6 @@ struct MovieHomePage: View {
                                         
                                     }
                                     .tag(0)
-//                                    .wait(isLoading: $HubState.isWait){
-//                                        BenHubLoadingView(message: HubState.message)
-//                                    }
-//                                    .alert(isAlert: $HubState.isPresented){
-//                                        BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
-//
-//                                    }
-                                
-                                
                                 
                                 SoicalView(namespace: namespace)
                                     .navigationTitle("")
@@ -97,14 +88,6 @@ struct MovieHomePage: View {
                                         
                                     }
                                     .tag(1)
-//                                    .wait(isLoading: $HubState.isWait){
-//                                        BenHubLoadingView(message: HubState.message)
-//                                    }
-//                                    .alert(isAlert: $HubState.isPresented){
-//                                        BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
-//
-//                                    }
-                                
                                                     
                                 MessageView()
                                     .navigationTitle("")
@@ -112,23 +95,16 @@ struct MovieHomePage: View {
                                     .navigationBarHidden(true)
                                     .tabItem{
                                         VStack(alignment:.center,spacing:10){
-                                            Image(systemName:"person.2.fill")
+                                            Image(systemName:"bell.fill")
                                                 .imageScale(.medium)
-                                            Text("朋友")
+                                            Text("通知")
                                                 .frame(width: 50)
                                                 .font(.caption)
                                         }
                                         
                                     }
                                     .tag(2)
-//                                    .wait(isLoading: $HubState.isWait){
-//                                        BenHubLoadingView(message: HubState.message)
-//                                    }
-//                                    .alert(isAlert: $HubState.isPresented){
-//                                        BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
-//
-//                                    }
-                                
+                                    .badge(userVM.profile?.totol_notification ?? 0)
                                 
                                 PersonProfileView()
                                     .navigationTitle("")
@@ -147,14 +123,6 @@ struct MovieHomePage: View {
                                         
                                     }
                                     .tag(3)
-//                                    .wait(isLoading: $HubState.isWait){
-//                                        BenHubLoadingView(message: HubState.message)
-//                                    }
-//                                    .alert(isAlert: $HubState.isPresented){
-//                                        BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
-//
-//                                    }
-                                
                             }
                             .accentColor(.white)
                             .background(Color("DarkMode2"))

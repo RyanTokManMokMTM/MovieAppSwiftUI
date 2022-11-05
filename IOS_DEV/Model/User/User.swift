@@ -14,6 +14,10 @@ struct User: Decodable{
     var UserName: String
     var Email: String
     var Password: String
+    
+    //friendNotificationCount
+    //LikeNotificationCount
+    //CommentNotificationCount
 //    var UserPhoto: String
     var UserPhoto: String?
 //
@@ -61,6 +65,31 @@ class UserViewModel : ObservableObject{
     
     //Use for other user
     func getUserProfile(){
+        if self.userID == nil{
+            return
+        }
+        
+        self.isLoadingProfile = true
+        self.fetchProfileError = nil
+        APIService.shared.GetUserProfile(){ [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .success(let data):
+                print("GET USER PROFILE SUCCEED")
+                self.profile = data
+//                self.profile!.UserGenrePrerences = []
+                self.isLoadingProfile = false
+                print(data)
+            case .failure(let err):
+                print("????")
+                self.fetchProfileError = err
+                print(err.localizedDescription)
+            }
+        }
+        
+    }
+    
+    func getUserProfileByID(){
         if self.userID == nil{
             return
         }
@@ -293,7 +322,7 @@ class UserViewModel : ObservableObject{
     }
     
     func GetPostIndex(postId : Int) -> Int{
-        print("collection ??\(self.profile!.UserCollection == nil)")
+//        print("collection ??\(self.profile!.UserCollection == nil)")
         if self.profile!.UserCollection == nil {
             return -1
         }
@@ -313,4 +342,6 @@ class UserViewModel : ObservableObject{
         
         return ids
     }
+    
+   
 }

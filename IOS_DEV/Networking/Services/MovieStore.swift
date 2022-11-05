@@ -39,7 +39,7 @@ class MovieStore: MovieService {
             "query": query
         ], completion: completion)
     }
-
+    
     func fetchMovies(from endpoint: MovieListEndpoint, completion: @escaping (Result<MovieResponse, MovieError>) -> ()) {
         guard let url = URL(string: "\(baseAPIURL)\(endpoint.description)") else {
             completion(.failure(.invalidEndpoint))
@@ -251,6 +251,8 @@ class MovieStore: MovieService {
 }
 
 class APIService : ServerAPIServerServiceInterface{
+
+    
     static let shared = APIService()
     private init(){
     } //signleton mode
@@ -282,9 +284,21 @@ class APIService : ServerAPIServerServiceInterface{
         self.FetchAndDecode(request: request, completion: completion)
     }
     
+    func asyncServerConnection() async -> Result<ServerStatus,Error> {
+        guard let url = URL(string: HOST + APIEndPoint.HealthCheck.apiUri) else{
+           return .failure(APIError.badUrl)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        return await AsyncFetchAndDecode(request: request)
+    }
+
+
+
     
     //MARK: --USER
-    func GetUserProfile(token : String, completion: @escaping (Result<Profile, Error>) -> ()) {
+    func GetUserProfile(completion: @escaping (Result<Profile, Error>) -> ()) {
         
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.UserProfile.apiUri) else{
             completion(.failure(APIError.badUrl))
@@ -412,6 +426,46 @@ class APIService : ServerAPIServerServiceInterface{
         request.addValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.httpBody = httpBody as Data
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    
+    func ResetFriendNotification(completion: @escaping (Result<ResetFriendNotificationResp,Error>)->()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.ResetFriendNotification.apiUri) else{
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    func ResetCommentNotification(completion: @escaping (Result<ResetCommentNotificationResp,Error>)->()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.ResetCommentNotification.apiUri) else{
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        PostAndDecode(req: request, completion: completion)
+    }
+    func ResetLikesNotification(completion: @escaping (Result<ResetLikesNotificationResp,Error>)->()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.ResetLikesNotification.apiUri) else{
+            completion(.failure(APIError.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         PostAndDecode(req: request, completion: completion)
     }
@@ -1551,6 +1605,97 @@ class APIService : ServerAPIServerServiceInterface{
         }.resume()
     }
     
+    private func AsyncFetchAndDecode<ResponseType : Decodable>(request : URLRequest,params : [String:String]? = nil) async -> Result<ResponseType,Error>{
+        
+        //check the url
+        guard var component = URLComponents(url: request.url!, resolvingAgainstBaseURL: false) else {
+//            completion(.failure(APIError.invalidEndpoint))
+            return .failure(APIError.invalidEndpoint)
+        }
+        
+        //page=?&value=? etc
+        var query : [URLQueryItem] = []
+        if let params = params{
+            query.append(contentsOf: params.map{ URLQueryItem(name: $0.key, value: $0.value)})
+            component.queryItems = query
+        }
+        
+        guard let _ = component.url else {
+//            completion(.failure(APIError.invalidEndpoint))
+//            return
+            return .failure(APIError.invalidEndpoint)
+        }
+
+    
+        
+//        print(request.absoluteURL)
+        //do a URLSession
+        
+        do {
+            let (data ,response) = try await Client.data(for: request)
+            guard let statusCode = response as? HTTPURLResponse,200..<300 ~= statusCode.statusCode else{
+                return  .failure(APIError.invalidResponse)
+            }
+            
+            if let decideData = try? self.Decoder.decode(ResponseType.self, from: data){
+               return .success(decideData)
+            }else{
+                //MARK: this code need to status code block !!!
+                let errResp = try self.Decoder.decode(ErrorResp.self, from: data)
+                print(errResp)
+                return .failure(errResp)
+            }
+        } catch {
+            return .failure(error)
+        }
+        
+//        Client.dataTask(with:request){ [weak self] (data,response,err) in
+//            guard let self = self else {return} //if current task is break , return
+//
+//            guard err == nil else {
+//                DispatchQueue.main.async {
+//                    completion(.failure(APIError.apiError))
+//                }
+//                return
+//            }
+//
+//            //reponse cast to httpResponse ? and status code is 2xx?
+//            guard let statusCode = response as? HTTPURLResponse,200..<300 ~= statusCode.statusCode else{
+//                DispatchQueue.main.async {
+//                    //Decode datas message???
+//
+//                    completion(.failure(APIError.invalidResponse))
+//                }
+//                return
+//            }
+//
+//            guard let data = data else{
+//                DispatchQueue.main.async {
+//                    completion(.failure(APIError.noData))
+//                }
+//                return
+//            }
+//
+//
+//            do {
+//                if let result = try? self.Decoder.decode(ResponseType.self, from: data){
+//                    DispatchQueue.main.async {
+//                        completion(.success(result))
+//                    }
+//                }else{
+//                    let errRes = try self.Decoder.decode(ErrorResp.self, from: data)
+//                    DispatchQueue.main.async {
+//                        completion(.failure(errRes))
+//                    }
+//                }
+//            } catch{
+//                DispatchQueue.main.async {
+//                    completion(.failure(APIError.serializationError))
+//                }
+//            }
+//        }.resume()
+    }
+    
     private func PostAndDecode<ResponseType : Decodable>(req : URLRequest,completion : @escaping (Result<ResponseType,Error>)->()) {
         
         Client.dataTask(with: req){(data,response,error) in
@@ -1788,8 +1933,7 @@ struct PersonDataInfo : Codable,Identifiable {
 }
 
 struct ServerStatus : Decodable{
-    let status : String
-    let code : Int
+    let result : String
 }
 
 

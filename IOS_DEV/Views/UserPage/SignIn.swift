@@ -173,7 +173,7 @@ struct SignInView: View   {
                 UserDefaults.standard.set(user.token, forKey: "userToken") //storing token
                 UserDefaults.standard.set(user.expired, forKey: "tokenExpired") //storing token expired time
                 
-                self.GetUserProfile(token: user.token)
+                self.GetUserProfile()
             case .failure(let err):
                 DispatchQueue.main.async {
                     withAnimation{
@@ -189,8 +189,8 @@ struct SignInView: View   {
     
     
     //Sending Request to server - Get Profile by Token
-    func GetUserProfile(token : String) {
-        APIService.shared.GetUserProfile(token: token){ (result) in
+    func GetUserProfile() {
+        APIService.shared.GetUserProfile(){ (result) in
             switch result{
             case .success(let profile):
 //                ErrorAlert = false

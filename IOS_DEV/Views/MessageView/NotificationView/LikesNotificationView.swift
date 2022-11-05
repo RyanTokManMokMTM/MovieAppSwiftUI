@@ -71,6 +71,7 @@ import SDWebImageSwiftUI
 struct LikesNotificationView: View {
     @Binding var isShowView : Bool
     @EnvironmentObject private var notificationVM : NotificationVM
+    @EnvironmentObject private var userVM :UserViewModel
     
     var body: some View {
         NotificationView(isShowView:$isShowView,topTitle: "點贊"){
@@ -91,6 +92,23 @@ struct LikesNotificationView: View {
         .background(Color("DarkMode2"))
         .onAppear(){
             notificationVM.GetLikesNotification()
+            UpdateNotificatin()
+        }
+        
+    }
+    
+    private func UpdateNotificatin(){
+        
+        APIService.shared.ResetLikesNotification(){ result in
+            switch result{
+            case .success(_):
+                DispatchQueue.main.async {
+                    self.userVM.profile?.notification_info?.likes_notification_count = 0
+                }
+            case .failure(let err ):
+                print(err.localizedDescription)
+            }
+            
         }
         
     }

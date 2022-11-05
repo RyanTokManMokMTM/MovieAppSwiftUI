@@ -9,7 +9,7 @@ import SwiftUI
 import SDWebImageSwiftUI
 import CoreAudio
 import Kingfisher
-import Combine //used to add a pulisher to a state variable
+import Combine
 
 struct PersonProfileView : View{
     @StateObject var HubState : BenHubState = BenHubState.shared
@@ -28,7 +28,7 @@ struct PersonProfileView : View{
             case .normal,.system_message:
                 BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
             case .notification:
-                BenHubAlertWithFriendRequest(user: HubState.senderInfo!, message: HubState.message)
+                BenHubAlertWithUserInfo(user: HubState.senderInfo!, message: HubState.message)
             case .message:
                 BenHubAlertWithMessage(user: HubState.senderInfo!, message: HubState.message)
             }
@@ -255,96 +255,6 @@ struct UserSetting : View {
     }
 }
 
-//struct EditTextAreaView : View {
-//    var settingHeader : String = "設定"
-//    @Binding var editText : String
-//    @Binding var isCancel : Bool
-//    @State private var isSave : Bool = false
-//    var body : some View{
-//
-//        GeometryReader{proxy in
-//            VStack(alignment:.leading){
-//                VStack{
-//                    HStack(){
-//                        Button(action:{
-//                            withAnimation(){
-//                                self.isCancel.toggle()
-//                            }
-//                        }){
-//                            Text("取消")
-//                                .foregroundColor(.white)
-//                                .font(.system(size: 14))
-//                        }
-//                        Spacer()
-//                        Text(settingHeader)
-//                            .font(.system(size: 14))
-//                        Spacer()
-//
-//                        Button(action:{
-//                            withAnimation(){
-//                                self.isSave.toggle()
-//                                self.isCancel.toggle()
-//                            }
-//                        }){
-//                            Text("完成")
-//                                .foregroundColor(.white)
-//                                .font(.system(size: 14))
-//                        }
-//                    }
-//                    .font(.system(size: 15))
-//                    .padding(.horizontal,5)
-//                    .padding(.bottom,10)
-//                }
-//                .frame(width: UIScreen.main.bounds.width, height: proxy.safeAreaInsets.top + 30,alignment: .bottom)
-//                Divider()
-//                    .background(Color.white.opacity(0.25))
-//
-//                HStack{
-//                    TextEditor(text: $editText)
-//                        .font(.system(size: 13))
-//                        .frame(height: 100, alignment: .center)
-//                        .background(Color("appleDark"))
-//                        .onReceive(Just(editText)){_ in limitText(50)}
-//
-//
-//                }
-//                .padding(5)
-//                .background(Color("appleDark"))
-//                .cornerRadius(10)
-//                .overlay(
-//                    VStack{
-//                        Spacer()
-//                        HStack{
-//                            Spacer()
-//                            Text("\(editText.count)/50")
-//                                .foregroundColor(.gray)
-//                                .font(.footnote)
-//                                .font(.system(size: 13))
-//                        }
-//                    }
-//                    .padding()
-//                )
-//                .padding(.horizontal)
-//
-//
-//
-//            }
-//            .onAppear {
-//                UITextView.appearance().backgroundColor = .clear
-//                UITextView.appearance().tintColor = .gray
-//            }
-//            .edgesIgnoringSafeArea(.all)
-//
-//        }
-//
-//    }
-//
-//    func limitText(_ upper: Int) {
-//        if editText.count > upper {
-//            editText = String(editText.prefix(upper))
-//        }
-//    }
-//}
 
 //currently just allow user to edit the name
 enum EditType {
@@ -621,6 +531,7 @@ struct profileCardCell : View {
     var Id : Int
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var postVM : PostVM
+    var action : ()->()
 
     var body: some View{
         VStack(alignment:.center){
@@ -631,11 +542,6 @@ struct profileCardCell : View {
                 .transition(.fade(duration: 0.5))
                 .aspectRatio(contentMode: .fit)
                 .clipShape(CustomeConer(width: 5, height: 5, coners: [.topLeft,.topRight]))
-//                .matchedGeometryEffect(id: post.id, in: namespace)
-//                .frame(height:230)
-                
-                
-
             Group{
     
                 HStack{
@@ -697,11 +603,9 @@ struct profileCardCell : View {
         .background(Color("MoviePostColor").cornerRadius(5))
         .padding(.horizontal,2)
         .onTapGesture {
-            self.postVM.selectedPost = self.userVM.profile!.UserCollection![Id]
-            withAnimation{
-                self.postVM.isShowPostDetail.toggle()
-            }
+            action()
         }
+
     }
     
     
@@ -765,13 +669,12 @@ struct PersonPostCardGridView : View{
             }else{
                 FlowLayoutView(list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10){ info in
                 
-                    profileCardCell(Id: userVM.GetPostIndex(postId: info.id))
-                        .onTapGesture {
-                            withAnimation{
-                                postVM.selectedPost = info
-                                postVM.isShowPostDetail = true
-                            }
+                    profileCardCell(Id: userVM.GetPostIndex(postId: info.id)){
+                        self.postVM.selectedPostInfo = info
+                        withAnimation{
+                            self.postVM.isShowPostDetail.toggle()
                         }
+                    }
                 }
             }
             
@@ -1365,13 +1268,22 @@ struct PersonPostTabBar : View{
 
 }
 
+struct RefershState {
+    var startOffset : CGFloat = 0
+    var offset : CGFloat = 0
+    var started : Bool
+    var released : Bool
+    var Ended : Bool
+    
+}
+
 struct personProfile: View {
     @EnvironmentObject private var userVM : UserViewModel
     @EnvironmentObject private var postVM : PostVM
     @State private var isEditProfile : Bool = false
     @State private var isSetting : Bool = false
     @State private var isAddingList : Bool = false
-    
+    @State private var refersh = RefershState(started: false, released: false,Ended: false)
     private let max = UIScreen.main.bounds.height / 2.5
     var topEdge : CGFloat
 
@@ -1434,6 +1346,31 @@ struct personProfile: View {
             
             GeometryReader { proxy in
                 ScrollView(showsIndicators: false){
+                    GeometryReader{reader -> AnyView in
+                        
+                        DispatchQueue.main.async {
+                            if self.refersh.startOffset == 0 {
+                                self.refersh.startOffset = reader.frame(in: .global).minY
+                            }
+                            refersh.offset = reader.frame(in: .global).minY
+               
+                            
+                            if self.refersh.offset - refersh.startOffset > 60 && !self.refersh.started {
+                                print("stated???")
+                                self.refersh.started = true
+                            }
+                            
+                            if self.refersh.offset == self.refersh.startOffset && self.refersh.started && !self.refersh.released{
+                                
+                                self.refersh.released = true
+//                                self.refersh.Ended = false
+                                updateData()
+                            }
+                            
+                        }
+
+                        return AnyView(Color.black.frame(width: 0, height: 0))
+                    }.frame(width: 0, height: 0)
                     LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]){
                         GeometryReader{ proxy  in
                             ZStack(alignment:.top){
@@ -1456,10 +1393,11 @@ struct personProfile: View {
                                     .zIndex(0)
                                 
                                 
+                                
                                 profile()
                                     .frame(maxWidth:.infinity)
                                     .frame(height:  getHeaderHigth() ,alignment: .bottom)
-                                    .zIndex(1)
+                                    .zIndex(2)
                                 
                             }
                         }
@@ -1543,14 +1481,22 @@ struct personProfile: View {
                            }
         )
         .background(
-            NavigationLink(destination:   PostDetailView(postForm: .Profile, isFromProfile: true)
-                            .navigationBarTitle("")
-                            .navigationTitle("")
-                            .navigationBarBackButtonHidden(true)
-                            .navigationBarHidden(true)
-                            .environmentObject(userVM)
-                            .environmentObject(postVM), isActive: self.$postVM.isShowPostDetail){
-                EmptyView()
+            ZStack{
+        
+                NavigationLink(destination:   PostDetailView(postForm: .Profile, isFromProfile: true,postInfo:
+                                                                self.$postVM.selectedPostInfo)
+                    .navigationBarTitle("")
+                    .navigationTitle("")
+                    .navigationBarBackButtonHidden(true)
+                    .navigationBarHidden(true)
+                    .environmentObject(userVM)
+                    .environmentObject(postVM), isActive: self.$postVM.isShowPostDetail){
+                        EmptyView()
+                        
+                        
+                    }
+                
+                
                 
             }
         )
@@ -1558,10 +1504,41 @@ struct personProfile: View {
         
     }
     
+    func updateData(){
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            print("updated")
+            self.refersh.Ended = true
+            self.refersh.started = false
+            self.refersh.released = false
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25){
+                self.refersh.Ended = false
+            }
+            
+        }
+    }
+    
     @ViewBuilder
     func profile() -> some View{
         VStack(alignment:.leading){
             Spacer()
+//            ActivityIndicatorView()
+            HStack{
+                Spacer()
+
+                HStack{
+                    DrawShape()
+                        .trim(from:  self.refersh.Ended ? 1 : 0, to: self.refersh.started ? 1 : (self.refersh.offset - refersh.startOffset) / 60)
+                        .stroke(Color.gray, style: StrokeStyle(lineWidth: 3, lineCap:.round , lineJoin: .round))
+                        .rotationEffect(Angle(degrees: self.refersh.started && self.refersh.released ? 0 : -360))
+                        .animation( self.refersh.started && self.refersh.released ? Animation.linear(duration: 2.0).repeatForever(autoreverses: false) : .default)
+                        .opacity(self.refersh.Ended ? 0 : 1)
+                }.frame(width: 1, height: 1)
+                    
+                Spacer()
+            }
+            
+            
             HStack(alignment:.center){
                 WebImage(url: userVM.profile!.UserPhotoURL)
                     .resizable()

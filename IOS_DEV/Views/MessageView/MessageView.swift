@@ -496,7 +496,7 @@ struct MessageView: View {
             case .normal,.system_message:
                 BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
             case .notification:
-                BenHubAlertWithFriendRequest(user: HubState.senderInfo!, message: HubState.message)
+                BenHubAlertWithUserInfo(user: HubState.senderInfo!, message: HubState.message)
             case .message:
                 BenHubAlertWithMessage(user: HubState.senderInfo!, message: HubState.message)
             }
@@ -572,6 +572,7 @@ struct chatRow : View{
 
 struct MessageHeaderTab : View{
     @EnvironmentObject private var notificationVM : NotificationVM
+    @EnvironmentObject private var userVM : UserViewModel
     @Binding var isShowLikesNotification : Bool
     @Binding var isShowFollowingNotification : Bool
     @Binding var isShowCommentNotification : Bool
@@ -585,23 +586,29 @@ struct MessageHeaderTab : View{
                             .navigationBarTitle("")
                             .navigationBarHidden(true)
                             .environmentObject(notificationVM)
+                            .environmentObject(userVM)
                            ,isActive: $isShowLikesNotification){
-                ZStack(alignment:.topTrailing){
+//                ZStack(alignment:.topTrailing){
                     tabButton(systemIcon: "heart.circle.fill", iconColor: .red, buttonText: "點讚"){
                         withAnimation{
                             self.isShowLikesNotification = true
                         }
                     }
+                    .overlay(alignment: .topTrailing){
+                        if userVM.profile!.notification_info!.likes_notification_count > 0{
+                            Text(userVM.profile!.notification_info!.likes_count)
+                                .font(.system(size: 10,weight: .medium))
+                                .frame(width: 22, height: 22)
+                                .background(
+                                    Circle()
+                                        .fill(Color.red)
+                                )
+                                .offset(x: 5, y: -5)
+                        }
+                          
+                    }
 
-//                    Text("10")
-//                        .font(.system(size: 12,weight: .medium))
-//                        .frame(width: 20, height: 20)
-//                        .background(
-//                            Circle()
-//                                .fill(Color.red)
-//                        )
-//                        .offset(x: 5, y: -5)
-                }
+//                }
             }
             
             Spacer()
@@ -612,23 +619,26 @@ struct MessageHeaderTab : View{
                             .navigationBarTitle("")
                             .navigationBarHidden(true)
                             .environmentObject(notificationVM)
+                            .environmentObject(userVM)
                            ,isActive: $isShowFollowingNotification){
-                ZStack(alignment:.topTrailing){
                     tabButton(systemIcon: "person.fill", iconColor: .blue, buttonText: "好友邀請"){
                         withAnimation{
                             self.isShowFollowingNotification = true
                         }
                     }
-
-//                    Text("8")
-//                        .font(.system(size: 12,weight: .medium))
-//                        .frame(width: 20, height: 20)
-//                        .background(
-//                            Circle()
-//                                .fill(Color.red)
-//                        )
-//                        .offset(x: 5, y: -5)
-                }
+                    .overlay(alignment: .topTrailing){
+                        if userVM.profile!.notification_info!.friend_notification_count > 0{
+                            Text(userVM.profile!.notification_info!.friend_count)
+                                .font(.system(size: 10,weight: .medium))
+                                .frame(width: 22, height: 22)
+                                .background(
+                                    Circle()
+                                        .fill(Color.red)
+                                )
+                                .offset(x: 5, y: -5)
+                        }
+                           
+                    }
             }
             
             Spacer()
@@ -639,23 +649,26 @@ struct MessageHeaderTab : View{
                             .navigationBarTitle("")
                             .navigationBarHidden(true)
                             .environmentObject(notificationVM)
+                            .environmentObject(userVM)
                            ,isActive: $isShowCommentNotification){
-                ZStack(alignment:.topTrailing){
                     tabButton(systemIcon: "paperplane.fill", iconColor: .orange, buttonText: "評論"){
                         withAnimation{
                             self.isShowCommentNotification = true
                         }
                     }
-
-//                    Text("1")
-//                        .font(.system(size: 12,weight: .medium))
-//                        .frame(width: 20, height: 20)
-//                        .background(
-//                            Circle()
-//                                .fill(Color.red)
-//                        )
-//                        .offset(x: 5, y: -5)
-                }
+                    .overlay(alignment: .topTrailing){
+                        if userVM.profile!.notification_info!.comment_notification_count > 0{
+                            Text(userVM.profile!.notification_info!.comment_count)
+                                .font(.system(size: 10,weight: .medium))
+                                .frame(width: 22, height: 22)
+                                .background(
+                                    Circle()
+                                        .fill(Color.red)
+                                )
+                                .offset(x: 5, y: -5)
+                        }
+                           
+                    }
             }
             Spacer()
         }

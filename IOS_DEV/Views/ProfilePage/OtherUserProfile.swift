@@ -32,7 +32,7 @@ struct OtherUserProfile: View {
             if userVM.profile == nil {
                 DispatchQueue.main.async {
                     userVM.setUserID(userID: userID)
-                    userVM.getUserProfile()
+                    userVM.getUserProfileByID()
                     userVM.getUserPosts()
                     userVM.GetUserGenresSetting()
                 }
@@ -341,7 +341,7 @@ struct UserProfileView : View {
                         .font(.title2)
                         .redacted(reason: self.userVM.isLoadingProfile ? .placeholder : [])
                     
-                    Text("@\(userVM.profile?.name ?? ""))")
+                    Text("@\(userVM.profile?.name ?? "")")
                         .font(.caption)
                         .foregroundColor(Color.gray)
                         .redacted(reason: self.userVM.isLoadingProfile ? .placeholder : [])
@@ -571,7 +571,7 @@ struct UserProfileView : View {
 
 struct OtherPersonPostCardGridView : View{
 //    let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
-    @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var userVM :  UserViewModel
     @EnvironmentObject var postVM : PostVM
     var body: some View{
         if userVM.profile?.UserCollection != nil{
@@ -587,27 +587,31 @@ struct OtherPersonPostCardGridView : View{
             }else{
                 FlowLayoutView(list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10){ info in
                 
-                    profileCardCell(Id : userVM.GetPostIndex(postId: info.id))
-                        .onTapGesture {
+                    profileCardCell(Id : userVM.GetPostIndex(postId: info.id)){
+                        DispatchQueue.main.async {
+                            self.postVM.selectedPostInfo = info
                             withAnimation{
-                                postVM.selectedPost = info
-                                postVM.isShowPostDetail = true
+                                self.postVM.isShowPostDetail.toggle()
                             }
+                        
                         }
+                    }
                 }
                 .background(
-                    NavigationLink(destination:   PostDetailView(postForm: .Profile, isFromProfile: true)
-                                    .navigationBarTitle("")
-                                    .navigationTitle("")
-                                    .navigationBarBackButtonHidden(true)
-                                    .navigationBarHidden(true)
-                                    .environmentObject(userVM)
-                                    .environmentObject(postVM), isActive: self.$postVM.isShowPostDetail){
-                        EmptyView()
-                        
-                    }
+                    NavigationLink(destination:   PostDetailView(postForm: .Profile, isFromProfile: true,postInfo: self.$postVM.selectedPostInfo)
+                        .navigationBarTitle("")
+                        .navigationTitle("")
+                        .navigationBarBackButtonHidden(true)
+                        .navigationBarHidden(true)
+                        .environmentObject(userVM)
+                        .environmentObject(postVM), isActive: self.$postVM.isShowPostDetail){
+                            EmptyView()
+                            
+                        }
+                    
+                    
                 )
-                
+//                
 
                 
             }
@@ -616,6 +620,46 @@ struct OtherPersonPostCardGridView : View{
     }
         
 }
+
+
+//struct OtherPersonPostCardGridView : View{
+////    let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
+//    @EnvironmentObject var userVM : OtherUserViewModel
+//    @EnvironmentObject var postVM : PostVM
+//    var body: some View{
+//        if userVM.profile!.UserCollection == nil {
+//            if self.userVM.IsPostLoading {
+//                LoadingView(isLoading: self.userVM.IsPostLoading, error: self.userVM.PostError as NSError?){
+//                    self.userVM.getUserPosts()
+//                }
+//            }
+//        } else if userVM.profile!.UserCollection != nil{
+//            if userVM.profile!.UserCollection!.isEmpty{
+//                VStack{
+//                    Spacer()
+//                    Text("無文章")
+//                        .font(.system(size:15))
+//                        .foregroundColor(.gray)
+//                    Spacer()
+//                }
+//                .frame(height:UIScreen.main.bounds.height / 2)
+//            }else{
+//                FlowLayoutView(list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10){ info in
+//
+//                    profileCardCell(Id: userVM.GetPostIndex(postId: info.id)){
+//                        self.postVM.selectedPostInfo = info
+//                        withAnimation{
+//                            self.postVM.isShowPostDetail.toggle()
+//                        }
+//                    }
+//                }
+//            }
+//
+//        }
+//    }
+//
+//}
+
 
 struct OtherLikedPostCardGridView : View {
     @EnvironmentObject var userVM : UserViewModel

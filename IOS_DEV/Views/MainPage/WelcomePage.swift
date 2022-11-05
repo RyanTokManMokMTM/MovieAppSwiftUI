@@ -20,10 +20,7 @@ struct HomePage: View {
     @State private var currentBG = 0
     @State private var isStarted = false
 
-    private let screen  = UIScreen.main.bounds
-//    init(){
-//        UIScrollView.appearance().bounces = false
-//    }
+
     
     var body: some View {
         
@@ -53,6 +50,9 @@ struct HomePage: View {
             .navigationBarHidden(true)
             .navigationBarTitle("")
             .accentColor(.white)
+            .onAppear(){
+                WebsocketManager.shared.userVM = UserVM
+            }
         }
         .navigationViewStyle(.stack)
 //        .onAppear{
@@ -80,28 +80,28 @@ struct HomePage: View {
     }
     
     func autoLogin(){
-        if !userToken.isEmpty{
-            print("token exist")
-            APIService.shared.GetUserProfile(token: userToken){ (result) in
-                switch result{
-                case .success(let data):
-                    self.UserVM.setUserInfo(info: data)
-                    self.isLoggedIn.toggle()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8){
-                        self.isLoading = false
-                    }
-                case .failure(let err):
-                    DispatchQueue.main.async{
-//                        if err.localizedDescription == NetworkingError.badUrl.localizedDescription{
-//                            self.ServerInternalError.toggle()
-//                        }else{
-                            self.isLoading = false
-//                        }
-                    }
-                    print("Error is : \(err.localizedDescription)")
-                }
-            }
-        }
+//        if !userToken.isEmpty{
+//            print("token exist")
+//            APIService.shared.GetUserProfile(token: userToken){ (result) in
+//                switch result{
+//                case .success(let data):
+//                    self.UserVM.setUserInfo(info: data)
+//                    self.isLoggedIn.toggle()
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8){
+//                        self.isLoading = false
+//                    }
+//                case .failure(let err):
+//                    DispatchQueue.main.async{
+////                        if err.localizedDescription == NetworkingError.badUrl.localizedDescription{
+////                            self.ServerInternalError.toggle()
+////                        }else{
+//                            self.isLoading = false
+////                        }
+//                    }
+//                    print("Error is : \(err.localizedDescription)")
+//                }
+//            }
+//        }
     }
 }
 

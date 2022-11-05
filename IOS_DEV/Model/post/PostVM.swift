@@ -7,16 +7,20 @@
 
 import Foundation
 import SwiftUI
-
+//
+//let initPostInfo = Post(id: 0, user_info: PosterOwner(id: 0, name: "", avatar: ""), post_title: "", post_desc: "", post_movie_info: PostMovieInfo(id: 0, title: "", poster_path: ""), post_like_count: 0, post_comment_count: 0, create_at: 0, is_post_liked: false)
 
 class PostVM : ObservableObject {
+    @Published var isRefersh = false
     @Published var initAllData : Bool = true
     @Published var initFollowing : Bool = true
     @Published var postData : [Post] = [] //set to nil for first time
     @Published var followingData : [Post] = [] //set to nil for firs time
     @Published var index : TabItem = .Explore
     @Published var isShowPostDetail : Bool = false
-    @Published var selectedPost : Post?
+    @Published var selectedPost : Post? // need this ?
+//    @Published var selectedPostID : Int = -1
+    @Published var selectedPostInfo : Post
 //    
     @Published var isReadMorePostInfo : Bool = false
     @Published var selectedReadMorePost : Post? = nil
@@ -33,6 +37,7 @@ class PostVM : ObservableObject {
     init(){
 //        self.GetAllUserPost()
 //        self.GetFollowUserPost()
+        selectedPostInfo = Post(id: 0, user_info: PosterOwner(id: 0, name: "", avatar: ""), post_title: "", post_desc: "", post_movie_info: PostMovieInfo(id: 0, title: "", poster_path: ""), post_like_count: 0, post_comment_count: 0, create_at: 0, is_post_liked: false)
     }
 
     func CreatePost(title : String, desc : String,movie: Movie,user: Profile, onSuccess : @escaping ()->()){

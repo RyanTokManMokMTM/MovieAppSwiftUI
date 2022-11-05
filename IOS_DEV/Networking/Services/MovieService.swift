@@ -31,11 +31,12 @@ protocol MovieService {
 protocol ServerAPIServerServiceInterface {
     //TODO: HELPER
     func serverConnection(completion : @escaping (Result<ServerStatus,Error>)->())
+    func asyncServerConnection() async -> Result<ServerStatus,Error>
     
     //TODO: USER
     func UserLogin(req : UserLoginReq,completion: @escaping (Result<UserLoginResp,Error>)->())
     func UserSignUp(req : UserSignUpReq,completion : @escaping (Result<UserSignUpResp,Error>)->())
-    func GetUserProfile(token : String,completion : @escaping (Result<Profile,Error>) -> ())
+    func GetUserProfile(completion : @escaping (Result<Profile,Error>) -> ())
     func GetUserProfileById(userID : Int,completion : @escaping (Result<Profile,Error>) -> ())
     func UpdateUserProfile(req : UserProfileUpdateReq, completion: @escaping (Result<UserProfileUpdateResp,Error>) -> ())
     func UploadImage(imgData : Data,uploadType: UploadImageType, completion: @escaping (Result<UploadImageResp,Error>) -> ())
@@ -43,6 +44,10 @@ protocol ServerAPIServerServiceInterface {
     func CountFriend(req : CountFriendReq,completion: @escaping (Result<CountFriendResp,Error>)->())
     func GetFriendList(req : GetFriendListReq,completion: @escaping (Result<GetFriendListResp,Error>)->())
     func GetFriendRoomList(completion: @escaping (Result<GetFriendRoomListResp,Error>)->())
+    
+    func ResetFriendNotification(completion: @escaping (Result<ResetFriendNotificationResp,Error>)->())
+    func ResetCommentNotification(completion: @escaping (Result<ResetCommentNotificationResp,Error>)->())
+    func ResetLikesNotification(completion: @escaping (Result<ResetLikesNotificationResp,Error>)->())
 //    func CountFollowingUser(req: CountFollowingReq, completion : @escaping (Result<CountFollowingResp,Error>) -> ())
 //    func CountFollowedUser(req : CountFollowedReq, completion : @escaping (Result<CountFollowedResp,Error>) -> ())
 //    func GetUserFollowingList(req: GetFollowingListReq,completion : @escaping (Result<GetFollowingListResp,Error>) -> ())
@@ -210,6 +215,9 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     case CountFriend
     case GetFriendList
     case GetFriendRoomList
+    case ResetFriendNotification
+    case ResetCommentNotification
+    case ResetLikesNotification
 //    case CountFollowingUser
 //    case CountFollowedUser
 //    case GetUserFollowingList
@@ -312,6 +320,9 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
         case .CountFriend: return "/user/friends/count/" //user/friends/count/:id
         case .GetFriendList: return "/user/friends/list/" //user/friends/list/:id
         case .GetFriendRoomList: return "/user/friends/room"
+        case .ResetLikesNotification: return "/user/reset/likes/notification"
+        case .ResetFriendNotification: return "/user/reset/friend/notification"
+        case .ResetCommentNotification: return "/user/reset/comment/notification"
 
             
         case .GetMoviesInfoByGenre: return "/movies/list/"

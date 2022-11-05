@@ -7,6 +7,8 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
+import SwiftUI_Pull_To_Refresh
+
 
 enum TabItem : String{
     case Explore = "發現"
@@ -25,18 +27,15 @@ struct SoicalView: View {
                 NavTabView(index: self.$postVM.index)
                     .frame(maxWidth:.infinity)
                 
+                
                 ScrollView(.horizontal, showsIndicators: false){
                     TabView(selection: self.$postVM.index){
                         CardFlowLayout()
                             .tag(TabItem.Explore)
                         FollowUserPostView()
                             .tag(TabItem.Follow)
-       
-
                     }
                     .environmentObject(postVM)
-                  
-//                    .animation(.easeOut(duration: 0.2), value: self.postVM.index)
                     .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                     .frame(width: proxy.size.width)
                 }
@@ -51,7 +50,7 @@ struct SoicalView: View {
             case .normal,.system_message:
                 BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
             case .notification:
-                BenHubAlertWithFriendRequest(user: HubState.senderInfo!, message: HubState.message)
+                BenHubAlertWithUserInfo(user: HubState.senderInfo!, message: HubState.message)
             case .message:
                 BenHubAlertWithMessage(user: HubState.senderInfo!, message: HubState.message)
             }

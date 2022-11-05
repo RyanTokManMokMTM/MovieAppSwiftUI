@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 enum WebsocketOpCode : UInt8 {
     case OpContinuation  = 0x0
@@ -17,6 +18,18 @@ enum WebsocketOpCode : UInt8 {
     case OpPong          = 0xa
     
     var value: UInt8 {
+        return self.rawValue
+    }
+}
+
+enum MessageType : Int {
+    case SYSTEM  = 0
+    case MESSAGE          = 1
+    case FRIEND        = 2
+    case COMMENT         = 3
+    case LIKES          = 4
+    
+    var value: Int {
         return self.rawValue
     }
 }
@@ -55,10 +68,22 @@ class WebsocketManager : ObservableObject{
     @AppStorage("userToken") var token : String = ""
     private let TTL = 5  //5 ping
     static var shared = WebsocketManager()
+    private var cancellable : AnyCancellable?
+    var userVM : UserViewModel? {
+        didSet{
+            print("setting up user vm in websocket as object...")
+            self.objectWillChange.send()
+            cancellable = userVM?.objectWillChange.sink(receiveValue: { _ in
+                print("sending???")
+                self.objectWillChange.send()
+            })
+        }
+    }
+    
     @Published var conn : URLSessionWebSocketTask?
     
     private init(){}
-    
+
     
     func connect(){
         if self.conn != nil { //no need to connecte again
@@ -118,63 +143,24 @@ class WebsocketManager : ObservableObject{
                         self.onSend(message: pingMessage)
                     }else if obj.opcode == WebsocketOpCode.OpText.rawValue{
                         
-                        if obj.message_type == 0{
-                            //MARK: A system message
-                            BenHubState.shared.AlertMessageWithUserInfo(message: obj.content, userInfo: obj.sender_info,type: .notification)
-                        }else {
-                            //MARK: A user message
-                            let newMessage = MessageInfo(id: obj.message_id, message: obj.content, sender_id: obj.sender_info.id, sent_time: obj.send_time)
-                            
-                            
-                            //MARK: This may change....
-                            let index = MessageViewModel.shared.FindChatRoom(roomID: obj.group_id)
-                            if index != -1 {
-                                
-                                MessageViewModel.shared.rooms[index].last_sender_id = obj.sender_info.id
-                                
-                                if MessageViewModel.shared.currentTalkingRoomID == obj.group_id {
-                                    print("inside the room")
-                                    MessageViewModel.shared.rooms[index].is_read = true
-                                    
-                                    //MARK: is set false by default
-                                    //MARK: and user is now in the room
-                                    //MARK: so we need to change the is_read field to true
-                                    APIService.shared.SetIsRead(req: SetIsReadReq(room_id: obj.group_id)){ reuslt in
-                                        switch reuslt{
-                                        case .success(_):
-                                            print("read state is updated")
-                                        case .failure(let err):
-                                            print(err.localizedDescription)
-                                        }
-                                    }
-                                }else {
-                                    MessageViewModel.shared.rooms[index].is_read = false
-                                }
-                                
-                                MessageViewModel.shared.addNewMessage(roomID: obj.group_id, message: newMessage)
-                            } else {
-                                //we need to get the room info first?
-                                APIService.shared.GetRoomInfo(req: GetRoomInfoReq(roome_id: obj.group_id)){ result in
-                                    switch result{
-                                    case .success(let data):
-                                        var chatData = data.info
-                                        chatData.messages.append(newMessage)
-                                        
-                                        //put into vm
-                                        MessageViewModel.shared.rooms.append(chatData)
-                                    case .failure(let err):
-                                        print(err.localizedDescription)
-                                    }
-                                }
-                            }
-                            
-                                
-                            if MessageViewModel.shared.currentTalkingRoomID == 0 || MessageViewModel.shared.currentTalkingRoomID != obj.group_id{
-                                BenHubState.shared.AlertMessageWithUserInfo(message: obj.content, userInfo: obj.sender_info,type: .message)
-                            }
-                            
-            
+                        switch obj.message_type {
+                        case 0 :
+                            BenHubState.shared.AlertMessageWithUserInfo(message: obj.content, userInfo: obj.sender_info,type: .normal)
+                        case 1 :
+                            pushMessageToChat(obj: obj)
+                        case 2:
+                            //MARK: FRIEND_NOTIFICATION
+                            pushFriendNotification(obj: obj)
+                        case 3:
+                            //MARK: COMMENT_NOTIFICATION
+                            pushCommentNotification(obj: obj)
+                        case 4:
+                            //MARK: LIKES_NOTIFICATION
+                            pushLikesNotification(obj: obj)
+                        default:break
                         }
+                        
+    
                     }
                     
                 } catch ( let err ){
@@ -191,11 +177,73 @@ class WebsocketManager : ObservableObject{
         }
     }
     
-//    func ping(){
-//        //Send the websocket message with ping opcode
-//
-//    }
-//
+    
+    private func pushMessageToChat(obj : MessageResp){
+        //MARK: A user message
+        let newMessage = MessageInfo(id: obj.message_id, message: obj.content, sender_id: obj.sender_info.id, sent_time: obj.send_time)
+        
+        
+        //MARK: This may change....
+        let index = MessageViewModel.shared.FindChatRoom(roomID: obj.group_id)
+        if index != -1 {
+            
+            MessageViewModel.shared.rooms[index].last_sender_id = obj.sender_info.id
+            
+            if MessageViewModel.shared.currentTalkingRoomID == obj.group_id {
+                print("inside the room")
+                MessageViewModel.shared.rooms[index].is_read = true
+                
+                //MARK: is set false by default
+                //MARK: and user is now in the room
+                //MARK: so we need to change the is_read field to true
+                APIService.shared.SetIsRead(req: SetIsReadReq(room_id: obj.group_id)){ reuslt in
+                    switch reuslt{
+                    case .success(_):
+                        print("read state is updated")
+                    case .failure(let err):
+                        print(err.localizedDescription)
+                    }
+                }
+            }else {
+                MessageViewModel.shared.rooms[index].is_read = false
+            }
+            
+            MessageViewModel.shared.addNewMessage(roomID: obj.group_id, message: newMessage)
+        } else {
+            //we need to get the room info first?
+            APIService.shared.GetRoomInfo(req: GetRoomInfoReq(roome_id: obj.group_id)){ result in
+                switch result{
+                case .success(let data):
+                    var chatData = data.info
+                    chatData.messages.append(newMessage)
+                    
+                    //put into vm
+                    MessageViewModel.shared.rooms.append(chatData)
+                case .failure(let err):
+                    print(err.localizedDescription)
+                }
+            }
+        }
+        
+            
+        if MessageViewModel.shared.currentTalkingRoomID == 0 || MessageViewModel.shared.currentTalkingRoomID != obj.group_id{
+            BenHubState.shared.AlertMessageWithUserInfo(message: obj.content, userInfo: obj.sender_info,type: .message)
+        }
+    }
+    
+    private func pushFriendNotification(obj : MessageResp) {
+        userVM?.profile?.notification_info?.friend_notification_count += 1
+        BenHubState.shared.AlertMessageWithUserInfo(message: obj.content, userInfo: obj.sender_info,type: .notification)
+    }
+    private func pushCommentNotification(obj : MessageResp) {
+        userVM?.profile?.notification_info?.comment_notification_count += 1
+        BenHubState.shared.AlertMessageWithUserInfo(message: obj.content, userInfo: obj.sender_info,type: .notification)
+    }
+    private func pushLikesNotification(obj : MessageResp) {
+        userVM?.profile?.notification_info?.likes_notification_count += 1
+        BenHubState.shared.AlertMessageWithUserInfo(message: obj.content, userInfo: obj.sender_info,type: .notification)
+    }
+    
     
     private func decode<T : Decodable>(type : T.Type,obj : Data) throws -> T{
         do {

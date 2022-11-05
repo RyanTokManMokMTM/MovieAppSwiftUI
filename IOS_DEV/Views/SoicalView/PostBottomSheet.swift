@@ -89,7 +89,7 @@ struct PostBottomSheet : View{
                     ScrollView(.vertical, showsIndicators: false){
                         VStack(alignment:.leading,spacing:8){
                             ForEach(self.$commentInfos) { comment in
-                                commentCell(comment: comment, isLoadingReply: $isLoadingReply, replyCommentId: $replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo,postID : postId)
+                                commentCell(postInfo: self.$postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)], comment: comment, isLoadingReply: $isLoadingReply, replyCommentId: $replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo)
                                     .padding(.vertical,5)
                             }
                         }
@@ -113,7 +113,7 @@ struct PostBottomSheet : View{
     private func CommentArea() -> some View {
         VStack{
             //                Spacer()
-            Divider()
+//            Divider()
             HStack{
                 TextField(self.placeHolder.isEmpty ? "留下點什麼~" : self.placeHolder,text:$message)
                     .font(.system(size:14,weight:.semibold))
@@ -137,7 +137,7 @@ struct PostBottomSheet : View{
             }
             .frame(height: 30)
         }
-        .padding(.bottom,5)
+        .padding(.vertical,5)
         
         
     }
@@ -226,6 +226,7 @@ struct PostBottomSheet : View{
 struct commentCell : View {
     @EnvironmentObject private var postVM : PostVM
     @EnvironmentObject private var userVM : UserViewModel
+    @Binding var postInfo : Post
     @Binding var comment : CommentInfo
     @Binding var isLoadingReply : Bool
     @Binding  var replyCommentId : Int
@@ -234,7 +235,8 @@ struct commentCell : View {
     @Binding  var isReply : Bool
     @Binding var commentInfos : [CommentInfo]
     @Binding var replyTo : CommentUser?
-    var postID : Int
+    
+    @State private var isShowLess = false
     var body : some View {
         VStack{
             HStack(alignment:.top){
@@ -253,7 +255,7 @@ struct commentCell : View {
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(Color(uiColor: .systemGray))
                             
-                            if getPostInfo().user_info.id == comment.user_info.id {
+                            if postInfo.user_info.id == comment.user_info.id {
                                 Text("作者")
                                     .font(.system(size: 11, weight: .semibold))
                                     .foregroundColor(Color(uiColor: .lightGray))
@@ -317,39 +319,72 @@ struct commentCell : View {
                             .font(.system(size:12,weight: .semibold))
                     } else {
                         VStack{
-                            if comment.replys != nil {
-                                
-                                ForEach(0..<comment.replys!.count,id:\.self){ i in
-                                    replyCommentCell(comment: $comment, replyCommentId:$replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo, releatedCommentId: comment.id, replyListIndex: i, postID: postID)
+                            if comment.replys != nil{
+                                if !self.isShowLess {
+                                    ForEach(0..<comment.replys!.count,id:\.self){ i in
+                                        replyCommentCell(postInfo: $postInfo, comment: $comment, replyCommentId:$replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo, releatedCommentId: comment.id, replyListIndex: i)
                                     
-                                
+                                    }
                                 }
-                                
-
                             }
                             
                             if comment.replys != nil && comment.reply_comments - comment.replys!.count <= 0 {
                                 HStack{
-                                    Text("已經沒有評論了~")
-                                        .font(.system(size:12,weight: .semibold))
+                                    if !self.isShowLess {
+                                        Text("已經沒有評論了~")
+                                            .font(.system(size:12,weight: .semibold))
+                                        
+                                    }
+                                    if comment.replys != nil {
+                                        Button(action:{
+                                            withAnimation{
+                                                self.isShowLess.toggle()
+                                            }
+                                        }){
+                                            Text("顯示\(self.isShowLess ? "更多" : "更少")")
+                                                .font(.system(size:14,weight: .semibold))
+                                            
+                                        }
+                                    }
                                     
                                     Spacer()
+                                    
+                                    
                                 }
                                 .padding(.vertical,5)
                                 .foregroundColor(.gray)
                             } else {
-                                Button(action:{
-                                    GetCommentReply(commentId: comment.id)
-                                }){
-                                    HStack{
-                                        Text("顯示\(comment.reply_comments - (comment.replys?.count ?? 0))條評論")
-                                            .font(.system(size:14,weight: .semibold))
-                                        
-                                        Spacer()
+                                HStack{
+                                    Button(action:{
+                                        GetCommentReply(commentId: comment.id)
+                                    }){
+                                        HStack{
+                                            Text("顯示\(comment.reply_comments - (comment.replys?.count ?? 0))條評論")
+                                                .font(.system(size:14,weight: .semibold))
+                                             
+                                            Spacer()
+                                        }
+                                        .padding(.vertical,5)
+                                        .foregroundColor(.gray)
                                     }
-                                    .padding(.vertical,5)
-                                    .foregroundColor(.gray)
+                                    
+                                    if comment.replys != nil {
+                                        Button(action:{
+                                            self.isShowLess.toggle()
+                                        }){
+                                            HStack{
+                                                Text("顯示\(self.isShowLess ? "更多" : "更少")")
+                                                    .font(.system(size:14,weight: .semibold))
+                                                 
+                                                Spacer()
+                                            }
+                                            .padding(.vertical,5)
+                                            .foregroundColor(.gray)
+                                        }
+                                    }
+                                    
                                 }
+        
                             }
                         }
                     
@@ -362,10 +397,10 @@ struct commentCell : View {
                 .padding(.vertical,3)
         }
     }
-    
-    private func getPostInfo() -> Post{
-        return self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postID)]
-    }
+//
+//    private func getPostInfo() -> Post{
+//        return self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postID)]
+//    }
     
     private func GetCommentReply(commentId : Int){
         let index = commentInfos.firstIndex{$0.id == commentId}
@@ -434,6 +469,7 @@ struct commentCell : View {
 struct replyCommentCell : View {
     @EnvironmentObject private var postVM : PostVM
     @EnvironmentObject private var userVM : UserViewModel
+    @Binding var postInfo : Post
     @Binding var comment : CommentInfo
     @Binding  var replyCommentId : Int
     @Binding  var rootCommentId : Int
@@ -443,7 +479,7 @@ struct replyCommentCell : View {
     @Binding var replyTo : CommentUser?
     let releatedCommentId : Int
     let replyListIndex : Int
-    let postID : Int
+
     
     var body : some View {
         VStack{
@@ -465,7 +501,7 @@ struct replyCommentCell : View {
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(Color(uiColor: .systemGray))
                             
-                            if getPostInfo().user_info.id == comment.replys![replyListIndex].user_info.id {
+                            if postInfo.user_info.id == comment.replys![replyListIndex].user_info.id {
                                 Text("作者")
                                     .font(.system(size: 11, weight: .semibold))
                                     .foregroundColor(Color(uiColor: .lightGray))
@@ -536,9 +572,9 @@ struct replyCommentCell : View {
         }
     }
     
-    private func getPostInfo() -> Post{
-        return self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: self.postID)]
-    }
+//    private func getPostInfo() -> Post{
+//        return self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: self.postID)]
+//    }
     
     private func likeComment(commentID : Int){
         

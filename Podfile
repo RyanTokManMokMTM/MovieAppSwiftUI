@@ -12,5 +12,5 @@ pod 'Kingfisher'
 pod 'SDWebImageSwiftUI'
 pod 'SwiftUIPager'
 pod 'DynamicOverlay'
-
+pod 'SwiftUI-Pull-To-Refresh', '~> 1.1.8'
 end
