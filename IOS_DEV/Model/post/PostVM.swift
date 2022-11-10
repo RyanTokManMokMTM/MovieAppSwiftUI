@@ -9,8 +9,10 @@ import Foundation
 import SwiftUI
 //
 //let initPostInfo = Post(id: 0, user_info: PosterOwner(id: 0, name: "", avatar: ""), post_title: "", post_desc: "", post_movie_info: PostMovieInfo(id: 0, title: "", poster_path: ""), post_like_count: 0, post_comment_count: 0, create_at: 0, is_post_liked: false)
-
+@MainActor
 class PostVM : ObservableObject {
+    @Published var isPostUploading = false
+//    @Published var uploadProgress : Double = 0
     @Published var isRefersh = false
     @Published var initAllData : Bool = true
     @Published var initFollowing : Bool = true
@@ -40,27 +42,41 @@ class PostVM : ObservableObject {
         selectedPostInfo = Post(id: 0, user_info: PosterOwner(id: 0, name: "", avatar: ""), post_title: "", post_desc: "", post_movie_info: PostMovieInfo(id: 0, title: "", poster_path: ""), post_like_count: 0, post_comment_count: 0, create_at: 0, is_post_liked: false)
     }
 
-    func CreatePost(title : String, desc : String,movie: Movie,user: Profile, onSuccess : @escaping ()->()){
+    func CreatePost(title : String, desc : String,movie: Movie,user: Profile){
         let req = CreatePostReq(post_title: title, post_desc: desc, movie_id: movie.id)
         self.isLoading = true
         self.err = nil
+        self.isPostUploading = true
         APIService.shared.CreatePost(req: req) { (result) in
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [self] in
                 self.isLoading = false
                 switch result{
                 case .success(let data):
-//                    print(data)
-                    
-                    let newPost = Post(id: data.id, user_info: PosterOwner(id: user.id, name: user.name, avatar: user.avatar), post_title: title, post_desc: desc, post_movie_info: PostMovieInfo(id: movie.id, title: movie.title, poster_path: movie.posterPath), post_like_count: 0, post_comment_count: 0, create_at: data.create_time, is_post_liked: false, comments: [])
-                    
-                    self.followingData.insert(newPost, at: 0)
-                    onSuccess()
+                    print(data)
+                    Task.init{
+                        await self.refershData()
+                    }
                     
                 case .failure(let err):
                     print(err.localizedDescription)
                     self.err = err
                 }
             }
+        }
+    }
+    
+    private func refershData() async {
+        print("updateing....")
+        let resp = await APIService.shared.AsyncGetFollowUserPost()
+        self.isPostUploading = false
+        APIService.shared.uploadProgress = 0
+        switch resp {
+        case .success(let data):
+            self.followingData = data.post_info
+            BenHubState.shared.AlertMessage(sysImg: "checkmark.circle.fill", message: "文章上傳成功")
+        case .failure(let err):
+            print("upload post err : \(err.localizedDescription)")
+            BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
         }
     }
     

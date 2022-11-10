@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
+import Refresher
 
 struct FollowUserPostView: View {
     @EnvironmentObject var postVM : PostVM
@@ -38,6 +39,9 @@ struct FollowUserPostView: View {
 //                .padding(.bottom,UIApplication.shared.windows.first?.safeAreaInsets.bottom )
 
             }
+        }
+        .refresher(style: .system){
+            await refershData()
         }
         .SheetWithDetents(isPresented:  self.$isShowMorePostDetail, detents: [.medium()]){
             self.isShowMorePostDetail = false
@@ -91,6 +95,20 @@ struct FollowUserPostView: View {
 //        }
         
 
+    }
+    
+    private func refershData() async {
+        print("waiting...")
+//        HubState.SetWait(message: "Loading...")
+        let resp = await APIService.shared.AsyncGetFollowUserPost()
+        switch resp {
+        case .success(let data):
+            self.postVM.followingData = data.post_info
+        case .failure(let err):
+            print(err.localizedDescription)
+            HubState.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
+        }
+        
     }
 }
 

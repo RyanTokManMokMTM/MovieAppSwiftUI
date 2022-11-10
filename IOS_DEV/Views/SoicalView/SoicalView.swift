@@ -26,7 +26,16 @@ struct SoicalView: View {
             VStack(spacing:0){
                 NavTabView(index: self.$postVM.index)
                     .frame(maxWidth:.infinity)
-                
+                if postVM.isPostUploading {
+                    ProgressView("上傳中...",value: APIService.shared.uploadProgress,total: 1)
+                        .font(.system(size: 12))
+                        .progressViewStyle(.linear)
+                        .padding(.vertical,5)
+                        .background(Color("DarkMode2").frame(maxWidth:.infinity))
+                        .tint(.blue)
+                    
+                        
+                }
                 
                 ScrollView(.horizontal, showsIndicators: false){
                     TabView(selection: self.$postVM.index){

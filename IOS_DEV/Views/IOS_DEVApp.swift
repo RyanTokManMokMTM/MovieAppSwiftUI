@@ -15,17 +15,90 @@ import Drawer
 import BottomSheet
 import MapKit
 import Combine
-
+import Refresher
 @main
 struct IOS_DEVApp: App {
     @UIApplicationDelegateAdaptor(Appdelegate.self) var delegate
     
     var body: some Scene {
         WindowGroup {
+//            Refersh()
             HomePage()
         }
     }
 }
+
+func textWithHashtags(_ text: String, color: Color) -> some View {
+    let words = text.split(separator: " ")
+    var output: Text = Text("")
+
+    for word in words {
+        if word.hasPrefix("#") { // Pick out hash in words
+            output = output + Text(" ") + Text(String(word))
+                .foregroundColor(color) // Add custom styling here
+        } else {
+            output = output + Text(" ") + Text(String(word))
+        }
+    }
+    return output
+}
+//
+//public struct EmojiRefreshView: View {
+//    @Binding var state: RefresherState
+//    @State private var angle: Double = 0.0
+//    @State private var isAnimating = false
+//
+//    var foreverAnimation: Animation {
+//        Animation.linear(duration: 1.0)
+//            .repeatForever(autoreverses: false)
+//    }
+//
+//    public var body: some View {
+//        VStack {
+//            switch state.mode {
+//            case .notRefreshing:
+//                EmptyView()
+//            case .pulling:
+//                    DrawShape()
+//                        .trim(from: 0, to: state.dragPosition)
+//                        .stroke(Color.gray, style: StrokeStyle(lineWidth: 2, lineCap:.round , lineJoin: .round))
+//                        .frame(width: 0.1, height: 0.1)
+//            case .refreshing:
+//
+//                    DrawShape()
+//                        .stroke(Color.gray, style: StrokeStyle(lineWidth: 2, lineCap:.round , lineJoin: .round))
+//                        .rotationEffect(.degrees(self.isAnimating ? 360.0 : 0.0))
+//                            .onAppear {
+//                                withAnimation(foreverAnimation) {
+//                                    isAnimating = true
+//                                }
+//                        }
+//                            .frame(width: 0.1, height: 0.1)
+//
+////                        .rotationEffect(Angle(degrees: self.isAnimate ? 0 : -360))
+////                        .animation(self.isAnimate ? Animation.linear(duration: 2.0).repeatForever(autoreverses: false) : .default)
+//
+//
+//            }
+//        }
+//        .scaleEffect(2)
+//    }
+//}
+//
+//struct Refersh : View {
+//    var body : some View {
+//        ScrollView{
+//            ForEach(0..<10){i in
+//                Text("\(i)")
+//            }
+//        }.refresher (refreshView : EmojiRefreshView.init ){ done in
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5){
+//                print("done")
+//                done()
+//            }
+//        }
+//    }
+//}
 
 struct TestShape : View {
     @State private var start = false
@@ -58,8 +131,8 @@ struct DrawShape : Shape {
         return Path{ path in
             let mid = rect.width / 2
             
-            path.move(to: CGPoint(x: mid - 10, y: 0))
-            path.addArc(center: CGPoint(x: mid, y: 0), radius: 10, startAngle: .init(degrees: -180), endAngle: .init(degrees: 120), clockwise: false)
+            path.move(to: CGPoint(x: mid - 5, y: 0))
+            path.addArc(center: CGPoint(x: mid, y: 0), radius: 5, startAngle: .init(degrees: -180), endAngle: .init(degrees: 120), clockwise: false)
         }
     }
 }

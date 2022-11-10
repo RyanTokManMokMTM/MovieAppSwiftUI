@@ -262,32 +262,27 @@ struct MovieCardGesture :View{
         if direction == .left || direction == .right{
             //TODO
             //remove the last movie in array and set current movie
-            
             _ = self.movies.popLast()
-
-                if direction == .right{
-                    self.movieID = self.movies.last!.id
-                    withAnimation{
-                        self.isShowMovieDetail = true
-                        
-                    }
-                }
-                
-                if direction == .left{
-                    postLikeData(movie: currentMovie!)
-                }
             
-                currentMovie = self.movies.last
-                
-
-                
-                if self.movies.count == 0{
-                    withAnimation(){
-                        self.backHomePage.toggle()
-                    }
+            if direction == .right{
+                self.movieID = currentMovie!.id
+                withAnimation{
+                    self.isShowMovieDetail = true
+                    
                 }
-                self.feedBack.impactOccurred(intensity: 0.8)
+            }
             
+            if direction == .left{
+                postLikeData(movie: currentMovie!)
+            }
+        
+            if self.movies.count == 0{
+                withAnimation(){
+                    self.backHomePage.toggle()
+                }
+            }
+            self.feedBack.impactOccurred(intensity: 0.8)
+            currentMovie = self.movies.last
         }
     }
     

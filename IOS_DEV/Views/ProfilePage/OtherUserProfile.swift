@@ -148,6 +148,7 @@ struct UserProfileView : View {
     @State private var tabIndex : Int = 0
     @State private var listIndex : Int = 0
     @State private var isViewMovieList : Bool = false
+    @State private var refersh = RefershState(started: false, released: false)
     
     @Binding var isFollowing : Bool
     @Binding var friends : Int
@@ -206,6 +207,33 @@ struct UserProfileView : View {
             
             GeometryReader { proxy in
                 ScrollView(showsIndicators: false){
+                    GeometryReader{reader -> AnyView in
+
+                        DispatchQueue.main.async {
+                            if self.refersh.startOffset == 0 {
+                                self.refersh.startOffset = reader.frame(in: .global).minY
+                            }
+                            refersh.offset = reader.frame(in: .global).minY
+
+
+                            if self.refersh.offset - refersh.startOffset > 60 && !self.refersh.started {
+                                self.refersh.started = true
+                            }
+
+                            if self.refersh.offset == self.refersh.startOffset && self.refersh.started && !self.refersh.released{
+                                
+                                self.refersh.released = true
+                                Task.init{
+                                    await updateData()
+                                }
+         
+                            }
+
+                        }
+
+                        return AnyView(Color.black.frame(width: 0, height: 0))
+                    }.frame(width: 0, height: 0)
+                    
                     LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]){
                         GeometryReader{ proxy  in
                             ZStack(alignment:.top){
@@ -319,11 +347,38 @@ struct UserProfileView : View {
         
         
     }
+    func updateData() async{
+        do {
+            try await Task.sleep(nanoseconds: 2_000_000_000) //API instead
+            self.refersh.started = false
+            self.refersh.released = false
+            print("done")
+        }catch {
+            print(error.localizedDescription)
+        }
+    }
     
     @ViewBuilder
     func profileInfo() -> some View{
         VStack(alignment:.leading){
             Spacer()
+            if self.refersh.started && self.refersh.released{
+                HStack{
+                    Spacer()
+                    ActivityIndicatorView()
+                    Spacer()
+                }
+            }else if self.refersh.offset > self.refersh.startOffset {
+                HStack{
+                    Spacer()
+                    Image(systemName: "arrow.down")
+                        .imageScale(.medium)
+                        .foregroundColor(.gray)
+                        .rotationEffect(Angle(degrees: self.refersh.started ? 180 : 0))
+                        .animation(.easeInOut)
+                    Spacer()
+                }
+            }
             HStack(alignment:.center){
                 WebImage(url: ((userVM.profile?.UserPhotoURL)))
                     .resizable()

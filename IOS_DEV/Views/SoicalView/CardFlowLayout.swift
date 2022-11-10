@@ -12,14 +12,9 @@ struct CardFlowLayout: View {
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
     @StateObject var HubState : BenHubState = BenHubState.shared
-    @State private var refershState : RefershState = RefershState(started: false, released: false, Ended: false)
+
     var body: some View {
-        FlowLayoutWithPullView(list: self.postVM.postData, columns: 2,HSpacing: 5,VSpacing: 10,refershSate: $refershState,onRefersh: {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3){
-                print("Loading done....")
-            }
-        }){ info in
-                
+        FlowLayoutWithPullView(list: self.postVM.postData, columns: 2,HSpacing: 5,VSpacing: 10,onRefersh: refershData){ info in
                 CardPostView(postInfo: self.$postVM.postData[self.postVM.getPostIndexFromDiscoveryList(postId: info.id)]){
                     DispatchQueue.main.async {
                         self.postVM.selectedPostInfo = info
@@ -68,6 +63,20 @@ struct CardFlowLayout: View {
 //        }
 //
 
+    }
+    
+    private func refershData() async {
+        //refershing just get the latest 20 posts ,and replace all oldest data that client have.
+        print("wating...")
+        let data = await APIService.shared.AsyncGetAllUserPost()
+        switch data{
+        case .success(let data):
+//            print("get new data \(data.post_info)")
+            self.postVM.postData = data.post_info
+        case .failure(let err):
+            print(err.localizedDescription)
+            HubState.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
+        }
     }
     
 }

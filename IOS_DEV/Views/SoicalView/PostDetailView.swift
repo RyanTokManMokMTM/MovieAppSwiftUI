@@ -7,7 +7,7 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
-
+import Refresher
 enum postDatFrom{
     case AllPost
     case Profile
@@ -53,6 +53,12 @@ struct PostDetailView: View {
                 ScrollView(.vertical, showsIndicators: false){
                    postBody()
                         
+                }
+                .refresher(style: .system){ done in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2){
+                        print("done")
+                        done()
+                    }
                 }
                 //                .frame(maxHeight:.infinity,alignment:.top)
                 CommentArea()

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Refresher
 
 struct FlowLayoutView< T : Identifiable,Content : View> : View where T : Hashable {
     
@@ -66,7 +67,7 @@ struct FlowLayoutView< T : Identifiable,Content : View> : View where T : Hashabl
 //                .background(Color("DarkMode2").frame(maxWidth:.infinity))
             }
         }
-        .background(Color("DarkMode2").frame(maxWidth:.infinity))
+//        .background(Color("DarkMode2").frame(maxWidth:.infinity))
         .listStyle(.plain)
 
     }
@@ -82,8 +83,7 @@ struct FlowLayoutWithPullView< T : Identifiable,Content : View> : View where T :
     var content : (T) -> Content
     var HSpacing : CGFloat
     var VSpacing : CGFloat
-    @Binding var refershState : RefershState
-    var onRefersh : ()->()
+    var onRefersh : () async ->()
     
     private func customList() -> [[T]] {
         var curIndx = 0
@@ -99,41 +99,17 @@ struct FlowLayoutWithPullView< T : Identifiable,Content : View> : View where T :
         }
         return gridList
     }
-    init(list : [T],columns : Int,HSpacing : CGFloat = 10,VSpacing : CGFloat = 10,refershSate : Binding<RefershState>,onRefersh : @escaping ()->(),@ViewBuilder content :@escaping (T) -> Content){
+    init(list : [T],columns : Int,HSpacing : CGFloat = 10,VSpacing : CGFloat = 10,onRefersh : @escaping () async ->(),@ViewBuilder content :@escaping (T) -> Content){
         self.content = content
         self.list = list
         self.colums = columns
         self.HSpacing = HSpacing
         self.VSpacing = VSpacing
-        self._refershState = refershSate
         self.onRefersh = onRefersh
     }
     
     var body: some View {
         ScrollView(.vertical, showsIndicators: false){
-            GeometryReader{reader -> AnyView in
-                
-                DispatchQueue.main.async {
-                    if self.refershState.startOffset == 0 {
-                        self.refershState.startOffset = reader.frame(in: .global).minY
-                    }
-                    
-                    refershState.offset = reader.frame(in: .global).minY
-                    
-                    if self.refershState.offset - refershState.startOffset > 80 && !self.refershState.started {
-                        self.refershState.started = true
-                    }
-                    
-                    if self.refershState.offset == self.refershState.startOffset && self.refershState.started && !self.refershState.released{
-                        self.refershState.released = true
-                        onRefersh()
-                    }
-                    
-                }
-
-                return AnyView(Color.black.frame(width: 0, height: 0))
-            }.frame(width: 0, height: 0)
-            
             VStack(spacing:0){
                 if list.isEmpty {
                     VStack{
@@ -161,9 +137,11 @@ struct FlowLayoutWithPullView< T : Identifiable,Content : View> : View where T :
                 }
             }
         }
+        .refresher(style: .system) {
+            await onRefersh()
+        }
         .background(Color("DarkMode2").frame(maxWidth:.infinity))
         .listStyle(.plain)
-
     }
 }
 

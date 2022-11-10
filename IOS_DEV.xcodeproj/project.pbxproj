@@ -162,6 +162,7 @@
 		7A2F7307261E099200C0A2FF /* MovieTrailerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F7306261E099200C0A2FF /* MovieTrailerModel.swift */; };
 		7A2F7310261E124E00C0A2FF /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F730F261E124E00C0A2FF /* Player.swift */; };
 		7A303BAC2877EF29004CCEB3 /* SoicalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A303BAB2877EF29004CCEB3 /* SoicalView.swift */; };
+		7A3BE010291CE98300508071 /* metadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3BE00F291CE98300508071 /* metadata.swift */; };
 		7A41C01628815703005FAEBD /* FollowUserPostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A41C01528815703005FAEBD /* FollowUserPostView.swift */; };
 		7A41C0182881633E005FAEBD /* PostBottomSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A41C0172881633E005FAEBD /* PostBottomSheet.swift */; };
 		7A47D57327A661BC00C9DEBC /* HotTopicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A47D57227A661BC00C9DEBC /* HotTopicView.swift */; };
@@ -194,6 +195,7 @@
 		7A94724A2894EBDD00B0758B /* LeckerliOne-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7A9472492894EBDC00B0758B /* LeckerliOne-Regular.ttf */; };
 		7A94724D28951BEB00B0758B /* CreateMovieList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A94724C28951BE900B0758B /* CreateMovieList.swift */; };
 		7A94724F28951C1300B0758B /* ViewMovieList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A94724E28951C1300B0758B /* ViewMovieList.swift */; };
+		7AA67676291796B1002D9BFC /* Refresher in Frameworks */ = {isa = PBXBuildFile; productRef = 7AA67675291796B1002D9BFC /* Refresher */; };
 		7AAE7EF0287D2AA1001B3212 /* AddPostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAE7EEF287D2AA1001B3212 /* AddPostView.swift */; };
 		7AB1E4E428BF56EF0092A509 /* LikesNotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB1E4E328BF56EE0092A509 /* LikesNotificationView.swift */; };
 		7AB1E4E628BF57300092A509 /* NotificationTopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB1E4E528BF57300092A509 /* NotificationTopView.swift */; };
@@ -388,6 +390,7 @@
 		7A2F730F261E124E00C0A2FF /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		7A303BAB2877EF29004CCEB3 /* SoicalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoicalView.swift; sourceTree = "<group>"; };
 		7A314880261095C300B6E5FB /* IOS_DEVDebug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = IOS_DEVDebug.entitlements; sourceTree = "<group>"; };
+		7A3BE00F291CE98300508071 /* metadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = metadata.swift; sourceTree = "<group>"; };
 		7A41C01528815703005FAEBD /* FollowUserPostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUserPostView.swift; sourceTree = "<group>"; };
 		7A41C0172881633E005FAEBD /* PostBottomSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostBottomSheet.swift; sourceTree = "<group>"; };
 		7A47D57227A661BC00C9DEBC /* HotTopicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotTopicView.swift; sourceTree = "<group>"; };
@@ -462,6 +465,7 @@
 				7A80F232288708F500A58356 /* BottomSheet in Frameworks */,
 				0EFBEEB402995C63C993EF15 /* Pods_IOS_DEV.framework in Frameworks */,
 				7A80F2382887100F00A58356 /* Drawer in Frameworks */,
+				7AA67676291796B1002D9BFC /* Refresher in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -734,6 +738,7 @@
 		01CCDF3B263E943B005E2424 /* Networking */ = {
 			isa = PBXGroup;
 			children = (
+				7A3BE00E291CE97200508071 /* metadata */,
 				7AEA8FDD2906943C0016DD47 /* message_api_data */,
 				7A61FD97290537A5005348BC /* room_api_data */,
 				7A61FD9429052F0F005348BC /* notification_api_data */,
@@ -998,6 +1003,14 @@
 			path = SoicalView;
 			sourceTree = "<group>";
 		};
+		7A3BE00E291CE97200508071 /* metadata */ = {
+			isa = PBXGroup;
+			children = (
+				7A3BE00F291CE98300508071 /* metadata.swift */,
+			);
+			path = metadata;
+			sourceTree = "<group>";
+		};
 		7A47D57127A6619C00C9DEBC /* HotTopicView */ = {
 			isa = PBXGroup;
 			children = (
@@ -1240,6 +1253,7 @@
 				7A80F231288708F500A58356 /* BottomSheet */,
 				7A80F2372887100F00A58356 /* Drawer */,
 				7A26B1D0288FE0240041492E /* SDWebImageSwiftUI */,
+				7AA67675291796B1002D9BFC /* Refresher */,
 			);
 			productName = IOS_DEV;
 			productReference = 7A0EE92E261041690056BC8C /* IOS_DEV.app */;
@@ -1273,6 +1287,7 @@
 				7A80F230288708F400A58356 /* XCRemoteSwiftPackageReference "BottomSheet" */,
 				7A80F2362887100F00A58356 /* XCRemoteSwiftPackageReference "SwiftUI-Drawer" */,
 				7A26B1CF288FE0240041492E /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
+				7AA67674291796B1002D9BFC /* XCRemoteSwiftPackageReference "SwiftUI-Refresher" */,
 			);
 			productRefGroup = 7A0EE92F261041690056BC8C /* Products */;
 			projectDirPath = "";
@@ -1533,6 +1548,7 @@
 				0194A5E82695DBA700E24598 /* MovieDetailList.swift in Sources */,
 				7A0EE934261041690056BC8C /* ContentView.swift in Sources */,
 				7A7398692883F4B400724B8F /* Post.swift in Sources */,
+				7A3BE010291CE98300508071 /* metadata.swift in Sources */,
 				7ACC9C5026217FAE00351E8D /* GlobalHelper.swift in Sources */,
 				7ADA5A7A26104355000A84D9 /* RoundedRectangle.swift in Sources */,
 				7AB42EC4263184A300AC7FA6 /* HScrollList.swift in Sources */,
@@ -1800,6 +1816,14 @@
 				minimumVersion = 1.0.0;
 			};
 		};
+		7AA67674291796B1002D9BFC /* XCRemoteSwiftPackageReference "SwiftUI-Refresher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gh123man/SwiftUI-Refresher.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1822,6 +1846,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7A80F2362887100F00A58356 /* XCRemoteSwiftPackageReference "SwiftUI-Drawer" */;
 			productName = Drawer;
+		};
+		7AA67675291796B1002D9BFC /* Refresher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7AA67674291796B1002D9BFC /* XCRemoteSwiftPackageReference "SwiftUI-Refresher" */;
+			productName = Refresher;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

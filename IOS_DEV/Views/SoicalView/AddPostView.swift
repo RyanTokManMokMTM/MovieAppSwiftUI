@@ -226,17 +226,19 @@ struct PostButton : View {
             
             //TODO: Not Add to the VM directly,but refershing the view instead
             
-            postVM.CreatePost(title: title, desc: desc, movie: movieInfo, user: userVM.profile!){
-                //TODO: SENDING REQUEST! - IGNORE
+            postVM.CreatePost(title: title, desc: desc, movie: movieInfo, user: userVM.profile!)
+            DispatchQueue.main.async {
                 withAnimation{
                     DispatchQueue.main.async {
                         self.isAddPost = false
                         self.isSelectedMovie = false
                         self.postVM.index = .Follow
                     }
-//                    dissmiss()
+                    //                    dissmiss()
                 }
             }
+            
+            
         }){
             HStack{
                 Text("發布")
@@ -250,6 +252,8 @@ struct PostButton : View {
             
         }
     }
+    
+
 }
 
 

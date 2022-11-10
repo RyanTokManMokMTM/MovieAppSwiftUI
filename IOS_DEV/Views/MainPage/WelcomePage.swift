@@ -20,7 +20,9 @@ struct HomePage: View {
     @State private var currentBG = 0
     @State private var isStarted = false
 
-
+    init(){
+        UIActivityIndicatorView.appearance().style = .medium
+    }
     
     var body: some View {
         

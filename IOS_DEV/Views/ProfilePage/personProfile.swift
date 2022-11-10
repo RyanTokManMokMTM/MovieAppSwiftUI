@@ -10,6 +10,7 @@ import SDWebImageSwiftUI
 import CoreAudio
 import Kingfisher
 import Combine
+import Refresher
 
 struct PersonProfileView : View{
     @StateObject var HubState : BenHubState = BenHubState.shared
@@ -1273,7 +1274,6 @@ struct RefershState {
     var offset : CGFloat = 0
     var started : Bool
     var released : Bool
-    var Ended : Bool
     
 }
 
@@ -1283,7 +1283,7 @@ struct personProfile: View {
     @State private var isEditProfile : Bool = false
     @State private var isSetting : Bool = false
     @State private var isAddingList : Bool = false
-    @State private var refersh = RefershState(started: false, released: false,Ended: false)
+    @State private var refersh = RefershState(started: false, released: false)
     private let max = UIScreen.main.bounds.height / 2.5
     var topEdge : CGFloat
 
@@ -1347,26 +1347,27 @@ struct personProfile: View {
             GeometryReader { proxy in
                 ScrollView(showsIndicators: false){
                     GeometryReader{reader -> AnyView in
-                        
+
                         DispatchQueue.main.async {
                             if self.refersh.startOffset == 0 {
                                 self.refersh.startOffset = reader.frame(in: .global).minY
                             }
                             refersh.offset = reader.frame(in: .global).minY
-               
-                            
+
+
                             if self.refersh.offset - refersh.startOffset > 60 && !self.refersh.started {
-                                print("stated???")
                                 self.refersh.started = true
                             }
-                            
+
                             if self.refersh.offset == self.refersh.startOffset && self.refersh.started && !self.refersh.released{
                                 
                                 self.refersh.released = true
-//                                self.refersh.Ended = false
-                                updateData()
+                                Task.init{
+                                    await updateData()
+                                }
+         
                             }
-                            
+
                         }
 
                         return AnyView(Color.black.frame(width: 0, height: 0))
@@ -1389,7 +1390,7 @@ struct personProfile: View {
                                         ], startPoint: .top, endPoint: .bottom).frame(width: UIScreen.main.bounds.width, height: offset > 0 ? offset + max + 20 : getHeaderHigth() + 20, alignment: .bottom)
                                             .scaleEffect(offset > 0 ? (offset / 500) + 1 : 1)
                                     )
-                                  
+
                                     .zIndex(0)
                                 
                                 
@@ -1410,6 +1411,7 @@ struct personProfile: View {
                                 PersonPostCardGridView()
                                     .padding(.vertical,3)
                                     .environmentObject(userVM)
+//                                    .background(Color.red)
                             case 1:
                                 LikedPostCardGridView()
                                     .environmentObject(userVM)
@@ -1459,12 +1461,15 @@ struct personProfile: View {
                     .modifier(PersonPageOffsetModifier(offset: $offset,isShowIcon:$isShowIcon))
                     .frame(alignment:.top)
                 }
+                
                 .coordinateSpace(name: "SCROLL") //cotroll relate coordinateSpace
                 .zIndex(0)
                 .onAppear{
                     self.userVM.getUserPosts()
                     self.userVM.GetUserGenresSetting()
                 }
+
+                
             }
             
         }
@@ -1504,17 +1509,14 @@ struct personProfile: View {
         
     }
     
-    func updateData(){
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            print("updated")
-            self.refersh.Ended = true
+    func updateData() async{
+        do {
+            try await Task.sleep(nanoseconds: 2_000_000_000)
             self.refersh.started = false
             self.refersh.released = false
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25){
-                self.refersh.Ended = false
-            }
-            
+            print("done")
+        }catch {
+            print(error.localizedDescription)
         }
     }
     
@@ -1522,23 +1524,24 @@ struct personProfile: View {
     func profile() -> some View{
         VStack(alignment:.leading){
             Spacer()
-//            ActivityIndicatorView()
-            HStack{
-                Spacer()
-
+            if self.refersh.started && self.refersh.released{
                 HStack{
-                    DrawShape()
-                        .trim(from:  self.refersh.Ended ? 1 : 0, to: self.refersh.started ? 1 : (self.refersh.offset - refersh.startOffset) / 60)
-                        .stroke(Color.gray, style: StrokeStyle(lineWidth: 3, lineCap:.round , lineJoin: .round))
-                        .rotationEffect(Angle(degrees: self.refersh.started && self.refersh.released ? 0 : -360))
-                        .animation( self.refersh.started && self.refersh.released ? Animation.linear(duration: 2.0).repeatForever(autoreverses: false) : .default)
-                        .opacity(self.refersh.Ended ? 0 : 1)
-                }.frame(width: 1, height: 1)
-                    
-                Spacer()
+                    Spacer()
+                    ActivityIndicatorView()
+                    Spacer()
+                }
+            }else if self.refersh.offset > self.refersh.startOffset {
+                HStack{
+                    Spacer()
+                    Image(systemName: "arrow.down")
+                        .imageScale(.medium)
+                        .foregroundColor(.gray)
+                        .rotationEffect(Angle(degrees: self.refersh.started ? 180 : 0))
+                        .animation(.easeInOut)
+                    Spacer()
+                }
             }
-            
-            
+
             HStack(alignment:.center){
                 WebImage(url: userVM.profile!.UserPhotoURL)
                     .resizable()

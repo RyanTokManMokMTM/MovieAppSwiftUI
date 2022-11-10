@@ -23,10 +23,6 @@ class MovieStore: MovieService {
     private let urlSession = URLSession.shared
     private let jsonDecoder = Utils.jsonDecoder
     
-//    private let API_URL = "http://127.0.0.1:8080/api"
-//    private let API_PLAYGOUND_URI = "/playground"
-    
-
     func searchRecommandMovie(query: String, completion: @escaping (Result<MovieSearchResponse, MovieError>) -> ()) {
         guard let url = URL(string: "\(baseAPIURL)/search/movie") else {
             completion(.failure(.invalidEndpoint))
@@ -250,15 +246,14 @@ class MovieStore: MovieService {
 
 }
 
-class APIService : ServerAPIServerServiceInterface{
-
-    
+class APIService : ServerAPIServerServiceInterface, ObservableObject{
     static let shared = APIService()
     private init(){
     } //signleton mode
     
     @AppStorage("userToken") var token : String = ""
-    
+    @Published var uploadProgress : Double = 0
+    @Published var observable : NSKeyValueObservation?
     private let API_SERVER_HOST = "\(SERVER_HOST)/api/v1"
     private let HOST = "\(SERVER_HOST)/"
 //    private let API_SERVER_HOST = "http://127.0.0.1:8080/api"
@@ -733,7 +728,7 @@ class APIService : ServerAPIServerServiceInterface{
         PostAndDecode(req: request, completion: completion)
     }
     
-    func GetAllCustomLists(userID : Int,completion: @escaping (Result<AllUserListResp, Error>) -> ()){
+    func GetAllCustomLists(userID : Int, page : Int = 1,limit : Int = 20,completion: @escaping (Result<AllUserListResp, Error>) -> ()){
         guard let url = URL(string: "\(API_SERVER_HOST)\(APIEndPoint.GetAllUserLists.apiUri)\(userID)") else{
             completion(.failure(APIError.apiError))
             return
@@ -800,7 +795,7 @@ class APIService : ServerAPIServerServiceInterface{
     }
     
     //MARK: --POST
-    func CreatePost(req : CreatePostReq , completion : @escaping (Result<CreatePostResp,Error>) -> ()) {
+    func CreatePost(req : CreatePostReq ,completion : @escaping (Result<CreatePostResp,Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreatePost.apiUri) else{
             completion(.failure(APIError.apiError))
             return
@@ -819,11 +814,11 @@ class APIService : ServerAPIServerServiceInterface{
             return
         }
         
-        PostAndDecode(req: request, completion: completion)
+        PostAndDecodeWithProgress(req: request,completion: completion)
     }
     
-    func GetAllUserPost(completion : @escaping (Result <AllUserPostResp,Error>) -> ()) {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetAllPosts.apiUri) else{
+    func GetAllUserPost( page : Int = 1,limit : Int = 20,completion : @escaping (Result <AllUserPostResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetAllPosts.apiUri + "?page=\(page)") else{
             completion(.failure(APIError.apiError))
             return
         }
@@ -836,7 +831,23 @@ class APIService : ServerAPIServerServiceInterface{
         FetchAndDecode(request: request, completion: completion)
     }
     
-    func GetFollowUserPost(completion : @escaping (Result <FollowingUserPostResp,Error>) -> ()) {
+    //Async Version
+    func AsyncGetAllUserPost(page : Int = 1,limit : Int = 20) async -> Result<AllUserPostResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetAllPosts.apiUri) else{
+            return .failure(APIError.apiError)
+        }
+        print(url.absoluteURL)
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        return await AsyncFetchAndDecode(request: request,params: [
+            "page" : page.description
+        ])
+    }
+    
+    func GetFollowUserPost( page : Int = 1,limit : Int = 20,completion : @escaping (Result <FollowingUserPostResp,Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetFollowingPosts.apiUri) else{
             completion(.failure(APIError.apiError))
             return
@@ -848,6 +859,19 @@ class APIService : ServerAPIServerServiceInterface{
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         FetchAndDecode(request: request, completion: completion)
+    }
+    
+    func AsyncGetFollowUserPost( page : Int = 1 ,limit : Int = 20) async -> Result <FollowingUserPostResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetFollowingPosts.apiUri) else{
+            return .failure(APIError.apiError)
+        }
+        print(url.absoluteURL)
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        return await AsyncFetchAndDecode(request: request)
     }
     
     func GetUserPostByUserID(userID : Int ,completion : @escaping (Result <UserPostResp,Error>) -> ()) {
@@ -1007,8 +1031,8 @@ class APIService : ServerAPIServerServiceInterface{
         PostAndDecode(req: request, completion: completion)
     }
     
-    func GetPostComments(postId : Int, completion : @escaping (Result<GetPostCommentsResp,Error>) -> ()) {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetPostComment.apiUri + postId.description) else {
+    func GetPostComments(postId : Int,  page : Int = 1,limit : Int = 20,completion : @escaping (Result<GetPostCommentsResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetPostComment.apiUri + postId.description + "?page=\(page)") else {
             completion(.failure(APIError.badUrl))
             return
         }
@@ -1045,8 +1069,8 @@ class APIService : ServerAPIServerServiceInterface{
         PostAndDecode(req: request, completion: completion)
     }
     
-    func GetReplyComment(req : GetReplyCommentReq, completion : @escaping (Result<GetReplyCommentResp,Error>) -> ()) {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetReplyComment.apiUri + req.comment_id.description) else {
+    func GetReplyComment(req : GetReplyCommentReq,  page : Int = 1,limit : Int = 5,completion : @escaping (Result<GetReplyCommentResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetReplyComment.apiUri + req.comment_id.description + "?page=\(page)") else {
             completion(.failure(APIError.badUrl))
             return
         }
@@ -1273,8 +1297,8 @@ class APIService : ServerAPIServerServiceInterface{
         PostAndDecode(req: request, completion: completion)
     }
     
-    func GetFriendRequest(completion: @escaping (Result<GetFriendRequestListResp,Error>) -> ()) {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetFriendRequest.apiUri) else {
+    func GetFriendRequest( page : Int = 1,limit : Int = 20,completion: @escaping (Result<GetFriendRequestListResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetFriendRequest.apiUri + "?page=\(page)") else {
             completion(.failure(APIError.badUrl))
             return
         }
@@ -1474,8 +1498,8 @@ class APIService : ServerAPIServerServiceInterface{
     
     //MARK: --Message
     //TODO: Message
-    func GetRoomMessage(req : GetRoomMessageReq,completion: @escaping (Result<GetRoomMessageResp,Error>) -> ()){
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetRoomMessage.apiUri + req.room_id.description) else {
+    func GetRoomMessage(req : GetRoomMessageReq, page : Int = 1,limit : Int = 20,completion: @escaping (Result<GetRoomMessageResp,Error>) -> ()){
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetRoomMessage.apiUri + req.room_id.description + "?page=\(page)") else {
             completion(.failure(APIError.badUrl))
             return
         }
@@ -1503,8 +1527,8 @@ class APIService : ServerAPIServerServiceInterface{
     }
     
     //MARK: --Notification
-    func GetLikesNotification(completion: @escaping (Result<GetLikesNotificationsResq, Error>) -> ()) {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetLikesNotification.apiUri ) else {
+    func GetLikesNotification( page : Int = 1,limit : Int = 20,completion: @escaping (Result<GetLikesNotificationsResq, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetLikesNotification.apiUri + "?page=\(page)" ) else {
             completion(.failure(APIError.badUrl))
             return
         }
@@ -1517,8 +1541,8 @@ class APIService : ServerAPIServerServiceInterface{
         FetchAndDecode(request: request, completion: completion)
     }
     
-    func GetCommentNotification(completion: @escaping (Result<GetCommentNotificationsResq, Error>) -> ()) {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetCommentNotification.apiUri) else {
+    func GetCommentNotification( page : Int = 1,limit : Int = 20,completion: @escaping (Result<GetCommentNotificationsResq, Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetCommentNotification.apiUri + "?page=\(page)") else {
             completion(.failure(APIError.badUrl))
             return
         }
@@ -1604,6 +1628,7 @@ class APIService : ServerAPIServerServiceInterface{
             }
         }.resume()
     }
+   
     
     private func AsyncFetchAndDecode<ResponseType : Decodable>(request : URLRequest,params : [String:String]? = nil) async -> Result<ResponseType,Error>{
         
@@ -1698,7 +1723,7 @@ class APIService : ServerAPIServerServiceInterface{
     
     private func PostAndDecode<ResponseType : Decodable>(req : URLRequest,completion : @escaping (Result<ResponseType,Error>)->()) {
         
-        Client.dataTask(with: req){(data,response,error) in
+         Client.dataTask(with: req){(data,response,error) in
             guard error == nil else{
                 completion(.failure(error!))
                 return
@@ -1727,7 +1752,51 @@ class APIService : ServerAPIServerServiceInterface{
                 }
             }
 
-        }.resume()
+         }.resume()
+
+    }
+    
+    private func PostAndDecodeWithProgress<ResponseType : Decodable>(req : URLRequest,completion : @escaping (Result<ResponseType,Error>)->()) {
+        
+        let dataTask = Client.dataTask(with: req){(data,response,error) in
+            self.observable?.invalidate()
+            guard error == nil else{
+                completion(.failure(error!))
+                return
+            }
+            guard let statusCode = response as? HTTPURLResponse,200..<300 ~= statusCode.statusCode else{
+                //Decode datas message???
+                DispatchQueue.main.async {
+//                    print((response as? HTTPURLResponse)?.statusCode)
+                    completion(.failure(APIError.badResponse))
+                }
+                return
+            }
+            
+            if let data = data {
+                do {
+                    if let decideData = try? self.Decoder.decode(ResponseType.self, from: data){
+                        completion(.success(decideData))
+                    }else{
+                        let errResp = try self.Decoder.decode(ErrorResp.self, from: data)
+                        print(errResp)
+                        completion(.failure(errResp))
+                    }
+                    
+                }catch{
+                    completion(.failure(error))
+                }
+            }
+
+        }
+        
+        self.observable = dataTask.progress.observe(\.fractionCompleted){pro ,_ in
+            DispatchQueue.main.async {
+                self.uploadProgress = pro.fractionCompleted
+            }
+        }
+        
+        dataTask.resume()
     }
     
     private func UploadTask<ResponseType : Decodable>(req : URLRequest,data :Data,completion : @escaping (Result<ResponseType,Error>)->()) {
