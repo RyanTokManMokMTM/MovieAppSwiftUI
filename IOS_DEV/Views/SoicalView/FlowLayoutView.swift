@@ -14,6 +14,7 @@ struct FlowLayoutView< T : Identifiable,Content : View> : View where T : Hashabl
     var colums : Int
     
     var content : (T) -> Content
+    
     var HSpacing : CGFloat
     var VSpacing : CGFloat
     
@@ -21,6 +22,7 @@ struct FlowLayoutView< T : Identifiable,Content : View> : View where T : Hashabl
     private func customList() -> [[T]] {
         var curIndx = 0
         var gridList : [[T]] = Array(repeating: [], count: self.colums)
+        
         list.forEach{ data  in
             //each row have colums data
             gridList[curIndx].append(data)
@@ -30,6 +32,7 @@ struct FlowLayoutView< T : Identifiable,Content : View> : View where T : Hashabl
                 curIndx += 1
             }
         }
+        
         return gridList
     }
     init(list : [T],columns : Int,HSpacing : CGFloat = 10,VSpacing : CGFloat = 10,@ViewBuilder content :@escaping (T) -> Content){
@@ -75,12 +78,13 @@ struct FlowLayoutView< T : Identifiable,Content : View> : View where T : Hashabl
 
 
 
-struct FlowLayoutWithPullView< T : Identifiable,Content : View> : View where T : Hashable {
+struct FlowLayoutWithPullView< T : Identifiable,Content : View,Content2 : View> : View where T : Hashable {
     
     var list : [T]
     var colums : Int
     
     var content : (T) -> Content
+    var loadMoreContent : () -> Content2
     var HSpacing : CGFloat
     var VSpacing : CGFloat
     var onRefersh : () async ->()
@@ -99,8 +103,9 @@ struct FlowLayoutWithPullView< T : Identifiable,Content : View> : View where T :
         }
         return gridList
     }
-    init(list : [T],columns : Int,HSpacing : CGFloat = 10,VSpacing : CGFloat = 10,onRefersh : @escaping () async ->(),@ViewBuilder content :@escaping (T) -> Content){
+    init(list : [T],columns : Int,HSpacing : CGFloat = 10,VSpacing : CGFloat = 10,onRefersh : @escaping () async ->(),@ViewBuilder content :@escaping (T) -> Content, @ViewBuilder loadMoreContent :@escaping () -> Content2){
         self.content = content
+        self.loadMoreContent = loadMoreContent
         self.list = list
         self.colums = columns
         self.HSpacing = HSpacing
@@ -110,7 +115,7 @@ struct FlowLayoutWithPullView< T : Identifiable,Content : View> : View where T :
     
     var body: some View {
         ScrollView(.vertical, showsIndicators: false){
-            VStack(spacing:0){
+            LazyVStack(spacing:0){
                 if list.isEmpty {
                     VStack{
                         Text("There is no any post yet...")
@@ -129,16 +134,20 @@ struct FlowLayoutWithPullView< T : Identifiable,Content : View> : View where T :
                                 }
                             }
                         }
-                        
                     }
                     .padding(.vertical,5)
                     .padding(.horizontal,3)
     //                .background(Color("DarkMode2").frame(maxWidth:.infinity))
+                    
+                    loadMoreContent()
                 }
             }
         }
-        .refresher(style: .system) {
-            await onRefersh()
+        .refresher(style: .system) { done in
+            Task.init{
+                await onRefersh()
+                done()
+            }
         }
         .background(Color("DarkMode2").frame(maxWidth:.infinity))
         .listStyle(.plain)

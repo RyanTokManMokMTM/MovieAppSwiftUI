@@ -86,6 +86,7 @@ struct FriendRequestCancelResp : Decodable {
 }
 struct GetFriendRequestListResp : Decodable {
     let requests : [FriendRequest]
+    let meta_data : MetaData
 }
 
 struct IsFriendResp : Decodable {

@@ -77,22 +77,53 @@ struct LikesNotificationView: View {
         NotificationView(isShowView:$isShowView,topTitle: "點贊"){
             List(){
                 if self.notificationVM.likesNotification.isEmpty {
-                    Text("暫無通知")
-                        .listRowBackground(Color("DarkMode2"))
-                }else {
-                    ForEach(self.notificationVM.likesNotification){ info in
-                        LikesCell(info: info)
-                            .listRowBackground(Color("DarkMode2"))
-                            .padding(.vertical,15)
+                    HStack{
+                        Spacer()
+                        Text("暫無通知")
+                            .foregroundColor(.gray)
+                        Spacer()
                     }
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color("DarkMode2"))
+                }else {
+                        ForEach(self.notificationVM.likesNotification){ info in
+                            LikesCell(info: info)
+                                .listRowBackground(Color("DarkMode2"))
+                                .padding(.vertical,15)
+                        }
+                        
+                        if self.notificationVM.notificationMataData?.page ?? 0 < self.notificationVM.notificationMataData?.total_pages ?? 0 {
+                            HStack{
+                                Spacer()
+                                ActivityIndicatorView()
+                                Spacer()
+                            }
+                            .listRowBackground(Color("DarkMode2"))
+                            .listRowSeparator(.hidden)
+                            .onAppear(){
+                                print("loading...")
+                            }
+                            .task {
+                                await self.notificationVM.LoadMoreLikesNotification()
+                            }
+                        }
+                    
                     
                 }
-            }.listStyle(.plain)
+            }
+            .listStyle(.plain)
+            .refreshable {
+//                await self.notificationVM.
+                await self.notificationVM.RefershLikesNotification()
+            }
         }
         .background(Color("DarkMode2"))
         .onAppear(){
             notificationVM.GetLikesNotification()
             UpdateNotificatin()
+        }
+        .onDisappear(){
+            self.notificationVM.notificationMataData = nil
         }
         
     }

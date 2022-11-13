@@ -32,16 +32,30 @@ struct FollowUserPostView: View {
                 }
                 .padding(.vertical)
             }else {
-                ForEach(self.postVM.followingData){ info in
-                    FollowPostCell(isShowMovieDetail: $isShowMovieDetail, movieId: $movieId,Id : postVM.getPostIndexFromFollowList(postId: info.id), isShowMorePostDetail:self.$isShowMorePostDetail, postId: self.$postId,isShowUserProfile: $isShowUserProfile,shownUserID:$shownUserID)
-                        .padding(.bottom,10)
+                LazyVStack(spacing:0){
+                    ForEach(self.postVM.followingData){ info in
+                        FollowPostCell(isShowMovieDetail: $isShowMovieDetail, movieId: $movieId,Id : postVM.getPostIndexFromFollowList(postId: info.id), isShowMorePostDetail:self.$isShowMorePostDetail, postId: self.$postId,isShowUserProfile: $isShowUserProfile,shownUserID:$shownUserID)
+                            .padding(.bottom,10)
+                    }
+                    
+                    if self.postVM.followingMetaData?.page ?? 0  < self.postVM.followingMetaData?.total_pages ?? 0{
+                        ActivityIndicatorView()
+                            .padding(.vertical,5)
+                            .onAppear(){
+                                //do some request here
+                                print("loading...")
+                            }
+                            .task{
+                                await self.postVM.LoadMoreFollowingData()
+                            }
+                    }
                 }
 //                .padding(.bottom,UIApplication.shared.windows.first?.safeAreaInsets.bottom )
 
             }
         }
         .refresher(style: .system){
-            await refershData()
+            await self.postVM.refershFollowingData()
         }
         .SheetWithDetents(isPresented:  self.$isShowMorePostDetail, detents: [.medium()]){
             self.isShowMorePostDetail = false
@@ -97,19 +111,7 @@ struct FollowUserPostView: View {
 
     }
     
-    private func refershData() async {
-        print("waiting...")
-//        HubState.SetWait(message: "Loading...")
-        let resp = await APIService.shared.AsyncGetFollowUserPost()
-        switch resp {
-        case .success(let data):
-            self.postVM.followingData = data.post_info
-        case .failure(let err):
-            print(err.localizedDescription)
-            HubState.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
-        }
-        
-    }
+
 }
 
 

@@ -9,6 +9,7 @@ import Foundation
 
 struct GetCommentNotificationsResq  : Decodable {
     let notifications : [CommentNotification]
+    let meta_data : MetaData
 }
 
 struct CommentNotification : Decodable,Identifiable {

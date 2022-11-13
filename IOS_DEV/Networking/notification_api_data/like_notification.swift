@@ -9,6 +9,7 @@ import Foundation
 
 struct GetLikesNotificationsResq  : Decodable {
     let notifications : [LikesNotification]
+    let meta_data : MetaData
 }
 
 struct LikesNotification : Decodable,Identifiable{

@@ -8,7 +8,7 @@
 import Foundation
 
 //MARK: For pagnation API
-struct metadata : Decodable {
+struct MetaData : Decodable {
     let total_pages : Int
     let total_results : Int
     let page : Int

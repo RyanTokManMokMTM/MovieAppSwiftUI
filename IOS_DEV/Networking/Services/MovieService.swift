@@ -120,6 +120,7 @@ protocol ServerAPIServerServiceInterface {
     func DeclineFriendRequest(req : FriendRequestDeclineReq, completion: @escaping (Result<FriendRequestDeclineResp,Error>) -> ())
     func CancelFriendRequest(req : FriendRequestCancelReq, completion: @escaping (Result<FriendRequestCancelResp,Error>) -> ())
     func GetFriendRequest(page : Int,limit : Int,completion: @escaping (Result<GetFriendRequestListResp,Error>) -> ())
+    func AsyncGetFriendRequest(page : Int,limit : Int) async -> Result<GetFriendRequestListResp,Error>
     
     //MARK: Need a api check is friend
     func IsFriend(req : IsFriendReq,completion: @escaping (Result<IsFriendResp,Error>) -> ())
@@ -147,7 +148,10 @@ protocol ServerAPIServerServiceInterface {
     
     //TODO: Notification
     func GetLikesNotification( page : Int ,limit : Int ,completion: @escaping (Result<GetLikesNotificationsResq,Error>) -> ())
+    func AsyncGetLikesNotification( page : Int ,limit : Int ) async -> Result<GetLikesNotificationsResq,Error>
+    
     func GetCommentNotification( page : Int ,limit : Int ,completion: @escaping (Result<GetCommentNotificationsResq,Error>) -> ())
+    func AsyncGetCommentNotification( page : Int ,limit : Int) async -> Result<GetCommentNotificationsResq,Error>
     
     //Searching and playground
 //    TODO - Person data format
@@ -239,10 +243,12 @@ protocol AsyncServerAPIServerServiceInterface {
     func UpdatePostComment(commentId : Int, req : UpdateCommentReq, completion : @escaping (Result<UpdateCommentResp,Error>) -> ())
     func DeletePostComment(commentId : Int, completion : @escaping (Result<DeletePostCommentResp,Error>) -> ())
     func GetPostComments(postId : Int, page : Int ,limit : Int ,completion : @escaping (Result<GetPostCommentsResp,Error>) -> ())
+    func AsyncGetPostComments(postId : Int, page : Int ,limit : Int) async -> Result<GetPostCommentsResp,Error>
     
     //TODO: REPLY COMMENT
     func CreateReplyComment(req : CreateReplyCommentReq, completion : @escaping (Result<CreateReplyCommentResp,Error>) -> ())
     func GetReplyComment(req : GetReplyCommentReq,  page : Int,limit : Int ,completion : @escaping (Result<GetReplyCommentResp,Error>) -> ())
+    func AsyncGetReplyComment(req : GetReplyCommentReq,  page : Int,limit : Int) async -> Result<GetReplyCommentResp,Error>
 //    func DeletePostComment(commentId : Int, completion : @escaping (Result<DeletePostCommentResp,Error>) -> ())
 //    func GetPostComments(postId : Int, completion : @escaping (Result<GetPostCommentsResp,Error>) -> ())
     
@@ -283,7 +289,7 @@ protocol AsyncServerAPIServerServiceInterface {
     
     //TODO: Message
     func GetRoomMessage(req : GetRoomMessageReq, page : Int ,limit : Int ,completion: @escaping (Result<GetRoomMessageResp,Error>) -> ())
-    
+    func AsyncGetRoomMessage(req : GetRoomMessageReq, page : Int ,limit : Int) async -> Result<GetRoomMessageResp,Error>
     //TODO: Notification
     func GetLikesNotification( page : Int ,limit : Int ,completion: @escaping (Result<GetLikesNotificationsResq,Error>) -> ())
     func GetCommentNotification( page : Int ,limit : Int ,completion: @escaping (Result<GetCommentNotificationsResq,Error>) -> ())

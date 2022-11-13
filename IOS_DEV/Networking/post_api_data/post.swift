@@ -34,11 +34,13 @@ struct CreatePostResp : Identifiable,Decodable {
 
 struct AllUserPostResp : Decodable {
     let post_info : [Post]
+    let meta_data : MetaData
 }
 
 
 struct FollowingUserPostResp : Decodable {
     let post_info : [Post]
+    let meta_data : MetaData
 }
 
 struct UserPostResp : Decodable {

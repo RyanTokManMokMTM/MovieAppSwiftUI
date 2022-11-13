@@ -14,17 +14,42 @@ struct CardFlowLayout: View {
     @StateObject var HubState : BenHubState = BenHubState.shared
 
     var body: some View {
-        FlowLayoutWithPullView(list: self.postVM.postData, columns: 2,HSpacing: 5,VSpacing: 10,onRefersh: refershData){ info in
+        FlowLayoutWithPullView(list: self.postVM.postData, columns: 2,HSpacing: 5,VSpacing: 10,onRefersh: self.postVM.refershDiscoverData,content: { info in
                 CardPostView(postInfo: self.$postVM.postData[self.postVM.getPostIndexFromDiscoveryList(postId: info.id)]){
-                    DispatchQueue.main.async {
-                        self.postVM.selectedPostInfo = info
-                        withAnimation{
-                            self.postVM.isShowPostDetail.toggle()
+                        DispatchQueue.main.async {
+                            self.postVM.selectedPostInfo = info
+                            withAnimation{
+                                self.postVM.isShowPostDetail.toggle()
+                            }
                         }
                     }
-                }
-        
-        }
+
+
+        },loadMoreContent: {
+            if self.postVM.discoverMetaData?.page ?? 0  < self.postVM.discoverMetaData?.total_pages ?? 0{
+                ActivityIndicatorView()
+                    .padding(.vertical,5)
+                    .onAppear(){
+                        //do some request here
+                        print("loading...")
+                    }
+                    .task{
+                        await self.postVM.LoadMoreDiscoverData()
+                    }
+            }
+        })
+//        FlowLayoutView(list: self.postVM.postData, columns: 2,HSpacing: 5,VSpacing: 10,content: { info in
+//            CardPostView(postInfo: self.$postVM.postData[self.postVM.getPostIndexFromDiscoveryList(postId: info.id)]){
+//                DispatchQueue.main.async {
+//                    self.postVM.selectedPostInfo = info
+//                    withAnimation{
+//                        self.postVM.isShowPostDetail.toggle()
+//                    }
+//                }
+//            }
+//            
+//            
+//        })
         .frame(maxWidth:.infinity)
         .background(Color("DarkMode2").frame(maxWidth:.infinity))
         .background(

@@ -12,6 +12,7 @@ import SDWebImageSwiftUI
 
 struct PostBottomSheet : View{
     @State var offset: CGFloat = 0.0
+    @State var commentMetaData : MetaData?
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
     @State private var cardOffset:CGFloat = 0
@@ -30,6 +31,7 @@ struct PostBottomSheet : View{
     @State private var rootCommentId : Int = -1
     @State private var placeHolder : String = ""
     @State private var isReply : Bool = false
+    @State private var scrollTo : Int = 0
 
 //    @Binding var postData : Post?
     var body : some View{
@@ -87,12 +89,32 @@ struct PostBottomSheet : View{
                     .padding(.vertical,20)
                 }else {
                     ScrollView(.vertical, showsIndicators: false){
-                        VStack(alignment:.leading,spacing:8){
+                        
+                        LazyVStack(alignment:.leading,spacing:8){
                             ForEach(self.$commentInfos) { comment in
-                                commentCell(postInfo: self.$postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)], comment: comment, isLoadingReply: $isLoadingReply, replyCommentId: $replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo)
-                                    .padding(.vertical,5)
+                                commentCell(postInfo: self.$postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)], comment: comment, isLoadingReply: $isLoadingReply, replyCommentId: $replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo, scrollTo: $scrollTo)
+                                    .id(comment.id)
+                                    .padding(.vertical,3)
                             }
+                            
+                            if self.commentMetaData?.page ?? 0 < self.commentMetaData?.total_pages ?? 0 {
+                                HStack{
+                                    ActivityIndicatorView()
+                                }
+                                .onAppear(){
+                                    print("loading...")
+                                }
+                                .task{
+                                    await LoadMoreCommentInfo(postID: self.postId)
+                                }
+                            }
+                            
+                            
+                            
+                            
                         }
+                        
+                        
                     }
                 }
                 
@@ -108,7 +130,14 @@ struct PostBottomSheet : View{
             GetPostComments()
         }
     }
-
+    func scrollTo(commentID : Int,anchor : UnitPoint? = nil,shouldAnima : Bool,scrollViewReader : ScrollViewProxy){
+        DispatchQueue.main.async {
+            withAnimation(shouldAnima ? .easeIn : nil){
+                scrollViewReader.scrollTo(commentID, anchor: anchor)
+            }
+        }
+    }
+    
     @ViewBuilder
     private func CommentArea() -> some View {
         VStack{
@@ -150,7 +179,7 @@ struct PostBottomSheet : View{
             case .success(let data):
                 let newComment = CommentInfo(id: data.id, user_info:
                                                 CommentUser(id: self.userVM.profile!.id, name: self.userVM.profile!.name, avatar: self.userVM.profile!.avatar ?? ""),
-                                             comment: self.message, update_at: data.create_at, reply_comments: 0, is_liked: false, comment_likes_count: 0, parent_comment_id: 0,reply_id: 0,reply_to: SimpleUserInfo(id: 0, name: "", avatar: ""))
+                                             comment: self.message, update_at: data.create_at, reply_comments: 0, is_liked: false, comment_likes_count: 0, parent_comment_id: 0,reply_id: 0,reply_to: SimpleUserInfo(id: 0, name: "", avatar: ""), meta_data: MetaData(total_pages: 0, total_results: 0, page: 0))
                 
                 self.commentInfos.insert(newComment, at: 0)
                 DispatchQueue.main.async {
@@ -179,7 +208,7 @@ struct PostBottomSheet : View{
             case .success(let data):
                 let newComment = CommentInfo(id: data.id, user_info:
                                                 CommentUser(id: self.userVM.profile!.id, name: self.userVM.profile!.name, avatar: self.userVM.profile!.avatar ?? ""),
-                                             comment: self.message, update_at: data.create_at, reply_comments: 0, is_liked: false, comment_likes_count: 0, parent_comment_id: self.rootCommentId,reply_id: self.replyCommentId, reply_to: SimpleUserInfo(id: self.replyTo!.id, name: self.replyTo!.name, avatar: self.replyTo!.avatar))
+                                             comment: self.message, update_at: data.create_at, reply_comments: 0, is_liked: false, comment_likes_count: 0, parent_comment_id: self.rootCommentId,reply_id: self.replyCommentId, reply_to: SimpleUserInfo(id: self.replyTo!.id, name: self.replyTo!.name, avatar: self.replyTo!.avatar), meta_data: MetaData(total_pages: 0, total_results: 0, page: 0))
 
                 if self.commentInfos[index].replys == nil {
                     self.commentInfos[index].replys = []
@@ -214,12 +243,28 @@ struct PostBottomSheet : View{
             switch result {
             case .success(let data):
                 self.commentInfos = data.comments
+                self.commentMetaData = data.meta_data
             case .failure(let err):
                 print("get comment failed : \(err.localizedDescription)")
             }
         }
     }
     
+    private func LoadMoreCommentInfo(postID :Int) async {
+        if self.commentMetaData == nil || self.commentMetaData!.page == self.commentMetaData!.total_pages {
+            return
+        }
+        
+        let resp = await APIService.shared.AsyncGetPostComments(postId: postID, page: self.commentMetaData!.page + 1)
+        switch resp {
+        case .success(let data):
+            self.commentInfos.append(contentsOf: data.comments)
+            self.commentMetaData = data.meta_data
+        case .failure(let err):
+            print(err.localizedDescription)
+            BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
+        }
+    }
 }
 
 
@@ -235,7 +280,9 @@ struct commentCell : View {
     @Binding  var isReply : Bool
     @Binding var commentInfos : [CommentInfo]
     @Binding var replyTo : CommentUser?
+    @Binding var scrollTo : Int
     
+    @State var replyCommentMetaData : MetaData?
     @State private var isShowLess = false
     var body : some View {
         VStack{
@@ -245,7 +292,7 @@ struct commentCell : View {
                     WebImage(url:comment.user_info.UserPhotoURL)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: 35, height: 35)
+                        .frame(width: 30, height: 30)
                         .clipShape(Circle())
                         .padding(.vertical,3)
                     
@@ -323,6 +370,7 @@ struct commentCell : View {
                                 if !self.isShowLess {
                                     ForEach(0..<comment.replys!.count,id:\.self){ i in
                                         replyCommentCell(postInfo: $postInfo, comment: $comment, replyCommentId:$replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo, releatedCommentId: comment.id, replyListIndex: i)
+                                            .id(comment.replys![i].id)
                                     
                                     }
                                 }
@@ -330,15 +378,21 @@ struct commentCell : View {
                             
                             if comment.replys != nil && comment.reply_comments - comment.replys!.count <= 0 {
                                 HStack{
-                                    if !self.isShowLess {
-                                        Text("已經沒有評論了~")
-                                            .font(.system(size:12,weight: .semibold))
-                                        
-                                    }
+//                                    if !self.isShowLess {
+//                                        Text("已經沒有評論了~")
+//                                            .font(.system(size:12,weight: .semibold))
+//test message load more
+//                                    }
                                     if comment.replys != nil {
                                         Button(action:{
                                             withAnimation{
                                                 self.isShowLess.toggle()
+                                                if self.isShowLess{
+                                                    scrollTo = comment.id
+                                                } else {
+                                                    scrollTo = comment.replys!.last?.id ?? 0
+                                                }
+                                                
                                             }
                                         }){
                                             Text("顯示\(self.isShowLess ? "更多" : "更少")")
@@ -356,7 +410,11 @@ struct commentCell : View {
                             } else {
                                 HStack{
                                     Button(action:{
-                                        GetCommentReply(commentId: comment.id)
+//                                        GetCommentReply(commentId: comment.id)
+                                        
+                                        Task.init{
+                                            await LoadCommentReply(commentId: comment.id)
+                                        }
                                     }){
                                         HStack{
                                             Text("顯示\(comment.reply_comments - (comment.replys?.count ?? 0))條評論")
@@ -382,7 +440,7 @@ struct commentCell : View {
                                             .foregroundColor(.gray)
                                         }
                                     }
-                                    
+                                   
                                 }
         
                             }
@@ -394,7 +452,6 @@ struct commentCell : View {
             }
             
             PostViewDivider
-                .padding(.vertical,3)
         }
     }
 //
@@ -402,35 +459,65 @@ struct commentCell : View {
 //        return self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postID)]
 //    }
     
-    private func GetCommentReply(commentId : Int){
+    private func LoadCommentReply(commentId : Int) async {
         let index = commentInfos.firstIndex{$0.id == commentId}
         guard let index = index else { return }
-        
         self.isLoadingReply = true
         let req = GetReplyCommentReq(comment_id: commentId)
-        APIService.shared.GetReplyComment(req: req){ result in
-            self.isLoadingReply = false
-            switch result{
-            case .success(let data):
-                
-                if self.commentInfos[index].replys != nil {
-                    for reply in data.reply{
-                        let e = self.commentInfos[index].replys!.contains{$0.id == reply.id}
-                        if !e {
-                            self.commentInfos[index].replys!.append(reply)
-                        }
+        let resp = await APIService.shared.AsyncGetReplyComment(req: req,page: self.replyCommentMetaData == nil ? 1 : self.replyCommentMetaData!.page + 1)
+        
+        switch resp {
+        case .success(let data):
+            
+            if self.commentInfos[index].replys != nil {
+                for reply in data.reply{
+                    let e = self.commentInfos[index].replys!.contains{$0.id == reply.id}
+                    if !e {
+                        self.commentInfos[index].replys!.append(reply)
                     }
-                }else {
-                    self.commentInfos[index].replys = data.reply
                 }
-               
-                
-//               let index = commentInfos.first{$0.id = self.replyCommentId}
-            case .failure(let err):
-                print(err.localizedDescription)
+            }else {
+                self.commentInfos[index].replys = data.reply
             }
+            self.replyCommentMetaData = data.meta_data
+            self.comment.reply_comments = self.replyCommentMetaData!.total_results //get the updated count
+        case .failure(let err):
+            print(err.localizedDescription)
+            BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
         }
+        
+        self.isLoadingReply = false
+    
     }
+//    private func GetCommentReply(commentId : Int){
+//        let index = commentInfos.firstIndex{$0.id == commentId}
+//        guard let index = index else { return }
+//
+//        self.isLoadingReply = true
+//        let req = GetReplyCommentReq(comment_id: commentId)
+//        APIService.shared.GetReplyComment(req: req){ result in
+//            self.isLoadingReply = false
+//            switch result{
+//            case .success(let data):
+//
+//                if self.commentInfos[index].replys != nil {
+//                    for reply in data.reply{
+//                        let e = self.commentInfos[index].replys!.contains{$0.id == reply.id}
+//                        if !e {
+//                            self.commentInfos[index].replys!.append(reply)
+//                        }
+//                    }
+//                }else {
+//                    self.commentInfos[index].replys = data.reply
+//                }
+//
+//
+////               let index = commentInfos.first{$0.id = self.replyCommentId}
+//            case .failure(let err):
+//                print(err.localizedDescription)
+//            }
+//        }
+//    }
     
     private func likeComment(commentID : Int){
         
@@ -491,7 +578,7 @@ struct replyCommentCell : View {
                     WebImage(url:comment.replys![replyListIndex].user_info.UserPhotoURL)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: 35, height: 35)
+                        .frame(width: 30, height: 30)
                         .clipShape(Circle())
                         .padding(.vertical,3)
                     

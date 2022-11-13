@@ -12,7 +12,6 @@ import Combine
 class MessageViewModel : ObservableObject{
 //    @Published var ChatList = ChatInfo.simpleChat
     @Published var rooms : [ChatData]  = []
-    
     @Published var currentTalkingRoomID : Int = 0 //0 means user not in any room
     @Published var isInit = false
     var sortedChat : [ChatData] {
@@ -143,6 +142,7 @@ class MessageViewModel : ObservableObject{
 }
 
 struct ChattingView : View{
+    @State private var messageMetaData : MetaData? = nil
     @EnvironmentObject private var userVM : UserViewModel
     @EnvironmentObject private var msgVM : MessageViewModel
     let chatInfo : ChatData
@@ -162,13 +162,13 @@ struct ChattingView : View{
                     ScrollViewReader{reader in
                         getMessageView(width: proxy.size.width)
                             .padding(.horizontal)
-                            .onChange(of: roomMessages.count){_ in
-                                if let msgID = roomMessages.last?.RoomUUID {
-                                    //if not nil
-                                    //scrolling to the msgID
-                                    scrollTo(messageID: msgID, shouldAnima: true, scrollViewReader: reader)
-                                }
-                            }
+//                            .onChange(of: roomMessages.count){_ in
+//                                if let msgID = roomMessages.last?.RoomUUID {
+//                                    //if not nil
+//                                    //scrolling to the msgID
+//                                    scrollTo(messageID: msgID, shouldAnima: true, scrollViewReader: reader)
+//                                }
+//                            }
                             .onAppear(){
 //
                                 if let messageID = roomMessages.last?.RoomUUID{
@@ -211,10 +211,46 @@ struct ChattingView : View{
         .onDisappear(){
             self.msgVM.currentTalkingRoomID = 0
         }
+        .task{
+            print("again?????")
+            await self.GetRoomMessage()
+        }
         
     }
     
-
+    private func GetRoomMessage() async {
+        let resp = await APIService.shared.AsyncGetRoomMessage(req: GetRoomMessageReq(room_id: self.roomId))
+        switch resp {
+        case .success(let data):
+//            self.roomMessages
+            print(data.messages)
+            print(data.meta_data)
+            self.roomMessages = data.messages
+            self.messageMetaData = data.meta_data
+        case .failure(let err):
+            print(err.localizedDescription)
+            //Show err???
+        }
+    }
+    private func loadMoreMessage() async {
+        if self.messageMetaData == nil || self.messageMetaData!.total_pages == self.messageMetaData!.page {
+            return
+        }
+        
+        let resp = await APIService.shared.AsyncGetRoomMessage(req: GetRoomMessageReq(room_id: self.roomId),page: self.messageMetaData!.page + 1)
+        switch resp {
+        case .success(let data):
+//            self.roomMessages
+            var dataMsg = data.messages
+            self.roomMessages.insert(contentsOf: data.messages.reversed(), at: 0)
+            self.messageMetaData = data.meta_data
+        case .failure(let err):
+            print(err.localizedDescription)
+            //Show err???
+        }
+    }
+    
+    
     @ViewBuilder
     func ToolBar() -> some View{
         VStack{
@@ -225,6 +261,10 @@ struct ChattingView : View{
                     .background(BlurView())
                     .clipShape(RoundedRectangle(cornerRadius: 13))
                     .focused($isFocus)
+                    .submitLabel(.send)
+                    .onSubmit{
+                        sendMessage()
+                    }
                 
                 //Send Button
                 Button(action:{
@@ -251,6 +291,15 @@ struct ChattingView : View{
     func getMessageView(width : CGFloat) -> some View{
         
         LazyVGrid(columns: colum,spacing:0){
+            if self.messageMetaData?.page ?? 0 < self.messageMetaData?.total_pages ?? 0 {
+                ActivityIndicatorView()
+                    .onAppear(){
+                        print("???")
+                    }
+                    .task{
+                        await self.loadMoreMessage()
+                    }
+            }
             let sectionMsg = MessageViewModel.shared.messageGrouping(for: roomMessages)
             ForEach(sectionMsg.indices,id:\.self){ sectionIndex in
                 let groupingMessage = sectionMsg[sectionIndex]
@@ -259,6 +308,7 @@ struct ChattingView : View{
                     Section(header:MessageHeader(firstMessage: groupingMessage.first!)){
                         ForEach(groupingMessage,id:\.RoomUUID){msg in
                             let isRecevied = msg.sender_id != self.userVM.userID!
+                            
                             HStack{
                                 ZStack{
                                     HStack{

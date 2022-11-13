@@ -833,18 +833,15 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
     
     //Async Version
     func AsyncGetAllUserPost(page : Int = 1,limit : Int = 20) async -> Result<AllUserPostResp,Error> {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetAllPosts.apiUri) else{
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetAllPosts.apiUri + "?page=\(page)") else{
             return .failure(APIError.apiError)
         }
-        print(url.absoluteURL)
+//        print(url.absoluteURL)
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        
-        return await AsyncFetchAndDecode(request: request,params: [
-            "page" : page.description
-        ])
+        return await AsyncFetchAndDecode(request: request)
     }
     
     func GetFollowUserPost( page : Int = 1,limit : Int = 20,completion : @escaping (Result <FollowingUserPostResp,Error>) -> ()) {
@@ -862,7 +859,7 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
     }
     
     func AsyncGetFollowUserPost( page : Int = 1 ,limit : Int = 20) async -> Result <FollowingUserPostResp,Error> {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetFollowingPosts.apiUri) else{
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetFollowingPosts.apiUri + "?page=\(page)") else{
             return .failure(APIError.apiError)
         }
         print(url.absoluteURL)
@@ -1045,6 +1042,19 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         FetchAndDecode(request: request, completion: completion)
     }
     
+    func AsyncGetPostComments(postId : Int, page : Int = 1 ,limit : Int = 20) async -> Result<GetPostCommentsResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetPostComment.apiUri + postId.description + "?page=\(page)") else {
+            return .failure(APIError.badUrl)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        return await AsyncFetchAndDecode(request: request)
+    }
+    
     //MARK: --REPLY COMMENT
     func CreateReplyComment(req : CreateReplyCommentReq, completion : @escaping (Result<CreateReplyCommentResp,Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreateReplyComment.apiUri + "\(req.post_id)/reply/\(req.comment_id)") else {
@@ -1082,6 +1092,21 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         FetchAndDecode(request: request, completion: completion)
+    }
+    
+    func AsyncGetReplyComment(req : GetReplyCommentReq,  page : Int = 1,limit : Int = 5) async -> Result<GetReplyCommentResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetReplyComment.apiUri + req.comment_id.description + "?page=\(page)") else {
+            return .failure(APIError.badUrl)
+            
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        return await AsyncFetchAndDecode(request: request)
     }
     
     //MARK: --COMMENT LIKES
@@ -1311,6 +1336,19 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         FetchAndDecode(request: request, completion: completion)
     }
     
+    func AsyncGetFriendRequest(page : Int = 1,limit : Int = 20) async -> Result<GetFriendRequestListResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetFriendRequest.apiUri + "?page=\(page)") else {
+            return .failure(APIError.badUrl)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        return await AsyncFetchAndDecode(request: request)
+    }
+    
     func IsFriend(req: IsFriendReq, completion: @escaping (Result<IsFriendResp, Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.IsFriend.apiUri + req.friend_id.description) else {
             completion(.failure(APIError.badUrl))
@@ -1512,6 +1550,20 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         FetchAndDecode(request: request, completion: completion)
     }
     
+    func AsyncGetRoomMessage(req : GetRoomMessageReq, page : Int = 1 ,limit : Int = 20) async -> Result<GetRoomMessageResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetRoomMessage.apiUri + req.room_id.description + "?page=\(page)") else {
+           return .failure(APIError.badUrl)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        return await AsyncFetchAndDecode(request: request)
+        
+    }
+    
     func SetIsRead(req: SetIsReadReq, completion: @escaping (Result<SetIsReadResp, Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.SetIsRead.apiUri + req.room_id.description + "/read" ) else {
             completion(.failure(APIError.badUrl))
@@ -1541,6 +1593,19 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         FetchAndDecode(request: request, completion: completion)
     }
     
+    func AsyncGetLikesNotification( page : Int = 1,limit : Int = 20) async -> Result<GetLikesNotificationsResq,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetLikesNotification.apiUri + "?page=\(page)" ) else {
+            return .failure(APIError.badUrl)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        return await AsyncFetchAndDecode(request: request)
+    }
+    
     func GetCommentNotification( page : Int = 1,limit : Int = 20,completion: @escaping (Result<GetCommentNotificationsResq, Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetCommentNotification.apiUri + "?page=\(page)") else {
             completion(.failure(APIError.badUrl))
@@ -1553,6 +1618,19 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         FetchAndDecode(request: request, completion: completion)
+    }
+    
+    func AsyncGetCommentNotification( page : Int = 1 ,limit : Int = 20) async -> Result<GetCommentNotificationsResq,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetCommentNotification.apiUri + "?page=\(page)") else {
+           return .failure(APIError.badUrl)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        return await AsyncFetchAndDecode(request: request)
     }
     
     
@@ -1630,30 +1708,26 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
     }
    
     
-    private func AsyncFetchAndDecode<ResponseType : Decodable>(request : URLRequest,params : [String:String]? = nil) async -> Result<ResponseType,Error>{
+    private func AsyncFetchAndDecode<ResponseType : Decodable>(request : URLRequest) async -> Result<ResponseType,Error>{
         
         //check the url
-        guard var component = URLComponents(url: request.url!, resolvingAgainstBaseURL: false) else {
-//            completion(.failure(APIError.invalidEndpoint))
-            return .failure(APIError.invalidEndpoint)
-        }
+//        guard var component = URLComponents(url: request.url!, resolvingAgainstBaseURL: false) else {
+////            completion(.failure(APIError.invalidEndpoint))
+//            return .failure(APIError.invalidEndpoint)
+//        }
         
         //page=?&value=? etc
-        var query : [URLQueryItem] = []
-        if let params = params{
-            query.append(contentsOf: params.map{ URLQueryItem(name: $0.key, value: $0.value)})
-            component.queryItems = query
-        }
-        
-        guard let _ = component.url else {
-//            completion(.failure(APIError.invalidEndpoint))
-//            return
-            return .failure(APIError.invalidEndpoint)
-        }
-
-    
-        
-//        print(request.absoluteURL)
+//        var query : [URLQueryItem] = []
+//        if let params = params{
+//            query.append(contentsOf: params.map{ URLQueryItem(name: $0.key, value: $0.value)})
+//            component.queryItems = query
+//        }
+//
+//        guard let finalURL = component.url else {
+//            return .failure(APIError.invalidEndpoint)
+//        }
+//
+//        request.url
         //do a URLSession
         
         do {

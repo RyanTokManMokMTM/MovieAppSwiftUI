@@ -12,12 +12,13 @@ struct GetRoomMessageReq {
 }
 
 struct GetRoomMessageResp : Decodable {
-    let messages : [MessageData]
+    let messages : [MessageInfo]
+    let meta_data : MetaData
 }
 
-struct MessageData  : Decodable, Identifiable {
-    let id : String
-    let users : SimpleUserInfo
-    let content :  String
-    let send_time : Int
-}
+//struct MessageData  : Decodable, Identifiable {
+//    let id : String
+//    let users : SimpleUserInfo
+//    let content :  String
+//    let send_time : Int
+//}

@@ -42,6 +42,7 @@ struct CreateNewCustomListResp : Decodable {
 
 struct AllUserListResp : Decodable {
     let lists : [CustomListInfo]?
+    let meta_data : MetaData
 }
 
 

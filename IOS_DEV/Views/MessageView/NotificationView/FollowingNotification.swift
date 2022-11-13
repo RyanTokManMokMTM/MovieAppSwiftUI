@@ -19,15 +19,43 @@ struct FollowingNotification: View {
             VStack{
                 List(){
                     if self.notificationVM.friendRequest.isEmpty {
-                        Text("暫無通知")
-                            .listRowBackground(Color("DarkMode2"))
+                        HStack{
+                            Spacer()
+                            Text("暫無通知")
+                                .foregroundColor(.gray)
+                            Spacer()
+                        }
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color("DarkMode2"))
+
                     }else {
                         ForEach(self.notificationVM.friendRequest,id: \.request_id){ info in
                             FollowingCell(info: info)
                                 .listRowBackground(Color("DarkMode2"))
                         }
+                        
+                        if self.notificationVM.notificationMataData?.page ?? 0 < self.notificationVM.notificationMataData?.total_pages ?? 0 {
+                            HStack{
+                                Spacer()
+                                ActivityIndicatorView()
+                                Spacer()
+                            }
+                            .listRowBackground(Color("DarkMode2"))
+                            .listRowSeparator(.hidden)
+                            .onAppear(){
+                                print("loading...")
+                            }
+                            .task {
+                                await self.notificationVM.LoadMoreFriendRequests()
+                            }
+                        }
+                        
                     }
-                }.listStyle(.plain)
+                }
+                .listStyle(.plain)
+                .refreshable {
+                    await self.notificationVM.RefershFriendRequest()
+                }
                 
             }
         }
@@ -35,6 +63,9 @@ struct FollowingNotification: View {
             notificationVM.GetFriendRequests()
             UpdateNotificatin()
             
+        }
+        .onDisappear(){
+            self.notificationVM.notificationMataData = nil
         }
         .background(Color("DarkMode2"))
     }

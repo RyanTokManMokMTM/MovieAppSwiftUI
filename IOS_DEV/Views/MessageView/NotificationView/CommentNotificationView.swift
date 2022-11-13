@@ -48,23 +48,54 @@ struct CommentNotificationView: View {
     @EnvironmentObject private var userVM : UserViewModel
     var body: some View {
         NotificationView(isShowView:$isShowView,topTitle: "留言"){
-            List(){
-                if self.notificationVM.commentNotification.isEmpty {
-                    Text("暫無通知")
+                List(){
+                    if self.notificationVM.commentNotification.isEmpty {
+                        HStack{
+                            Spacer()
+                            Text("暫無通知")
+                                .foregroundColor(.gray)
+                            Spacer()
+                        }
+                        .listRowSeparator(.hidden)
                         .listRowBackground(Color("DarkMode2"))
-                }else {
-                    ForEach(self.notificationVM.commentNotification){ info in
-                        CommentCell(info: info)
+                    }else {
+    //                    LazyVStack(spacing:0){
+                            ForEach(self.notificationVM.commentNotification){ info in
+                                CommentCell(info: info)
+                                    .listRowBackground(Color("DarkMode2"))
+                                    .padding(.vertical,15)
+                            }
+                        
+                        if self.notificationVM.notificationMataData?.page ?? 0 < self.notificationVM.notificationMataData?.total_pages ?? 0 {
+                            HStack{
+                                Spacer()
+                                ActivityIndicatorView()
+                                Spacer()
+                            }
                             .listRowBackground(Color("DarkMode2"))
-                            .padding(.vertical,15)
+                            .listRowSeparator(.hidden)
+                            .onAppear(){
+                                print("loading...")
+                            }
+                            .task {
+                                await self.notificationVM.LoadMoreCommentNotification()
+                            }
+                        }
                     }
                 }
-            }.listStyle(.plain)
+                .listStyle(.plain)
+                .refreshable {
+                    await self.notificationVM.RefershCommentNotification()
+                }
+            
         }
         .background(Color("DarkMode2"))
         .onAppear(){
             self.notificationVM.GetCommentNotification()
             UpdateNotificatin()
+        }
+        .onDisappear(){
+            self.notificationVM.notificationMataData = nil
         }
     }
     

@@ -56,10 +56,12 @@ struct UpdateCommentResp : Decodable {
 
 struct GetPostCommentsResp : Decodable{
     let comments : [CommentInfo]
+    let meta_data : MetaData
 }
 
 struct GetReplyCommentResp : Decodable{
     let reply : [CommentInfo]
+    let meta_data : MetaData
 }
 
 struct DeletePostCommentResp : Decodable {}
@@ -82,6 +84,7 @@ struct CommentInfo : Decodable,Identifiable{
     let reply_id : Int
     let reply_to : SimpleUserInfo
     var replys : [CommentInfo]? //can be empty //same parent comment id
+    var meta_data : MetaData?  //reply comment only
     
     var comment_time : Date{
         return Date(timeIntervalSince1970: TimeInterval(update_at))

@@ -32,6 +32,7 @@ struct DeleteUserLikedMovieResp : Decodable {}
 
 struct AllUserLikedMovieResp : Decodable{
     var liked_movies : [LikedMovieCard]?
+    let meta_data : MetaData
 }
 
 struct IsLikedMovieResp : Decodable {

@@ -18,6 +18,7 @@ struct PostDetailView: View {
     var postForm : postDatFrom
     var isFromProfile : Bool
     
+    @State private var metaData : MetaData? = nil
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
     
@@ -42,7 +43,7 @@ struct PostDetailView: View {
     @State private var rootCommentId : Int = -1
     @State private var placeHolder : String = ""
     @State private var isReply : Bool = false
-    
+    @State private var scrollTo : Int = 0
     @Binding var postInfo : Post
     var body: some View {
         ZStack(alignment: .top){
@@ -54,12 +55,12 @@ struct PostDetailView: View {
                    postBody()
                         
                 }
-                .refresher(style: .system){ done in
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2){
-                        print("done")
-                        done()
-                    }
-                }
+//                .refresher(style: .system){ done in
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2){
+//                        print("done")
+//                        done()
+//                    }
+//                }
                 //                .frame(maxHeight:.infinity,alignment:.top)
                 CommentArea()
             }
@@ -85,6 +86,22 @@ struct PostDetailView: View {
         }
 
         
+    }
+    
+    private func LoadMoreCommentInfo(postID :Int) async {
+        if self.metaData == nil || self.metaData!.page == self.metaData!.total_pages {
+            return
+        }
+        
+        let resp = await APIService.shared.AsyncGetPostComments(postId: postID, page: self.metaData!.page + 1)
+        switch resp {
+        case .success(let data):
+            self.commentInfos.append(contentsOf: data.comments)
+            self.metaData = data.meta_data
+        case .failure(let err):
+            print(err.localizedDescription)
+//            BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
+        }
     }
     
     @ViewBuilder
@@ -351,7 +368,7 @@ struct PostDetailView: View {
             }
             .frame(maxWidth:.infinity,alignment: .center)
         }else {
-            if self.commentInfos.isEmpty {
+            if self.commentInfos.isEmpty{
                 HStack{
                     Spacer()
                     Image(systemName: "text.bubble")
@@ -365,17 +382,29 @@ struct PostDetailView: View {
             }else {
                 ForEach(self.$commentInfos,id:\.id){ comment in
 //                    commentCell(comment: info)
-                    commentCell(postInfo: $postInfo, comment: comment, isLoadingReply: $isLoadingReply, replyCommentId: $replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo)
+                    commentCell(postInfo: $postInfo, comment: comment, isLoadingReply: $isLoadingReply, replyCommentId: $replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo, scrollTo: $scrollTo)
                 }
                 
-                HStack{
-                    Spacer()
-                    Text("沒有評論了唷~ ")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.gray)
-                        .padding(.vertical,8)
-                    Spacer()
+                
+                if self.metaData?.page ?? 0 < self.metaData?.total_pages ?? 0{
+                    HStack{
+                        Spacer()
+                        ActivityIndicatorView()
+                        Spacer()
+                    }.task {
+                        await self.LoadMoreCommentInfo(postID: self.postInfo.id)
+                    }
+                }else {
+                    HStack{
+                        Spacer()
+                        Text("沒有評論了唷~ ")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.gray)
+                            .padding(.vertical,8)
+                        Spacer()
+                    }
                 }
+           
             }
         }
     }
@@ -390,7 +419,7 @@ struct PostDetailView: View {
             case .success(let data):
                 let newComment = CommentInfo(id: data.id, user_info:
                                                 CommentUser(id: self.userVM.profile!.id, name: self.userVM.profile!.name, avatar: self.userVM.profile!.avatar ?? ""),
-                                             comment: self.message, update_at: data.create_at, reply_comments: 0, is_liked: false, comment_likes_count: 0, parent_comment_id: 0,reply_id: 0,reply_to: SimpleUserInfo(id: 0, name: "", avatar: ""))
+                                             comment: self.message, update_at: data.create_at, reply_comments: 0, is_liked: false, comment_likes_count: 0, parent_comment_id: 0,reply_id: 0,reply_to: SimpleUserInfo(id: 0, name: "", avatar: ""), meta_data: MetaData(total_pages: 0, total_results: 0, page: 0))
                 
                 self.commentInfos.insert(newComment, at: 0)
                 postInfo.post_comment_count += 1
@@ -413,7 +442,7 @@ struct PostDetailView: View {
             case .success(let data):
                 let newComment = CommentInfo(id: data.id, user_info:
                                                 CommentUser(id: self.userVM.profile!.id, name: self.userVM.profile!.name, avatar: self.userVM.profile!.avatar ?? ""),
-                                             comment: self.message, update_at: data.create_at, reply_comments: 0, is_liked: false, comment_likes_count: 0, parent_comment_id: self.rootCommentId,reply_id: self.replyCommentId, reply_to: SimpleUserInfo(id: self.replyTo!.id, name: self.replyTo!.name, avatar: self.replyTo!.avatar))
+                                             comment: self.message, update_at: data.create_at, reply_comments: 0, is_liked: false, comment_likes_count: 0, parent_comment_id: self.rootCommentId,reply_id: self.replyCommentId, reply_to: SimpleUserInfo(id: self.replyTo!.id, name: self.replyTo!.name, avatar: self.replyTo!.avatar), meta_data: MetaData(total_pages: 0, total_results: 0, page: 0))
                 
                 if self.commentInfos[index].replys == nil {
                     self.commentInfos[index].replys = []
@@ -443,6 +472,8 @@ struct PostDetailView: View {
             switch result {
             case .success(let data):
                 self.commentInfos = data.comments
+                self.metaData = data.meta_data
+                print(self.commentInfos[0])
             case .failure(let err):
                 print("get comment failed : \(err.localizedDescription)")
             }

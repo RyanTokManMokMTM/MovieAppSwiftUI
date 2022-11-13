@@ -14,6 +14,10 @@ class PostVM : ObservableObject {
     @Published var isPostUploading = false
 //    @Published var uploadProgress : Double = 0
     @Published var isRefersh = false
+
+//    @Published var isFetchMoreData : Bool = false
+    @Published var discoverMetaData : MetaData?
+    @Published var followingMetaData : MetaData?
     @Published var initAllData : Bool = true
     @Published var initFollowing : Bool = true
     @Published var postData : [Post] = [] //set to nil for first time
@@ -52,9 +56,8 @@ class PostVM : ObservableObject {
                 self.isLoading = false
                 switch result{
                 case .success(let data):
-                    print(data)
                     Task.init{
-                        await self.refershData()
+                        await self.refershFollowingData()
                     }
                     
                 case .failure(let err):
@@ -65,7 +68,7 @@ class PostVM : ObservableObject {
         }
     }
     
-    private func refershData() async {
+    func refershFollowingData() async {
         print("updateing....")
         let resp = await APIService.shared.AsyncGetFollowUserPost()
         self.isPostUploading = false
@@ -73,11 +76,62 @@ class PostVM : ObservableObject {
         switch resp {
         case .success(let data):
             self.followingData = data.post_info
-            BenHubState.shared.AlertMessage(sysImg: "checkmark.circle.fill", message: "文章上傳成功")
+            self.followingMetaData = data.meta_data
         case .failure(let err):
             print("upload post err : \(err.localizedDescription)")
             BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
         }
+    }
+    
+    func refershDiscoverData() async {
+        print("updateing....")
+        let resp = await APIService.shared.AsyncGetAllUserPost()
+        switch resp {
+        case .success(let data):
+            self.postData = data.post_info
+            self.discoverMetaData = data.meta_data
+        case .failure(let err):
+            print("upload post err : \(err.localizedDescription)")
+            BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
+        }
+    }
+    
+    func LoadMoreDiscoverData() async {
+        if self.discoverMetaData == nil || self.discoverMetaData!.total_pages == self.discoverMetaData!.page{
+            return
+        }
+//        self.isFetchMoreData = true
+        print("loading more....")
+        let resp = await APIService.shared.AsyncGetAllUserPost(page: self.discoverMetaData!.page + 1)
+        switch resp {
+        case .success(let data):
+//            print(data.post_info)
+            self.postData.append(contentsOf: data.post_info)
+            self.discoverMetaData = data.meta_data
+        case .failure(let err):
+            print("upload post err : \(err.localizedDescription)")
+            BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
+        }
+        
+//        self.isFetchMoreData = false
+    }
+    
+    func LoadMoreFollowingData() async {
+        if self.followingMetaData == nil || self.followingMetaData!.total_pages == self.followingMetaData!.page{
+            return
+        }
+        print("loading more....")
+        let resp = await APIService.shared.AsyncGetFollowUserPost(page: self.followingMetaData!.page + 1)
+        switch resp {
+        case .success(let data):
+//            print(data.post_info)
+            self.followingData.append(contentsOf: data.post_info)
+            self.followingMetaData = data.meta_data
+        case .failure(let err):
+            print("load post err : \(err.localizedDescription)")
+            BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
+        }
+        
     }
     
     func GetAllUserPost(onSucceed : @escaping ()->() , onFailed : @escaping  (_ errMsg : String)->()) {
@@ -87,22 +141,27 @@ class PostVM : ObservableObject {
         APIService.shared.GetAllUserPost(){result in
             DispatchQueue.main.async {
                 self.isGetPostLoading = false
+                
                 switch result {
                 case .success(let data):
-                    print("Fetched!\(data)")
+//                    print("Fetched!\(data)")
                     onSucceed()
                     for var info in data.post_info {
                         info.comments = [] //we will fetch the data when user press the comment
                         self.postData.append(info)
-//                        self.followingData[0].post_comment_count = 0
                     }
+                    self.discoverMetaData = data.meta_data
 //                    self.postData = data.post_info //not fetching!
                 case .failure(let err):
 //                    print("POST DATA")
 //                    print(err.localizedDescription)
                     onFailed(err.localizedDescription)
                     self.isGetPostErr = err
+                    self.initAllData = false
                 }
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1){
+                self.initAllData = false
             }
         }
     }
@@ -123,6 +182,8 @@ class PostVM : ObservableObject {
                         self.followingData.append(info)
                     }
 //                    self.followingData = data.post_info
+                    self.followingMetaData = data.meta_data
+                    print(self.followingMetaData)
                 case .failure(let err):
 //                    print("POST DATA")
                     print(err.localizedDescription)
@@ -147,5 +208,7 @@ class PostVM : ObservableObject {
             $0.id == postId
         } ?? -1
     }
+    
+
 
 }
