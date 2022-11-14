@@ -58,6 +58,8 @@
 			<string></string>
 		</dict>
 	</dict>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This application saves Photos and videos to your library.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>ConcertOne-Regular.ttf</string>

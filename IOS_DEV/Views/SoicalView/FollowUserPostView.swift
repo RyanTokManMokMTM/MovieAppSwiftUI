@@ -318,20 +318,30 @@ struct FollowPostCell : View {
     
     @ViewBuilder
     func PostButton() -> some View {
+        Spacer()
         HStack(alignment:.center){
-//            Button(action:{
-//                //TODO: SHARE - NOT
-//            }){
-//                HStack{
-//                    Image(systemName: "square.and.arrow.up")
-//                        .imageScale(.medium)
-//                }
-//                .foregroundColor(.white)
-//            }
 //            .disabled(true)
-            Spacer()
             
             HStack(spacing:10){
+                Button(action:{
+                    //TODO: SHARE - Yes
+                    DispatchQueue.main.async {
+                        withAnimation{
+                            self.postVM.sharedData = self.postVM.followingData[Id]
+                            self.postVM.isSharePost.toggle()
+                        }
+                    }
+                }){
+                    HStack{
+                        Image(systemName: "square.and.arrow.up")
+                            .imageScale(.large)
+                    }
+                    .foregroundColor(.white)
+                    
+                    Text("分享")
+                        .font(.caption)
+                }
+                
                 HStack(spacing:5){
                     Button(action:{
                         //TODO: Like the post
@@ -343,7 +353,7 @@ struct FollowPostCell : View {
                     }){
                         
                         Image(systemName: self.postVM.followingData[Id].is_post_liked ?  "heart.fill" : "heart")
-                            .imageScale(.medium)
+                            .imageScale(.large)
                             .foregroundColor(self.postVM.followingData[Id].is_post_liked ? .red : .white)
                         
                     }
@@ -363,7 +373,7 @@ struct FollowPostCell : View {
                 }){
                     HStack(spacing:5){
                         Image(systemName: "text.bubble")
-                            .imageScale(.medium)
+                            .imageScale(.large)
                         Text(self.postVM.followingData[Id].post_comment_count.description)
                             .font(.caption)
                     }

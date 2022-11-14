@@ -181,7 +181,21 @@ struct PostDetailView: View {
                 }
                 
                 Spacer()
-                
+                Button(action:{
+                    //TODO: SHARE - Yes
+                    DispatchQueue.main.async {
+                        withAnimation{
+                            self.postVM.sharedData = self.postInfo
+                            self.postVM.isSharePost.toggle()
+                        }
+                    }
+                }){
+                    HStack{
+                        Image(systemName: "square.and.arrow.up")
+                            .imageScale(.large)
+                    }
+                    .foregroundColor(.white)
+                }
 //                if self.postVM.selectedPost!.user_info.id != self.userVM.userID! {
 //                    Button(action:{
 //    //                    withAnimation{
@@ -473,7 +487,6 @@ struct PostDetailView: View {
             case .success(let data):
                 self.commentInfos = data.comments
                 self.metaData = data.meta_data
-                print(self.commentInfos[0])
             case .failure(let err):
                 print("get comment failed : \(err.localizedDescription)")
             }

@@ -11,8 +11,8 @@ import SwiftUI
 import BottomSheet
 
 
-let SERVER_HOST = "http://127.0.0.1:8000"
-let SERVER_WS = "ws://127.0.0.1:8000/ws"
+let SERVER_HOST = "http://ec2-13-214-138-219.ap-southeast-1.compute.amazonaws.com:8000"
+let SERVER_WS = "ws://ec2-13-214-138-219.ap-southeast-1.compute.amazonaws.com:8000/ws"
 
 class MovieStore: MovieService {
     static let shared = MovieStore()

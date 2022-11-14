@@ -11,6 +11,8 @@ import SwiftUI
 //let initPostInfo = Post(id: 0, user_info: PosterOwner(id: 0, name: "", avatar: ""), post_title: "", post_desc: "", post_movie_info: PostMovieInfo(id: 0, title: "", poster_path: ""), post_like_count: 0, post_comment_count: 0, create_at: 0, is_post_liked: false)
 @MainActor
 class PostVM : ObservableObject {
+    @Published var isSharePost = false
+    @Published var sharedData : Post? = nil
     @Published var isPostUploading = false
 //    @Published var uploadProgress : Double = 0
     @Published var isRefersh = false

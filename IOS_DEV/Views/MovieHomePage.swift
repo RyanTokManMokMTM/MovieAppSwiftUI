@@ -143,13 +143,18 @@ struct MovieHomePage: View {
 
                 }
 //                .ignoresSafeArea(.keyboard, edges: .bottom)
+                if self.postVM.isSharePost && self.postVM.sharedData != nil{
+                    SharingView(postInfo: self.postVM.sharedData!)
+                        .environmentObject(postVM)
+                        .transition(.asymmetric(insertion: .move(edge: .bottom), removal: .opacity))
+                        .onDisappear(){
+                            self.postVM.sharedData = nil
+                        }
+                }
                 
             }
             .background(Color("DarkMode2").edgesIgnoringSafeArea(.all))
-            .onAppear {
-//                 UIApplication.topViewController()?
-//                    .navigationController?.isNavigationBarHidden = true
-                    UITabBar.appearance().isTranslucent = false
+            .onAppear {                    UITabBar.appearance().isTranslucent = false
                     UITabBar.appearance().backgroundColor = UIColor(named:"DarkMode2")
              }
             
