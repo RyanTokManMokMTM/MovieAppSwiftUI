@@ -167,6 +167,7 @@
 		7A41C0182881633E005FAEBD /* PostBottomSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A41C0172881633E005FAEBD /* PostBottomSheet.swift */; };
 		7A47D57327A661BC00C9DEBC /* HotTopicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A47D57227A661BC00C9DEBC /* HotTopicView.swift */; };
 		7A47D57527A6730600C9DEBC /* ConcertOne-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7A47D57427A6730500C9DEBC /* ConcertOne-Regular.ttf */; };
+		7A4F531B29277EFD00293E17 /* YTPageController in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4F531A29277EFD00293E17 /* YTPageController */; };
 		7A55618E28795F0600B0C987 /* CardFlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A55618D28795F0600B0C987 /* CardFlowLayout.swift */; };
 		7A55619028797A2300B0C987 /* FlowLayoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A55618F28797A2300B0C987 /* FlowLayoutView.swift */; };
 		7A55619228797A9F00B0C987 /* CardPostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A55619128797A9F00B0C987 /* CardPostView.swift */; };
@@ -464,6 +465,7 @@
 				7A7896D82886E6C500FFF95A /* SwiftUIPager in Frameworks */,
 				7A80F232288708F500A58356 /* BottomSheet in Frameworks */,
 				0EFBEEB402995C63C993EF15 /* Pods_IOS_DEV.framework in Frameworks */,
+				7A4F531B29277EFD00293E17 /* YTPageController in Frameworks */,
 				7A80F2382887100F00A58356 /* Drawer in Frameworks */,
 				7AA67676291796B1002D9BFC /* Refresher in Frameworks */,
 			);
@@ -1254,6 +1256,7 @@
 				7A80F2372887100F00A58356 /* Drawer */,
 				7A26B1D0288FE0240041492E /* SDWebImageSwiftUI */,
 				7AA67675291796B1002D9BFC /* Refresher */,
+				7A4F531A29277EFD00293E17 /* YTPageController */,
 			);
 			productName = IOS_DEV;
 			productReference = 7A0EE92E261041690056BC8C /* IOS_DEV.app */;
@@ -1288,6 +1291,7 @@
 				7A80F2362887100F00A58356 /* XCRemoteSwiftPackageReference "SwiftUI-Drawer" */,
 				7A26B1CF288FE0240041492E /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
 				7AA67674291796B1002D9BFC /* XCRemoteSwiftPackageReference "SwiftUI-Refresher" */,
+				7A4F531929277EFD00293E17 /* XCRemoteSwiftPackageReference "YTPageController" */,
 			);
 			productRefGroup = 7A0EE92F261041690056BC8C /* Products */;
 			projectDirPath = "";
@@ -1792,6 +1796,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		7A4F531929277EFD00293E17 /* XCRemoteSwiftPackageReference "YTPageController" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/iWECon/YTPageController";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 		7A7896D62886E6C400FFF95A /* XCRemoteSwiftPackageReference "SwiftUIPager" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/fermoya/SwiftUIPager.git";
@@ -1831,6 +1843,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7A26B1CF288FE0240041492E /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */;
 			productName = SDWebImageSwiftUI;
+		};
+		7A4F531A29277EFD00293E17 /* YTPageController */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A4F531929277EFD00293E17 /* XCRemoteSwiftPackageReference "YTPageController" */;
+			productName = YTPageController;
 		};
 		7A7896D72886E6C500FFF95A /* SwiftUIPager */ = {
 			isa = XCSwiftPackageProductDependency;

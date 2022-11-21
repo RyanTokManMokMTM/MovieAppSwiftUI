@@ -34,7 +34,6 @@ struct OtherUserProfile: View {
                     userVM.setUserID(userID: userID)
                     userVM.getUserProfileByID()
                     userVM.getUserPosts()
-                    userVM.GetUserGenresSetting()
                 }
                 
             }
@@ -640,7 +639,7 @@ struct OtherPersonPostCardGridView : View{
                 }
                 .frame(height:UIScreen.main.bounds.height / 2)
             }else{
-                FlowLayoutView(list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10){ info in
+                FlowLayoutView(list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollAble: .constant(true)){ info in
                 
                     profileCardCell(Id : userVM.GetPostIndex(postId: info.id)){
                         DispatchQueue.main.async {

@@ -11,8 +11,8 @@ import SwiftUI
 import BottomSheet
 
 
-let SERVER_HOST = "http://ec2-13-214-138-219.ap-southeast-1.compute.amazonaws.com:8000"
-let SERVER_WS = "ws://ec2-13-214-138-219.ap-southeast-1.compute.amazonaws.com:8000/ws"
+let SERVER_HOST = "http://ec2-13-214-172-176.ap-southeast-1.compute.amazonaws.com:8000"
+let SERVER_WS = "ws://ec2-13-214-172-176.ap-southeast-1.compute.amazonaws.com:8000/ws"
 
 class MovieStore: MovieService {
     static let shared = MovieStore()
@@ -794,6 +794,18 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         FetchAndDecode(request: request, completion: completion)
     }
     
+    func GetCollectedMovieCount(userID : Int) async -> Result<GetCollectedMovieResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetCollectedMovieCount.apiUri + userID.description) else {
+          return .failure(APIError.badUrl)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        return await AsyncFetchAndDecode(request: request)
+    }
+    
     //MARK: --POST
     func CreatePost(req : CreatePostReq ,completion : @escaping (Result<CreatePostResp,Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreatePost.apiUri) else{
@@ -817,8 +829,8 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         PostAndDecodeWithProgress(req: request,completion: completion)
     }
     
-    func GetAllUserPost( page : Int = 1,limit : Int = 20,completion : @escaping (Result <AllUserPostResp,Error>) -> ()) {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetAllPosts.apiUri + "?page=\(page)") else{
+    func GetAllUserPost( page : Int = 1,limit : Int = 5,completion : @escaping (Result <AllUserPostResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetAllPosts.apiUri + "?page=\(page)&limit=\(limit)") else{
             completion(.failure(APIError.apiError))
             return
         }
@@ -832,8 +844,8 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
     }
     
     //Async Version
-    func AsyncGetAllUserPost(page : Int = 1,limit : Int = 20) async -> Result<AllUserPostResp,Error> {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetAllPosts.apiUri + "?page=\(page)") else{
+    func AsyncGetAllUserPost(page : Int = 1,limit : Int = 5) async -> Result<AllUserPostResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetAllPosts.apiUri + "?page=\(page)&limit=\(limit)") else{
             return .failure(APIError.apiError)
         }
 //        print(url.absoluteURL)
@@ -844,8 +856,8 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         return await AsyncFetchAndDecode(request: request)
     }
     
-    func GetFollowUserPost( page : Int = 1,limit : Int = 20,completion : @escaping (Result <FollowingUserPostResp,Error>) -> ()) {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetFollowingPosts.apiUri) else{
+    func GetFollowUserPost( page : Int = 1,limit : Int = 5,completion : @escaping (Result <FollowingUserPostResp,Error>) -> ()) {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetFollowingPosts.apiUri  + "?page=\(page)&limit=\(limit)") else{
             completion(.failure(APIError.apiError))
             return
         }
@@ -858,8 +870,8 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         FetchAndDecode(request: request, completion: completion)
     }
     
-    func AsyncGetFollowUserPost( page : Int = 1 ,limit : Int = 20) async -> Result <FollowingUserPostResp,Error> {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetFollowingPosts.apiUri + "?page=\(page)") else{
+    func AsyncGetFollowUserPost( page : Int = 1 ,limit : Int = 5) async -> Result <FollowingUserPostResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetFollowingPosts.apiUri + "?page=\(page)&limit=\(limit)") else{
             return .failure(APIError.apiError)
         }
         print(url.absoluteURL)
@@ -1505,7 +1517,7 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         FetchAndDecode(request: request, completion: completion)
     }
     
-
+    
     func GetUserRooms(completion: @escaping (Result<GetUserRoomsResp, Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetUserRooms.apiUri) else {
             completion(.failure(APIError.badUrl))
@@ -1536,8 +1548,8 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
     
     //MARK: --Message
     //TODO: Message
-    func GetRoomMessage(req : GetRoomMessageReq, page : Int = 1,limit : Int = 20,completion: @escaping (Result<GetRoomMessageResp,Error>) -> ()){
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetRoomMessage.apiUri + req.room_id.description + "?page=\(page)") else {
+    func GetRoomMessage(req : GetRoomMessageReq, page : Int = 1,limit : Int = 10,completion: @escaping (Result<GetRoomMessageResp,Error>) -> ()){
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetRoomMessage.apiUri + req.room_id.description + "/" + req.last_id.description + "/?page=\(page)") else {
             completion(.failure(APIError.badUrl))
             return
         }
@@ -1551,10 +1563,10 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
     }
     
     func AsyncGetRoomMessage(req : GetRoomMessageReq, page : Int = 1 ,limit : Int = 20) async -> Result<GetRoomMessageResp,Error> {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetRoomMessage.apiUri + req.room_id.description + "?page=\(page)") else {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetRoomMessage.apiUri + req.room_id.description + "/" + req.last_id.description + "/?page=\(page)") else {
            return .failure(APIError.badUrl)
         }
-        
+        print(url.description)
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")

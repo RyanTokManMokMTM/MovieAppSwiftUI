@@ -18,6 +18,8 @@ struct FlowLayoutView< T : Identifiable,Content : View> : View where T : Hashabl
     var HSpacing : CGFloat
     var VSpacing : CGFloat
     
+    @Binding var isScrollable : Bool
+    
     
     private func customList() -> [[T]] {
         var curIndx = 0
@@ -35,16 +37,17 @@ struct FlowLayoutView< T : Identifiable,Content : View> : View where T : Hashabl
         
         return gridList
     }
-    init(list : [T],columns : Int,HSpacing : CGFloat = 10,VSpacing : CGFloat = 10,@ViewBuilder content :@escaping (T) -> Content){
+    init(list : [T],columns : Int,HSpacing : CGFloat = 10,VSpacing : CGFloat = 10,isScrollAble : Binding<Bool>,@ViewBuilder content :@escaping (T) -> Content){
         self.content = content
         self.list = list
         self.colums = columns
         self.HSpacing = HSpacing
         self.VSpacing = VSpacing
+        self._isScrollable = isScrollAble
     }
     
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false){
+        ScrollView{
             if list.isEmpty {
                 VStack{
                     Text("There is no any post yet...")
@@ -69,6 +72,10 @@ struct FlowLayoutView< T : Identifiable,Content : View> : View where T : Hashabl
                 .padding(.horizontal,3)
 //                .background(Color("DarkMode2").frame(maxWidth:.infinity))
             }
+        }
+        .introspectScrollView{scroll in
+            print("?//\(isScrollable)" )
+            scroll.isScrollEnabled = self.isScrollable
         }
 //        .background(Color("DarkMode2").frame(maxWidth:.infinity))
         .listStyle(.plain)
@@ -101,6 +108,7 @@ struct FlowLayoutWithPullView< T : Identifiable,Content : View,Content2 : View> 
                 curIndx += 1
             }
         }
+        print("updated?????????")
         return gridList
     }
     init(list : [T],columns : Int,HSpacing : CGFloat = 10,VSpacing : CGFloat = 10,onRefersh : @escaping () async ->(),@ViewBuilder content :@escaping (T) -> Content, @ViewBuilder loadMoreContent :@escaping () -> Content2){
@@ -149,6 +157,7 @@ struct FlowLayoutWithPullView< T : Identifiable,Content : View,Content2 : View> 
                 done()
             }
         }
+
         .background(Color("DarkMode2").frame(maxWidth:.infinity))
         .listStyle(.plain)
     }

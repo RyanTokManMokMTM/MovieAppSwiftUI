@@ -303,7 +303,7 @@ extension View {
         view?.backgroundColor = .clear
 
         let format = UIGraphicsImageRendererFormat()
-        format.scale = 3 // Ensures 3x-scale images. You can customise this however you like.
+        // Ensures 3x-scale images. You can customise this however you like.
         let renderer = UIGraphicsImageRenderer(size: targetSize, format: format)
         return renderer.image { _ in
             view?.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)

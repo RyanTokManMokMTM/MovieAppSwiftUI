@@ -158,7 +158,7 @@ struct MovieListView: View {
             VStack(spacing:0){
                 VStack(spacing:0){
                     HomeNavTabView(index: $tabIndex)
-                    Divider()
+//                    Divider()
                     
                 }
                 MoviePage()

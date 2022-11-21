@@ -26,7 +26,7 @@ struct GetMoreMovie: View{
                 if recommendState.movies!.isEmpty {
                     Text("No recommended movie.")
                 }else {
-                    FlowLayoutView(list: recommendState.movies!, columns: 2,HSpacing: 10,VSpacing: 20){ info in
+                    FlowLayoutView(list: recommendState.movies!, columns: 2,HSpacing: 10,VSpacing: 20, isScrollAble: .constant(true)){ info in
                         Button(action: {
                             self.showDetailId = info.id
                             self.isShowMovieDetail = true

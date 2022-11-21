@@ -16,6 +16,9 @@ import BottomSheet
 import MapKit
 import Combine
 import Refresher
+import UIKit
+import YTPageController
+
 @main
 struct IOS_DEVApp: App {
     @UIApplicationDelegateAdaptor(Appdelegate.self) var delegate
@@ -27,10 +30,368 @@ struct IOS_DEVApp: App {
         }
     }
 }
+
+struct TestSCroll:View {
+    var body : some View {
+        ScrollView{
+            VStack{
+                ForEach(0..<50){ _ in
+                    Text("abc")
+                }
+            }
+        }
+        .introspectScrollView{scroll in
+//            scroll.bounces =
+            scroll.isScrollEnabled = true
+        }
+    }
+}
+
+struct TestScrollViewTes : View {
+    @State private var isAbleToScroll = false
+    @State private var headerOffset : CGFloat = 0
+    @State private var headerMinY : CGFloat = 0
+    @State private var headerHeight : CGFloat = 0
+    @State private var navBarHeight : CGFloat = 0
+    @State private var index : Int = 0
+    var body : some View {
+        VStack(spacing:0){
+            ZStack{
+                GeometryReader{ proxy -> AnyView in
+                    DispatchQueue.main.async {
+                        let frame = proxy.frame(in : .global)
+                        if navBarHeight != frame.height{
+                            navBarHeight = frame.height
+                        }
+                    }
+                    return AnyView(Color.clear)
+                }.frame(width: 0, height: 0)
+                VStack{
+                    Spacer()
+                    Text("Nav Bar")
+                        .padding(.bottom)
+                }
+                .frame(width: UIScreen.main.bounds.width,height:80)
+                .background(Color.green)
+            }
+            
+            ScrollView (.vertical,showsIndicators: false){
+                VStack(spacing:0){
+                    VStack{
+                        ZStack{
+                            GeometryReader{ reader -> AnyView in
+                                let frame = reader.frame(in: .global)
+    //                            print(frame.minY)
+    //                            print(frame.maxY)
+    //                            print("----------")
+                                print(isAbleToScroll)
+                                DispatchQueue.main.async {
+                                    
+                                    if self.headerMinY == 0 {
+                                        headerMinY = frame.minY
+                                    }
+                                    
+                                    if headerHeight != frame.height {
+                                        print(frame.height)
+                                        headerHeight = frame.height
+                                    }
+                                    
+                                    headerOffset = headerMinY - frame.minY
+                                    let newValue = headerOffset > headerHeight
+                                    if isAbleToScroll != newValue {
+                                        isAbleToScroll = newValue
+                                    }
+                                }
+        //                        if headerMinY == 0{
+        //                            headerMinY = frame.minY
+                                //                        }
+                                
+                                
+                                return AnyView(Color.clear)
+                            
+                                
+                            }
+                            
+                            Color.red
+                                .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2.5)
+
+                        }
+                    }
+                    HStack{
+                        Text("Header...")
+                    }
+                    .frame(width: UIScreen.main.bounds.width, height: 35)
+                    .background(Color.blue)
+                    .offset(y : isAbleToScroll ? headerOffset - headerHeight : 0)
+                    .zIndex(1)
+                    
+                    TestView()
+                    .frame(height: UIScreen.main.bounds.height - 80 - 35)
+//
+                    
+                }
+            }
+        }
+
+        .edgesIgnoringSafeArea(.all)
+//        .disabled(true)
+    }
+    
+    @ViewBuilder
+    private func TestView() -> some View  {
+        GeometryReader{ proxy in
+            HStack(spacing:0){
+                ForEach(0..<5){ index in
+                    ScrollView(.vertical,showsIndicators: false){
+                        ForEach(0..<50){ i in
+                            Text("\(i) for index \(index + 1)")
+                                .frame(width: UIScreen.main.bounds.width, height: 20)
+                                .background(Color.gray)
+                        }
+                    }
+                    .frame(width: UIScreen.main.bounds.width)
+                }
+            }
+            .offset(x : CGFloat(self.index) * -UIScreen.main.bounds.width)
+            .disabled(!isAbleToScroll)
+        }
+        .frame(width: UIScreen.main.bounds.width)
+        .gesture(DragGesture().onEnded{ t in
+            let cur = t.translation.width
+            var curInd = self.index
+            
+            if cur > 50 {
+                curInd -= 1
+            } else if cur < -50 {
+                curInd += 1
+            }
+            
+            curInd = max(min(curInd,4),0)
+            withAnimation(.spring()){
+                self.index = curInd
+            }
+        })
+    }
+    
+}
+
+
+
+struct SideMenu : View {
+    @EnvironmentObject private var userVM : UserViewModel
+    @Binding var isShow : Bool
+    @State private var offset = 0.0
+    @State private var isAnimated = false
+    @State private var isEditProfile = false
+    var body : some View {
+        VStack{
+            menu()
+                .offset(x : self.isAnimated ? 0 : -UIScreen.main.bounds.width / 1.5)
+                .transition(.move(edge: .leading))
+        }
+        .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height,alignment:.leading)
+        .edgesIgnoringSafeArea(.all)
+        .background(Color.black.opacity(0.5).edgesIgnoringSafeArea(.all).onTapGesture {
+            withAnimation{
+                self.isAnimated = false
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3){
+                withAnimation{
+                    self.isShow.toggle()
+                }
+            }
+        })
+        .onAppear(){
+            withAnimation{
+                self.isAnimated = true
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func menu() -> some View {
+        VStack(alignment:.leading,spacing:12){
+            //adding people
+            
+            Button(action:{
+                withAnimation{
+                    self.isAnimated = false
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3){
+                    withAnimation{
+                        self.isShow.toggle()
+                    }
+                }
+            }){
+                Image(systemName: "xmark")
+                    .imageScale(.large)
+                    .foregroundColor(.gray)
+            }
+            .padding(.vertical,5)
+            
+            memuButton(imageName: "person.fill.badge.plus", title: "添加好友")
+            Divider()
+            
+            
+            Button(action:{
+                withAnimation{
+                    self.isEditProfile.toggle()
+                }
+            }){
+                NavigationLink(destination:
+                                EditProfile(isEditProfile: $isEditProfile)
+                    .environmentObject(userVM)
+                               , isActive: $isEditProfile){
+                    HStack(spacing:18){
+                        Image(systemName: "gearshape")
+                            .imageScale(.large)
+                            .font(.system(size: 15))
+                        Text("修改資料")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
+                    .foregroundColor(.gray)
+                }
+                
+            }
+            
+//
+            
+            
+            Spacer()
+            memuButton(imageName: "arrow.uturn.left", title: "登出")
+            //setting?
+//            Spacer()
+        }
+        .padding(.horizontal,18)
+        .padding(.top,UIApplication.shared.windows.first?.safeAreaInsets.top)
+        .padding(.top)
+        .padding(.bottom,UIApplication.shared.windows.first?.safeAreaInsets.bottom)
+        .padding(.bottom)
+        .frame(width: UIScreen.main.bounds.width / 1.5, height: UIScreen.main.bounds.height,alignment:.leading)
+        .background(Color("appleDark"))
+//        .gesture(
+//            DragGesture()
+//                .onChanged(self.onChage(value:))
+//                .onEnded(self.onEnded(value:))
+//        )
+//        .offset(x : -self.offset)
+        
+        
+    }
+    
+    private func onChage(value : DragGesture.Value){
+        print(value.translation.width)
+        if value.translation.width > 0 {
+            self.offset = value.translation.width
+        }
+    }
+
+    private func onEnded(value : DragGesture.Value){
+        if value.translation.width > 0 {
+            withAnimation(){
+//                let cardHeight = UIScreen.main.bounds.height / 4
+//
+//                if value.translation.height > cardHeight / 2.8 {
+//                    self.previewModel.isShowPreview.toggle()
+//                }
+                self.offset = 0
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func memuButton(imageName : String, title: String) -> some View{
+        Button(action:{
+            
+        }){
+            HStack(spacing:18){
+                Image(systemName: imageName)
+                    .imageScale(.large)
+                    .font(.system(size: 15))
+                Text(title)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+            .foregroundColor(.gray)
+        }
+    }
+    
+}
+
+
+struct TestScrollView<Content:View> : UIViewRepresentable {
+    func makeCoordinator() -> Coordinator {
+        return Coordinator(parent: self)
+    }
+
+    let content:Content
+    @Binding var isAbleToScroll : Bool
+    
+    init(isAbleToScroll : Binding<Bool>,@ViewBuilder content: @escaping ()->Content){
+        self.content = content()
+        self._isAbleToScroll = isAbleToScroll
+    }
+    
+    func makeUIView(context: Context) -> UIScrollView {
+        let view = UIScrollView()
+        setUp(view: view)
+        view.delegate = context.coordinator
+        return view
+    }
+
+    func updateUIView(_ uiView: UIScrollView, context: Context) {
+        //TODO
+        setUp(view: uiView)
+        uiView.delegate = context.coordinator
+    }
+    
+    private func setUp(view : UIScrollView){
+        let host = UIHostingController(rootView: self.content.frame(maxHeight:.infinity,alignment:.top))
+        host.view.translatesAutoresizingMaskIntoConstraints = false
+        
+        let constrains = [
+            host.view.topAnchor.constraint(equalTo: view.topAnchor), //no constraint at top
+            host.view.bottomAnchor.constraint(equalTo: view.bottomAnchor), //no constraint at top bottom
+            host.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),//no constraint at leading
+            host.view.trailingAnchor.constraint(equalTo: view.trailingAnchor), //no constraint at trailing
+            
+            host.view.widthAnchor.constraint(equalTo: view.widthAnchor),
+            host.view.heightAnchor.constraint(greaterThanOrEqualTo: view.heightAnchor,constant: 1),
+        ]
+        view.bounces = false
+        view.isScrollEnabled = isAbleToScroll
+        view.subviews.last?.removeFromSuperview()
+        view.addSubview(host.view)
+        view.showsVerticalScrollIndicator = false
+        view.addConstraints(constrains)
+    }
+    
+    
+
+    class Coordinator:NSObject,UIScrollViewDelegate{
+        var parent : TestScrollView
+        init(parent:TestScrollView){
+            self.parent = parent
+        }
+        
+        func scrollViewDidScroll(_ scrollView: UIScrollView) {
+
+        }
+    }
+    
+}
+
+
 //70DD6006-048A-4B29-B98B-D8EE21038006
 struct SnapCard : View {
     //postData Here
+    @Binding var isAnimated : Bool
     var postInfo : Post
+    init(isAnimated : Binding<Bool>,postInfo:Post){
+        self._isAnimated = isAnimated
+        self.postInfo = postInfo
+    }
     var body : some View{
         ZStack{
             WebImage(url:postInfo.post_movie_info.PosterURL)
@@ -100,6 +461,11 @@ struct SnapCard : View {
                 }
             }
             .frame(width: UIScreen.main.bounds.width / 1.2)
+            .opacity(self.isAnimated ? 1 : 0)
+            .offset(y: self.isAnimated ?  0 : -UIScreen.main.bounds.height)
+//            .rotationEffect(.degrees(-180), anchor: UnitPoint(x: 0, y: 0))
+            .animation(.spring())
+            .transition(.move(edge: .top))
 
         }
         .frame(maxWidth:.infinity,maxHeight: .infinity).ignoresSafeArea()
@@ -110,10 +476,13 @@ struct SnapCard : View {
 struct SharingView : View {
     //need the post data
     @EnvironmentObject private var postVM : PostVM
+    @State private var isAnimated = false
+    @State private var buttonAnimation = false
     var postInfo : Post
     var body : some View {
         ZStack(alignment:.bottom){
             BuildSnapCard()
+            
             ShareSheet()
         }
         .frame(maxWidth:.infinity)
@@ -187,6 +556,9 @@ struct SharingView : View {
    
             }
             .padding(.horizontal)
+            .offset(y: self.buttonAnimation ?  0 : UIScreen.main.bounds.height)
+            .animation(.spring())
+            .transition(.move(edge: .bottom))
         }
         .padding(.vertical)
         .padding(.bottom)
@@ -195,12 +567,22 @@ struct SharingView : View {
         .background(Color("appleDark"))
         .clipShape(CustomeConer(width: 10, height: 10, coners: [.topLeft,.topRight]))
         .ignoresSafeArea()
+        .onAppear(){
+            withAnimation{
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1){
+                    self.isAnimated = true
+                }
+ 
+                self.buttonAnimation = true
+            }
+            
+        }
             
     }
     
     @ViewBuilder
     private func BuildSnapCard() -> some View {
-        SnapCard(postInfo: self.postInfo)
+        SnapCard(isAnimated: $isAnimated, postInfo: postInfo)
     }
     
     private func saveToAlbums(){
@@ -322,7 +704,7 @@ struct DrawShape : Shape {
 //        print(rect)
         return Path{ path in
             let mid = rect.width / 2
-            
+
             path.move(to: CGPoint(x: mid - 5, y: 0))
             path.addArc(center: CGPoint(x: mid, y: 0), radius: 5, startAngle: .init(degrees: -180), endAngle: .init(degrees: 120), clockwise: false)
         }
@@ -339,7 +721,7 @@ struct BenHubTest : View {
                     withAnimation{
                         hubState.SetWait(message: "Loading")
                     }
-                    
+
                     DispatchQueue.main.asyncAfter(deadline: .now() + 3){
                         withAnimation{
                             hubState.isWait = false
@@ -354,10 +736,10 @@ struct BenHubTest : View {
                 BenHubLoadingView(message: hubState.message)
             }
             .alert(isAlert: $hubState.isPresented){
-                
+
                 BenHubAlertView(message: hubState.message, sysImg: hubState.sysImg)
             }
-        
+
         }
     }
 }
@@ -367,7 +749,7 @@ struct textFieldTest : View {
     @Binding var isShow : Bool
     var body : some View {
         VStack{
-            
+
             Spacer()
             TextField("hi", text: $query)
             Spacer()
@@ -394,7 +776,7 @@ struct TestNav : View {
             }
         }
     }
-    
+
 }
 
 
@@ -646,7 +1028,7 @@ struct DetectResultCell : View{
                 .aspectRatio(contentMode: .fit)
                 .frame(height:230)
                 .cornerRadius(15)
-            
+
             VStack(alignment:.center){
                 Text("The Exorcism of Carmen Farias")
                     .bold()
@@ -667,30 +1049,30 @@ struct DetectResult : View{
     @Binding var show :Bool
     @State private var isDone : Bool = false
 //    @Binding var reDetech : Bool
-    
+
     @Binding var isStopDeting : Bool //toggle back
     var detechingData : UIImage
     let gridItem = Array(repeating: GridItem(.flexible(),spacing: 10.0), count: 2)
     var body : some View{
-        
+
         ZStack{
             GeometryReader{ imageProxy in
                 Image(uiImage: self.detechingData)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: imageProxy.frame(in: .global).width, height:imageProxy.frame(in: .global).height)
-                    
-                
+
+
             }
             .blur(radius: self.blurLevel())
             .ignoresSafeArea()
-            
+
             GeometryReader{sheetPorxy -> AnyView in
                 return AnyView(
                     ZStack{
                         BlurView()
                             .clipShape(CustomeConer(width: 25, height: 25, coners: [.topLeft,.topRight]))
-                        
+
                         VStack{
                             Capsule()
                                 .fill(Color.gray)
@@ -705,13 +1087,13 @@ struct DetectResult : View{
                                         .frame(width: 18, height: 18)
                                         .foregroundColor(.white)
                                 }
-                                
+
                                 Text("Detecting keyword")
                                     .bold()
                                     .padding(.horizontal)
-                                
+
                                 Spacer()
-                                
+
                                 Image("post4")
                                     .resizable()
                                     .aspectRatio(contentMode: .fill) //??
@@ -721,7 +1103,7 @@ struct DetectResult : View{
                             }
                             .padding(.horizontal)
                             .padding(.vertical,5)
-                            
+
                             ScrollView(.vertical, showsIndicators: false){
                                 LazyVGrid(columns: gridItem){
                                     ForEach(testList,id:\.self){ i in
@@ -748,7 +1130,7 @@ struct DetectResult : View{
                             //+y is negative
                             //-y is positive
                             //-offset = if current is +y = -(-num)
-                            
+
                             //this case is +y > 100 ? and +y < half screen
                             if -offset > 100 && -offset < (sheetPorxy.frame(in: .global).height / 2)  {
                                     offset = -(sheetPorxy.frame(in: .global).height / 3)
@@ -762,20 +1144,20 @@ struct DetectResult : View{
                         }
                     }))
                 )
-                
+
             }
             .ignoresSafeArea(.all, edges: .bottom)
         }
-        
+
     }
-        
-    
+
+
     private func onChage(){
         DispatchQueue.main.async{
             self.offset = self.gestureoffset + self.preOffset
         }
     }
-    
+
     private func blurLevel() -> CGFloat {
         return (-offset / UIScreen.main.bounds.height / 2) * 30
     }
@@ -786,13 +1168,13 @@ struct Detecting : View{
     @State private var percentage : Float = 0
     @Binding  var isDone : Bool
     @Binding var isStopDeteching : Bool
-    
+
     @State private var offset : CGFloat = UIScreen.main.bounds.height / 3
     @State private var preOffset : CGFloat = 0
     @GestureState private var gestureoffset : CGFloat = 0
 
     var detechingData : UIImage
-    
+
     private let gridItem = Array(repeating: GridItem(.flexible(),spacing: 10.0), count: 2)
     private let timer = Timer.publish(every: 0.5, on: .main,in: .common).autoconnect()
     var body: some View {
@@ -805,7 +1187,7 @@ struct Detecting : View{
             }
             .blur(radius: self.blurLevel())
             .ignoresSafeArea()
-            
+
             VStack{
                 Spacer()
                 VStack(spacing:10){
@@ -832,9 +1214,9 @@ struct Detecting : View{
                         DetectLabel(percentage: percentage)
                     }
                     DetectProgressBar(percentage: percentage)
-                    
+
                 }
-                
+
                 Button(action:{
                     withAnimation(){
                         self.isStopDeteching.toggle()
@@ -854,12 +1236,12 @@ struct Detecting : View{
                             .stroke(lineWidth: 1.0)
                             .foregroundColor(Color.black.opacity(0.35))
                     )
-                    
+
                 }
                 .padding(.vertical,50)
-                
+
                 Spacer()
-                
+
             }
             .edgesIgnoringSafeArea(.all)
             .frame(maxWidth:.infinity,maxHeight: .infinity)
@@ -872,30 +1254,30 @@ struct Detecting : View{
                     }else{
                         self.percentage += 0.01
                     }
-                    
+
                 }else{
                     withAnimation(){
                         self.isDone.toggle()
                     }
                     self.timer.upstream.connect().cancel()
                 }
-                
+
             }
             .opacity(self.isDone ? 0 : 1.0)
-            
+
             GeometryReader{sheetPorxy -> AnyView in
                 return AnyView(
                     ZStack{
                         BlurView()
                             .clipShape(CustomeConer(width: 25, height: 25, coners: [.topLeft,.topRight]))
-                        
+
                         VStack{
                             Capsule()
                                 .fill(Color.gray)
                                 .frame(width: 60, height: 4)
                                 .padding(.top)
                             HStack{
-                                
+
                                 Button(action:{
                                     //Close the result
                                     withAnimation{
@@ -910,13 +1292,13 @@ struct Detecting : View{
                                     }
                                     .frame(width: 50)
                                 }
-                                
+
                                 Text("Detecting keyword")
                                     .bold()
                                     .padding(.horizontal)
-                                
+
                                 Spacer()
-                                
+
                                 Image("post4")
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
@@ -926,7 +1308,7 @@ struct Detecting : View{
                             }
                             .padding(.horizontal)
                             .padding(.vertical,5)
-                            
+
                             ScrollView(.vertical, showsIndicators: false){
                                 LazyVGrid(columns: gridItem){
                                     ForEach(testList,id:\.self){ i in
@@ -961,7 +1343,7 @@ struct Detecting : View{
                     }))
                     .offset(y : self.isDone ? 0 : UIScreen.main.bounds.height)
                 )
-                
+
             }
             .ignoresSafeArea(.all, edges: .bottom)
             .animation(.easeIn(duration: 0.3))
@@ -972,14 +1354,14 @@ struct Detecting : View{
             self.isDone = false
         }
     }
-    
-    
+
+
     private func onChage(){
         DispatchQueue.main.async{
             self.offset = self.gestureoffset + self.preOffset
         }
     }
-    
+
     private func blurLevel() -> CGFloat {
         return (-offset / UIScreen.main.bounds.height / 2) * 30
     }
@@ -996,7 +1378,7 @@ struct DetectLabel : View{
                 .foregroundColor(.white)
                 .font(.system(size:50))
                 .bold()
-                
+
         }
     }
 }
@@ -1044,7 +1426,7 @@ struct BaseProgressCircle : View{
                 )
         }
     }
-    
+
 }
 
 struct DetectingView : View {
@@ -1057,29 +1439,29 @@ struct DetectingView : View {
             .background(Color.black)
             .clipShape(Circle())
             .opacity(0.75)
-        
+
     }
 }
 
 struct CameraView : View {
     @ObservedObject private var cameraModel = CameraViewModel()
     @Binding var closeCamera : Bool
-    
+
     @State private var sourceType: UIImagePickerController.SourceType = .photoLibrary
     @State private var selectedPhoto:UIImage? // it may remove and instead with custom view
     @State private var isImagePickerDisplay : Bool = false
     @State private var deteching = false
     @State private var isDone:Bool = false
-    
 
-    
+
+
     @State private var reTake:Bool = false
     var body: some View {
         ZStack(alignment:.bottom){
             ZStack(alignment:.bottom){
                 DetechCameraView(camera: cameraModel)
                     .edgesIgnoringSafeArea(.all)
-                
+
                 VStack{
                     HStack{
                         Button(action:{
@@ -1098,9 +1480,9 @@ struct CameraView : View {
                             .frame(width: 50)
                         }
                         .padding(.horizontal)
-                        
+
                         Spacer()
-                        
+
                         HStack{
                             Button(action:{
                                 withAnimation(){
@@ -1116,7 +1498,7 @@ struct CameraView : View {
                                 }
                                 .frame(width: 50)
                             }
-                            
+
                             Button(action:{
                                 self.cameraModel.chagneCapture()
                             }){
@@ -1132,12 +1514,12 @@ struct CameraView : View {
 
                         }
                         .padding(.horizontal,5)
-                        
+
                     }
                     .padding(.top,5)
-                    
+
                     Spacer()
-                    
+
                     HStack{
                         Button(action:{
                             withAnimation(){
@@ -1153,10 +1535,10 @@ struct CameraView : View {
                                     .frame(width: 30)
                             }
                             .frame(width: 50)
-                            
+
                         }
                         .padding(.horizontal)
-                        
+
                         Spacer()
                         Button(action: {
                             self.cameraModel.takenPicture()
@@ -1166,21 +1548,21 @@ struct CameraView : View {
                                     .foregroundColor(.white)
                                     .opacity(0.2)
                                     .frame(width: 70, height: 70)
-                                
+
                                 Circle()
                                     .foregroundColor(.orange)
                                     .frame(width: 50, height: 50)
-                                
+
                                 Image(systemName: "camera")
                                     .foregroundColor(.white)
                             }
                         }
-                        
+
                     }
                     .padding(.trailing,UIScreen.main.bounds.width / 2.5)
                     .padding(.horizontal,5)
                 }
-                
+
                 //just test here
                 if !self.cameraModel.photoData.isEmpty && self.cameraModel.phototTaken{
                     //                NavigationLink(destination: Deteching(isStopDeteching: self.$cameraModel.phototTaken, detechingData: UIImage(data: self.cameraModel.photoData)!), isActive: self.$cameraModel.phototTaken){
@@ -1207,7 +1589,7 @@ struct CameraView : View {
                         }
                         .transition(.identity)
                 }
-            
+
             }
         }
         .fullScreenCover(isPresented: self.$isImagePickerDisplay){
@@ -1218,7 +1600,7 @@ struct CameraView : View {
         .onAppear{
             //check the permission
             self.cameraModel.cameraPremissionCheck()
-           
+
         }
     }
 }
@@ -1234,7 +1616,7 @@ class CameraViewModel : NSObject, ObservableObject,AVCapturePhotoCaptureDelegate
     @Published var photoData : Data = Data(count: 0)
     @Published var flashMode : Bool = false
     private var camera : AVCaptureDevice?
-    
+
     func cameraPremissionCheck(){
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
@@ -1258,34 +1640,34 @@ class CameraViewModel : NSObject, ObservableObject,AVCapturePhotoCaptureDelegate
             return
         }
     }
-    
+
     func captureSetUp(){
         do {
             //set up our sessopm
             //start Configuration
             print("setting up")
             self.captureSession.beginConfiguration()
-            
+
 //            let devices = AVCaptureDevice.default(.builtInDualCamera, for: .video, position: .back) //for our back camera only
 
             //check decvies is suppost this type of capture
             guard let suppostedDevice =  AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
                 return
             }
-            
-            
+
+
             self.camera = suppostedDevice
             let input = try AVCaptureDeviceInput(device: suppostedDevice)
-            
+
             //check input
             if self.captureSession.canAddInput(input){
                 self.captureSession.addInput(input) //for camera
             }
-            
+
             if self.captureSession.canAddOutput(output){
                 self.captureSession.addOutput(output) //for photolib
             }
-            
+
             //finished Configuration
             self.captureSession.commitConfiguration()
         } catch {
@@ -1293,17 +1675,17 @@ class CameraViewModel : NSObject, ObservableObject,AVCapturePhotoCaptureDelegate
             print(error.localizedDescription)
         }
     }
-    
+
     func chagneCapture(){
         //get the firstInput
         guard let currentCameraInut = self.captureSession.inputs.first else {
             return
         }
         self.captureSession.beginConfiguration()
-        
+
         //remove first input
         self.captureSession.removeInput(currentCameraInut)
-        
+
         //get the new camera input
         var newCam : AVCaptureDevice! = nil
         if let input = currentCameraInut as? AVCaptureDeviceInput{
@@ -1313,7 +1695,7 @@ class CameraViewModel : NSObject, ObservableObject,AVCapturePhotoCaptureDelegate
                 newCam = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
             }
         }
-        
+
         //get the new input to device
         self.camera = newCam
         var newVideoInput : AVCaptureDeviceInput!
@@ -1324,18 +1706,18 @@ class CameraViewModel : NSObject, ObservableObject,AVCapturePhotoCaptureDelegate
             err = inputErr
             newVideoInput = nil
         }
-        
+
         if newVideoInput == nil || err != nil{
             print("camera setting error : \(String(describing: err?.localizedDescription))")
         }else{
             //if no any error there
             self.captureSession.addInput(newVideoInput)
         }
-        
+
         self.captureSession.commitConfiguration()
-        
+
     }
-    
+
     func getSetting(camera:AVCaptureDevice,flashMode :AVCaptureDevice.FlashMode) -> AVCapturePhotoSettings{
         let setting = AVCapturePhotoSettings()
         if camera.hasTorch{
@@ -1343,7 +1725,7 @@ class CameraViewModel : NSObject, ObservableObject,AVCapturePhotoCaptureDelegate
         }
         return setting
     }
-    
+
     func takenPicture(){
         DispatchQueue.global(qos: .background).async {
             self.output.capturePhoto(with: self.getSetting(camera: self.camera!, flashMode: self.flashMode ? .on : .off), delegate: self)
@@ -1359,10 +1741,10 @@ class CameraViewModel : NSObject, ObservableObject,AVCapturePhotoCaptureDelegate
         guard let imgData = photo.fileDataRepresentation() else {
             return
         }
-        
+
         self.photoData = imgData
    //     UIImageWriteToSavedPhotosAlbum(UIImage(data: self.photoData)!,nil,nil,nil)
-        
+
         self.captureSession.stopRunning()
         DispatchQueue.main.async {
             withAnimation(){
@@ -1371,25 +1753,25 @@ class CameraViewModel : NSObject, ObservableObject,AVCapturePhotoCaptureDelegate
         }
 
     }
-    
+
 }
 
 struct DetechCameraView : UIViewRepresentable{
     @ObservedObject var camera : CameraViewModel
     func makeUIView(context: Context) ->  UIView {
         let view = UIView(frame: UIScreen.main.bounds)
-        
+
         camera.cameraPreview = AVCaptureVideoPreviewLayer(session: camera.captureSession)
         camera.cameraPreview.frame = view.frame
-        
+
         camera.cameraPreview.videoGravity = .resizeAspectFill
-        
+
         view.layer.addSublayer(camera.cameraPreview)
-        
+
         camera.captureSession.startRunning()
         return view
     }
-    
+
     func updateUIView(_ uiView: UIView, context: Context) {
         //TO Update
         //reset the camera state
@@ -1559,8 +1941,8 @@ struct DetechCameraView : UIViewRepresentable{
 //        return index
 //    }
 //}
-
-
+//
+//
 ////
 ////  AutoScroll.swift
 ////  IOS_DEV

@@ -101,6 +101,8 @@ struct SignInView: View   {
                             }
                             
                             self.Login(UserName: self.email, Password: self.password)
+                            self.isEmaillFocus = false
+                            self.isPasswordFocus = false
                         }){
                             Text("登入")
                                 .bold()
@@ -138,7 +140,7 @@ struct SignInView: View   {
             .background(Color("DarkMode2"))
             .zIndex(0)
             .frame(maxWidth:.infinity,maxHeight: .infinity,alignment: .center)
-            
+            .edgesIgnoringSafeArea(.all)
             
             if isSignUp{
                 SignUpView(backToSignIn: $isSignUp)

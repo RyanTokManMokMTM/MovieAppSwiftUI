@@ -64,6 +64,15 @@ struct PostDetailView: View {
                 //                .frame(maxHeight:.infinity,alignment:.top)
                 CommentArea()
             }
+            
+            if self.postVM.isSharePost && self.postVM.sharedData != nil{
+                SharingView(postInfo: self.postVM.sharedData!)
+                    .environmentObject(postVM)
+                    .transition(.asymmetric(insertion: .move(edge: .bottom), removal: .opacity))
+                    .onDisappear(){
+                        self.postVM.sharedData = nil
+                    }
+            }
         }
         //        .frame(maxHeight:.infinity,alignment: .top)/
         .background(Color("appleDark").edgesIgnoringSafeArea(.all))

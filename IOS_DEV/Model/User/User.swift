@@ -29,6 +29,7 @@ struct User: Decodable{
 
 class UserViewModel : ObservableObject{
 //    @Published var user : Me?//???
+    @Published var isAllowToScroll = false
     @Published var isLogIn : Bool = false
     @Published var profile : Profile?
     @Published var userID : Int?
@@ -76,9 +77,11 @@ class UserViewModel : ObservableObject{
             switch result {
             case .success(let data):
                 print("GET USER PROFILE SUCCEED")
-                self.profile = data
-//                self.profile!.UserGenrePrerences = []
-                self.isLoadingProfile = false
+                DispatchQueue.main.async {
+                    self.profile = data
+    //                self.profile!.UserGenrePrerences = []
+                    self.isLoadingProfile = false
+                }
                 print(data)
             case .failure(let err):
                 print("????")
@@ -100,11 +103,14 @@ class UserViewModel : ObservableObject{
             guard let self = self else { return }
             switch result {
             case .success(let data):
+                DispatchQueue.main.async {
+                    self.profile = data
+    //                self.profile!.UserGenrePrerences = []
+                    self.isLoadingProfile = false
+                    print(data)
+                    self.GetUserGenresSetting()
+                }
                 print("GET USER PROFILE SUCCEED")
-                self.profile = data
-//                self.profile!.UserGenrePrerences = []
-                self.isLoadingProfile = false
-                print(data)
             case .failure(let err):
                 print("????")
                 self.fetchProfileError = err
@@ -291,6 +297,9 @@ class UserViewModel : ObservableObject{
             self.isUserGenresLoading = false
             switch result{
             case .success(let data):
+                if self.profile == nil{
+                    print("something wrong...")
+                }
                 self.profile!.UserGenrePrerences = data.user_genres
             case .failure(let err):
                 self.fetchUserGenreError = err

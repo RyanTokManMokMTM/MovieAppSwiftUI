@@ -61,6 +61,7 @@ struct ChatData : Decodable, Identifiable{
     var messages : [MessageInfo]
     var last_sender_id : Int
     var is_read : Bool
+    var meta_data : MetaData
     
     var last_sent : Date? { //for sorting the chat room
         let last_message = messages.last ?? nil
@@ -75,6 +76,7 @@ struct ChatData : Decodable, Identifiable{
 
 struct MessageInfo : Decodable,Identifiable{
     let id : String
+    let msg_identity : Int //msg id in sql
     let message : String
     let sender_id : Int
     let sent_time : Int

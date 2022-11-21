@@ -34,8 +34,11 @@ struct HomePage: View {
                     .environmentObject(HubState)
                     .zIndex(0)
                 
+                
                 if UserVM.isLogIn{
                     MovieHomePage(isLogOut: $isLoggedIn)
+                        .transition(.identity)
+                        .accentColor(.white)
                         .environmentObject(UserVM)
                         .environmentObject(HubState)
                         .environment(\.colorScheme, .dark)
@@ -56,7 +59,7 @@ struct HomePage: View {
                 WebsocketManager.shared.userVM = UserVM
             }
         }
-        .navigationViewStyle(.stack)
+//        .navigationViewStyle(.)
 //        .onAppear{
 //            APIService.shared.serverConnection(){ result in
 //                self.isLoading = true

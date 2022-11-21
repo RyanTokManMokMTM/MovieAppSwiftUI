@@ -13,4 +13,5 @@ pod 'SDWebImageSwiftUI'
 pod 'SwiftUIPager'
 pod 'DynamicOverlay'
 pod 'SwiftUI-Pull-To-Refresh', '~> 1.1.8'
+pod 'SnapKit', '4.2.0'
 end

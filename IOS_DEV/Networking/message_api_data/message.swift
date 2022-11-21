@@ -9,11 +9,12 @@ import Foundation
 
 struct GetRoomMessageReq {
     let room_id : Int
+    let last_id : Int
 }
 
 struct GetRoomMessageResp : Decodable {
     let messages : [MessageInfo]
-    let meta_data : MetaData
+//    let meta_data : MetaData
 }
 
 //struct MessageData  : Decodable, Identifiable {

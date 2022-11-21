@@ -31,7 +31,12 @@ class MessageViewModel : ObservableObject{
         let idx = rooms.firstIndex(where: {$0.id == roomId})
         return idx!
     }
-
+    
+    func checkRoom(roomId : Int) -> Int?{
+        let idx = rooms.firstIndex(where: {$0.id == roomId})
+        return idx
+    }
+    
     static var shared = MessageViewModel() //share in whole app for now
 
     private init(){
@@ -56,7 +61,7 @@ class MessageViewModel : ObservableObject{
         APIService.shared.GetUserRooms(){result in
             switch result{
             case .success(let data):
-//                print(data.rooms)
+                print(data.rooms)
                 self.isInit = true
                 self.rooms = data.rooms
             case .failure(let err):
@@ -99,19 +104,23 @@ class MessageViewModel : ObservableObject{
     }
     
     func sendMessage(_ text : String,sender : Int, in chat : ChatData) -> MessageInfo?{
-        let message = MessageInfo(id: UUID().uuidString, message: text, sender_id: sender, sent_time: Int(Date().timeIntervalSince1970))
-        if let index = self.rooms.firstIndex(where: {$0.id == chat.id}){
-            self.rooms[index].messages.append(message)
+        
+            let message = MessageInfo(id: UUID().uuidString, msg_identity: 0, message: text, sender_id: sender, sent_time: Int(Date().timeIntervalSince1970))
+            if let index = self.rooms.firstIndex(where: {$0.id == chat.id}){
+                self.rooms[index].messages.append(message)
+                let req = MessageReq(opcode: WebsocketOpCode.OpText.rawValue, message_id: message.id, group_id: chat.id, message: message.message, sent_time: message.sent_time)
+                WebsocketManager.shared.onSend(message: req)
+                return message //create a new message instace
+            }
+            DispatchQueue.main.async {
+                var newChat = chat
+                newChat.messages.append(message)
+                self.rooms.append(newChat)
+            }
             let req = MessageReq(opcode: WebsocketOpCode.OpText.rawValue, message_id: message.id, group_id: chat.id, message: message.message, sent_time: message.sent_time)
             WebsocketManager.shared.onSend(message: req)
             return message //create a new message instace
-        }
         
-        
-        self.rooms.append(chat)
-        let req = MessageReq(opcode: WebsocketOpCode.OpText.rawValue, message_id: message.id, group_id: chat.id, message: message.message, sent_time: message.sent_time)
-        WebsocketManager.shared.onSend(message: req)
-        return message //create a new message instace
     }
     
     func messageGrouping(for messages : [MessageInfo]) ->[[MessageInfo]]{
@@ -142,14 +151,15 @@ class MessageViewModel : ObservableObject{
 }
 
 struct ChattingView : View{
-    @State private var messageMetaData : MetaData? = nil
+//    @State private var messageMetaData : MetaData? = nil
     @EnvironmentObject private var userVM : UserViewModel
     @EnvironmentObject private var msgVM : MessageViewModel
-    let chatInfo : ChatData
+    let chatId : Int
+//    let chatInfo : ChatData
     let roomId : Int
 //    let messageID : Int
-    @Binding var roomMessages : [MessageInfo]
     private let colum = [GridItem(.flexible(minimum: 10))]
+    @State private var isSend = false
     
     @State private var message : String = ""
     @FocusState private var isFocus
@@ -162,16 +172,21 @@ struct ChattingView : View{
                     ScrollViewReader{reader in
                         getMessageView(width: proxy.size.width)
                             .padding(.horizontal)
-//                            .onChange(of: roomMessages.count){_ in
-//                                if let msgID = roomMessages.last?.RoomUUID {
-//                                    //if not nil
-//                                    //scrolling to the msgID
-//                                    scrollTo(messageID: msgID, shouldAnima: true, scrollViewReader: reader)
-//                                }
-//                            }
+                            .onChange(of: self.msgVM.rooms[chatId].messages.count){_ in
+                                if !isSend {
+                                    return
+                                }
+                                
+                                if let msgID = self.msgVM.rooms[chatId].messages.last?.RoomUUID {
+                                    //if not nil
+                                    //scrolling to the msgID
+                                    isSend = false
+                                    scrollTo(messageID: msgID, shouldAnima: true, scrollViewReader: reader)
+                                }
+                            }
                             .onAppear(){
 //
-                                if let messageID = roomMessages.last?.RoomUUID{
+                                if let messageID = self.msgVM.rooms[chatId].messages.last?.RoomUUID{
                                     scrollTo(messageID: messageID, anchor: .bottom,shouldAnima: false, scrollViewReader: reader)
                                 }
                             }
@@ -187,7 +202,7 @@ struct ChattingView : View{
 //        .ignoresSafeArea(.all,edges: .bottom)
         .padding(.top,1)
         .navigationBarItems(leading:HStack{
-            AsyncImage(url: chatInfo.users[0].UserPhotoURL){ image in
+            AsyncImage(url: self.msgVM.rooms[self.chatId].users[0].UserPhotoURL){ image in
                 image
                     .resizable()
                     .scaledToFill()
@@ -198,7 +213,7 @@ struct ChattingView : View{
             .clipShape(Circle())
             .clipped()
 
-            Text(chatInfo.users[0].name)
+            Text(self.msgVM.rooms[self.chatId].users[0].name)
                 .font(.system(size:16))
             }.padding(.trailing)
         )
@@ -206,44 +221,49 @@ struct ChattingView : View{
         .accentColor(.white)
         .onAppear(){
             self.msgVM.currentTalkingRoomID = roomId
-            self.msgVM.updateReadMark(true,info: chatInfo)
+            self.msgVM.updateReadMark(true,info: self.msgVM.rooms[self.chatId])
         }
         .onDisappear(){
             self.msgVM.currentTalkingRoomID = 0
         }
-        .task{
-            print("again?????")
-            await self.GetRoomMessage()
-        }
-        
+//        .task{
+//            print("again?????")
+////            await self.GetRoomMessage()
+//        }
+//
     }
     
     private func GetRoomMessage() async {
-        let resp = await APIService.shared.AsyncGetRoomMessage(req: GetRoomMessageReq(room_id: self.roomId))
-        switch resp {
-        case .success(let data):
-//            self.roomMessages
-            print(data.messages)
-            print(data.meta_data)
-            self.roomMessages = data.messages
-            self.messageMetaData = data.meta_data
-        case .failure(let err):
-            print(err.localizedDescription)
-            //Show err???
-        }
+        //TODO: we need to get the last id which id is the first message in messageInfo
+//        let last_id = self.roomMessages.
+//        let resp = await APIService.shared.AsyncGetRoomMessage(req: GetRoomMessageReq(room_id: self.roomId, last_id: 0))
+//        switch resp {
+//        case .success(let data):
+////            self.roomMessages
+//            print(data.messages)
+////            print(data.meta_data) /
+//            self.roomMessages = data.messages
+////            self.messageMetaData = data.meta_data
+//        case .failure(let err):
+//            print(err.localizedDescription)
+//            //Show err???
+//        }
     }
+    
     private func loadMoreMessage() async {
-        if self.messageMetaData == nil || self.messageMetaData!.total_pages == self.messageMetaData!.page {
+        
+        if  self.msgVM.rooms[self.chatId].meta_data.total_pages ==  self.msgVM.rooms[self.chatId].meta_data.page {
             return
         }
-        
-        let resp = await APIService.shared.AsyncGetRoomMessage(req: GetRoomMessageReq(room_id: self.roomId),page: self.messageMetaData!.page + 1)
+        //TODO: we need to get the last id which id is the first message in messageInfo
+        let lastID =  self.msgVM.rooms[chatId].messages.first?.msg_identity ?? 0
+        print(lastID)
+        let resp = await APIService.shared.AsyncGetRoomMessage(req: GetRoomMessageReq(room_id: self.roomId, last_id: lastID),page:  self.msgVM.rooms[self.chatId].meta_data.page + 1)
         switch resp {
         case .success(let data):
-//            self.roomMessages
-            var dataMsg = data.messages
-            self.roomMessages.insert(contentsOf: data.messages.reversed(), at: 0)
-            self.messageMetaData = data.meta_data
+            self.msgVM.rooms[chatId].messages.insert(contentsOf: data.messages.reversed(), at: 0)
+            self.msgVM.rooms[self.chatId].meta_data.page +=  1
+            print(data.messages)
         case .failure(let err):
             print(err.localizedDescription)
             //Show err???
@@ -269,7 +289,10 @@ struct ChattingView : View{
                 //Send Button
                 Button(action:{
                     //send the message
-                    sendMessage()
+                    DispatchQueue.main.async {
+                        self.isSend = true
+                        sendMessage()
+                    }
                 }){
                     Image(systemName: "paperplane.fill")
                         .foregroundColor( .white)
@@ -291,16 +314,17 @@ struct ChattingView : View{
     func getMessageView(width : CGFloat) -> some View{
         
         LazyVGrid(columns: colum,spacing:0){
-            if self.messageMetaData?.page ?? 0 < self.messageMetaData?.total_pages ?? 0 {
+            if self.msgVM.rooms[self.chatId].meta_data.page < self.msgVM.rooms[self.chatId].meta_data.total_pages {
                 ActivityIndicatorView()
                     .onAppear(){
                         print("???")
                     }
+//                    .offset(y: -UIScreen.main.bounds.height / 10)
                     .task{
                         await self.loadMoreMessage()
                     }
             }
-            let sectionMsg = MessageViewModel.shared.messageGrouping(for: roomMessages)
+            let sectionMsg = MessageViewModel.shared.messageGrouping(for: self.msgVM.rooms[chatId].messages)
             ForEach(sectionMsg.indices,id:\.self){ sectionIndex in
                 let groupingMessage = sectionMsg[sectionIndex]
                 
@@ -313,7 +337,7 @@ struct ChattingView : View{
                                 ZStack{
                                     HStack{
                                         if isRecevied{
-                                            AsyncImage(url: chatInfo.users[0].UserPhotoURL){ image in
+                                            AsyncImage(url: self.msgVM.rooms[self.chatId].users[0].UserPhotoURL){ image in
                                                 image
                                                     .resizable()
                                                     .scaledToFill()
@@ -395,7 +419,7 @@ struct ChattingView : View{
             return
         }
         
-        if let newMessage = MessageViewModel.shared.sendMessage(message, sender: self.userVM.userID!, in: self.chatInfo){
+        if let newMessage = MessageViewModel.shared.sendMessage(message, sender: self.userVM.userID!, in: self.msgVM.rooms[self.chatId]){
             //set the message to empty
             message = ""
             print(newMessage)
@@ -472,7 +496,7 @@ struct MessageView: View {
                         }
                     }
                     .frame(width: UIScreen.main.bounds.width, height: proxy.safeAreaInsets.top + 30,alignment: .bottom)
-                    Divider()
+//                    Divider()
                     
                     MessageHeaderTab(isShowLikesNotification: $isShowLikesNotification, isShowFollowingNotification: $isShowFollowingNotification, isShowCommentNotification: $isShowCommentNotification)
                         .padding(.top)
@@ -482,7 +506,7 @@ struct MessageView: View {
                             //Sort by last_message time!
                             ForEach(msgVM.sortedChat, id: \.id){ info in
 //                                ZStack{
-                                NavigationLink(destination:ChattingView(chatInfo: info,roomId: info.id, roomMessages: $msgVM.rooms[msgVM.FindChatRoom(roomID: info.id)].messages)
+                                NavigationLink(destination:ChattingView(chatId: self.msgVM.findIndex(roomId: info.id),roomId: info.id)
                                     .environmentObject(userVM)
                                     .environmentObject(msgVM)
 

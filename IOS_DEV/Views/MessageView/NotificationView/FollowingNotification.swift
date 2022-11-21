@@ -32,6 +32,7 @@ struct FollowingNotification: View {
                         ForEach(self.notificationVM.friendRequest,id: \.request_id){ info in
                             FollowingCell(info: info)
                                 .listRowBackground(Color("DarkMode2"))
+                                .padding(.vertical,15)
                         }
                         
                         if self.notificationVM.notificationMataData?.page ?? 0 < self.notificationVM.notificationMataData?.total_pages ?? 0 {

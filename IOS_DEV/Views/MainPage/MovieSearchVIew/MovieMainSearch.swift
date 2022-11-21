@@ -564,7 +564,7 @@ struct MovieMainSearchResultView: View {
             .background(Color("DarkMode2").frame(maxWidth:.infinity))
             
         }else {
-            FlowLayoutView(list: self.searchVM.searchResult, columns: 2,HSpacing: 10,VSpacing: 15){ info in
+            FlowLayoutView(list: self.searchVM.searchResult, columns: 2,HSpacing: 10,VSpacing: 15, isScrollAble: .constant(true)){ info in
                 Button(action:{
                     DispatchQueue.main.async {
                         self.movieId = info.id

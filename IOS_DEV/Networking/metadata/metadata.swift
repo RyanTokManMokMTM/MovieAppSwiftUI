@@ -11,5 +11,5 @@ import Foundation
 struct MetaData : Decodable {
     let total_pages : Int
     let total_results : Int
-    let page : Int
+    var page : Int
 }

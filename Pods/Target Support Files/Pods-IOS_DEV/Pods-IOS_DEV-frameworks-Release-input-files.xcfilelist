@@ -13,6 +13,7 @@ ${BUILT_PRODUCTS_DIR}/OverlayContainer/OverlayContainer.framework
 ${BUILT_PRODUCTS_DIR}/PromisesObjC/FBLPromises.framework
 ${BUILT_PRODUCTS_DIR}/SDWebImage/SDWebImage.framework
 ${BUILT_PRODUCTS_DIR}/SDWebImageSwiftUI/SDWebImageSwiftUI.framework
+${BUILT_PRODUCTS_DIR}/SnapKit/SnapKit.framework
 ${BUILT_PRODUCTS_DIR}/SwiftUI-Pull-To-Refresh/SwiftUI_Pull_To_Refresh.framework
 ${BUILT_PRODUCTS_DIR}/SwiftUIPager/SwiftUIPager.framework
 ${BUILT_PRODUCTS_DIR}/nanopb/nanopb.framework

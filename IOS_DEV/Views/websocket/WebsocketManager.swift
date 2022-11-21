@@ -114,6 +114,8 @@ class WebsocketManager : ObservableObject{
     func disconnect(){}
     
     func onSend(message : MessageReq){
+        
+        
         do {
             let req = try encode(obj: message)
             print("sending the request via socket server")
@@ -180,7 +182,10 @@ class WebsocketManager : ObservableObject{
     
     private func pushMessageToChat(obj : MessageResp){
         //MARK: A user message
-        let newMessage = MessageInfo(id: obj.message_id, message: obj.content, sender_id: obj.sender_info.id, sent_time: obj.send_time)
+        //msg_identity = 0 -> if this a new chat room -> id = 0 means no any oldest data
+        //msg_identidy = 0 -> is a active chat room, but the last id is the oldest message we got
+        //so we set it to 0
+        let newMessage = MessageInfo(id: obj.message_id, msg_identity: 0, message: obj.content, sender_id: obj.sender_info.id, sent_time: obj.send_time)
         
         
         //MARK: This may change....
@@ -214,11 +219,7 @@ class WebsocketManager : ObservableObject{
             APIService.shared.GetRoomInfo(req: GetRoomInfoReq(roome_id: obj.group_id)){ result in
                 switch result{
                 case .success(let data):
-                    var chatData = data.info
-                    chatData.messages.append(newMessage)
-                    
-                    //put into vm
-                    MessageViewModel.shared.rooms.append(chatData)
+                    MessageViewModel.shared.rooms.append(data.info)
                 case .failure(let err):
                     print(err.localizedDescription)
                 }

@@ -8,7 +8,7 @@
 import SwiftUI
 import SDWebImageSwiftUI
 import Refresher
-
+private let feedBack = UIImpactFeedbackGenerator()
 struct FollowUserPostView: View {
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
@@ -35,7 +35,7 @@ struct FollowUserPostView: View {
                 LazyVStack(spacing:0){
                     ForEach(self.postVM.followingData){ info in
                         FollowPostCell(isShowMovieDetail: $isShowMovieDetail, movieId: $movieId,Id : postVM.getPostIndexFromFollowList(postId: info.id), isShowMorePostDetail:self.$isShowMorePostDetail, postId: self.$postId,isShowUserProfile: $isShowUserProfile,shownUserID:$shownUserID)
-                            .padding(.bottom,10)
+                            .padding(.bottom,20)
                     }
                     
                     if self.postVM.followingMetaData?.page ?? 0  < self.postVM.followingMetaData?.total_pages ?? 0{
@@ -152,7 +152,7 @@ struct FollowPostCell : View {
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 35, height: 35)
                     .clipShape(Circle())
-
+            
             
             VStack(alignment:.leading){
                 HStack(alignment:.center, spacing:10){
@@ -167,19 +167,38 @@ struct FollowPostCell : View {
                     .font(.caption)
                     .foregroundColor(.gray)
             }
-            
             Spacer()
             //TODO: Coming Soone???
-//            Button(action: {
-//                //TODO: DO SOME MORE THING??
-//            }){
-//                Image(systemName: "ellipsis")
-//                    .imageScale(.large)
-//                    .foregroundColor(.white)
-//            }
-//            .disabled(true)
             
-            
+            Menu(content: {
+                Button(action: {
+                    // delete the selected post if user is owner
+                }) {
+                    HStack {
+                        Text("刪除")
+                        Image(systemName: "trash")
+                    }
+                }
+                
+                Button(action: {
+                    // share the post
+                    DispatchQueue.main.async {
+                        withAnimation{
+                            self.postVM.sharedData = self.postVM.followingData[Id]
+                            self.postVM.isSharePost.toggle()
+                        }
+                    }
+                }) {
+                    HStack {
+                        Text("分享")
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                }
+            }){
+                Label("", systemImage: "ellipsis")
+                    .imageScale(.large)
+                    .foregroundColor(.white)
+            }
         }
         .padding(.horizontal,10)
         .onTapGesture{
@@ -202,10 +221,11 @@ struct FollowPostCell : View {
                 .frame(maxWidth:.infinity,maxHeight: UIScreen.main.bounds.height / 2.2)
                 .onTapGesture(count: 2){
                     print("liked post")
+                    feedBack.impactOccurred(intensity: 0.8)
                     withAnimation{
                         self.isTapToLike = true
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2){
                         withAnimation{
                             self.isTapToLike = false
                         }
@@ -224,6 +244,7 @@ struct FollowPostCell : View {
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 80)
                                 .foregroundColor(.red)
+                                .transition(.opacity)
                         }
                     }
                 )
@@ -337,9 +358,6 @@ struct FollowPostCell : View {
                             .imageScale(.large)
                     }
                     .foregroundColor(.white)
-                    
-                    Text("分享")
-                        .font(.caption)
                 }
                 
                 HStack(spacing:5){
@@ -358,26 +376,31 @@ struct FollowPostCell : View {
                         
                     }
                     
-                    Text(self.postVM.followingData[Id].post_like_count.description)
-                        .font(.caption)
+                    if self.postVM.followingData[Id].post_like_count > 0 {
+                        Text(self.postVM.followingData[Id].post_like_count.description)
+                            .font(.caption)
+                    }
                 }
                 .foregroundColor(.white)
                 
-                Button(action:{
-                    self.postId  = self.postVM.followingData[Id].id
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
-                        withAnimation{
-                            self.isShowMorePostDetail = true
+                HStack(spacing:5){
+                    Button(action:{
+                        self.postId  = self.postVM.followingData[Id].id
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
+                            withAnimation{
+                                self.isShowMorePostDetail = true
+                            }
                         }
+                    }){
+                            Image(systemName: "text.bubble")
+                                .imageScale(.large)
+                                .foregroundColor(.white)
                     }
-                }){
-                    HStack(spacing:5){
-                        Image(systemName: "text.bubble")
-                            .imageScale(.large)
+                    
+                    if self.postVM.followingData[Id].post_comment_count > 0{
                         Text(self.postVM.followingData[Id].post_comment_count.description)
                             .font(.caption)
                     }
-                    .foregroundColor(.white)
                 }
             }
 

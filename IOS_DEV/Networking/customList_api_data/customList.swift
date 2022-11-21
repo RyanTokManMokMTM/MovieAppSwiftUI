@@ -32,7 +32,12 @@ struct RemoveMovieFromListReq  {
     let movie_id : Int
 }
 
+
 /// RESPONSE
+struct GetCollectedMovieResp  : Decodable {
+    let total : Int
+}
+
 struct CreateNewCustomListResp : Decodable {
     let id : Int
     let title: String

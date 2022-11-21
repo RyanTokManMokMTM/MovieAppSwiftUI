@@ -75,6 +75,7 @@ protocol ServerAPIServerServiceInterface {
     func InsertMovieToList(movieID : Int, listID : Int, completion : @escaping (Result<InsertMovieToListResp,Error>)->())
     func RemoveMovieFromList(req : RemoveMovieFromListReq , completion: @escaping (Result<RemoveMovieFromListResp,Error>)->()) //???
     func GetOneMovieFromUserList(req : GetOneMovieFromUserListReq, completion : @escaping (Result<GetOneMovieFromUserListResp,Error>) -> ())
+    func GetCollectedMovieCount(userID : Int) async -> Result<GetCollectedMovieResp,Error>
     
     //TODO: POST
     func CreatePost(req : CreatePostReq,completion : @escaping (Result<CreatePostResp,Error>) -> ())
@@ -388,6 +389,7 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     case AddMovieToList
     case RemoveMovieFromList
     case GetOneMovieFromUserList
+    case GetCollectedMovieCount
     
     //MARK: Create post API
     case CreatePost //Done
@@ -492,6 +494,7 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
         case .GetAllUserLists: return "/lists/" //user_id
         case .GetUserList: return "/list/" //list_id
         case .GetOneMovieFromUserList: return "/list/movie/" //movie_id
+        case .GetCollectedMovieCount: return "/list/movies/count/"
         
         case .AddMovieToList: return "/list/" // listID/movie/:movieID
         case .RemoveMovieFromList: return "/list/" // /list/:list_id/movie/:movie_id

@@ -72,7 +72,7 @@ class PostVM : ObservableObject {
     
     func refershFollowingData() async {
         print("updateing....")
-        let resp = await APIService.shared.AsyncGetFollowUserPost()
+        let resp = await APIService.shared.AsyncGetFollowUserPost(limit:10)
         self.isPostUploading = false
         APIService.shared.uploadProgress = 0
         switch resp {
@@ -104,14 +104,16 @@ class PostVM : ObservableObject {
         }
 //        self.isFetchMoreData = true
         print("loading more....")
-        let resp = await APIService.shared.AsyncGetAllUserPost(page: self.discoverMetaData!.page + 1)
+        let resp = await APIService.shared.AsyncGetAllUserPost(page: self.discoverMetaData!.page + 1,limit: 10)
         switch resp {
         case .success(let data):
-//            print(data.post_info)
+            print(data.post_info)
             self.postData.append(contentsOf: data.post_info)
+            print(postData.count)
             self.discoverMetaData = data.meta_data
+            print(data.meta_data)
         case .failure(let err):
-            print("upload post err : \(err.localizedDescription)")
+            print("loading more post(discovery) err : \(err.localizedDescription)")
             BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
         }
         
@@ -123,10 +125,10 @@ class PostVM : ObservableObject {
             return
         }
         print("loading more....")
-        let resp = await APIService.shared.AsyncGetFollowUserPost(page: self.followingMetaData!.page + 1)
+        let resp = await APIService.shared.AsyncGetFollowUserPost(page: self.followingMetaData!.page + 1,limit: 10)
         switch resp {
         case .success(let data):
-//            print(data.post_info)
+            print(data.post_info)
             self.followingData.append(contentsOf: data.post_info)
             self.followingMetaData = data.meta_data
         case .failure(let err):
@@ -140,7 +142,7 @@ class PostVM : ObservableObject {
         self.isGetPostLoading = true
         self.isGetPostErr = nil
         self.postData = []
-        APIService.shared.GetAllUserPost(){result in
+        APIService.shared.GetAllUserPost(limit:10){result in
             DispatchQueue.main.async {
                 self.isGetPostLoading = false
                 
@@ -153,10 +155,8 @@ class PostVM : ObservableObject {
                         self.postData.append(info)
                     }
                     self.discoverMetaData = data.meta_data
-//                    self.postData = data.post_info //not fetching!
+                    print(data.meta_data)
                 case .failure(let err):
-//                    print("POST DATA")
-//                    print(err.localizedDescription)
                     onFailed(err.localizedDescription)
                     self.isGetPostErr = err
                     self.initAllData = false
@@ -172,7 +172,7 @@ class PostVM : ObservableObject {
         self.isGetFollowPostLoading = true
         self.isGetFollowPostErr = nil
         self.followingData = []
-        APIService.shared.GetFollowUserPost(){result in
+        APIService.shared.GetFollowUserPost(limit:10){result in
             DispatchQueue.main.async {
                 self.isGetFollowPostLoading = false
                 switch result {
@@ -184,6 +184,7 @@ class PostVM : ObservableObject {
                         self.followingData.append(info)
                     }
 //                    self.followingData = data.post_info
+                    
                     self.followingMetaData = data.meta_data
                     print(self.followingMetaData)
                 case .failure(let err):
