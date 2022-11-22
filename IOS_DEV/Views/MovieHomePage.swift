@@ -48,8 +48,6 @@ struct MovieHomePage: View {
     @Namespace var namespace
     
     @State private var isShowSideMenu : Bool = false
-    @State private var isShowLikedMovie : Bool = false
-    @State private var isShowMovieList : Bool = false
     var body: some View {
 //        NavigationView{
             ZStack{
@@ -109,7 +107,7 @@ struct MovieHomePage: View {
                                     .tag(2)
                                     .badge(userVM.profile?.totol_notification ?? 0)
                                 
-                                PersonProfileView(isShowMenu: $isShowSideMenu,isShowLikedMovie:$isShowLikedMovie,isShowMovieList:$isShowMovieList)
+                                PersonProfileView(isShowMenu: $isShowSideMenu)
                                     .navigationTitle("")
                                     .navigationBarTitle("")
                                     .navigationBarHidden(true)
@@ -144,7 +142,24 @@ struct MovieHomePage: View {
 //                    .environmentObject(DragAndDropPreview) //here due to bottomSheet need to use to update some state
                     .environmentObject(postVM)
                     .environmentObject(userVM)
+                    .background(
+                        NavigationLink(destination:
+                                        PostDetailView(postForm: postVM.selectedPostFrom, isFromProfile: false,postInfo: self.$postVM.selectedPostInfo)
+                            .environmentObject(postVM)
+                            .environmentObject(userVM)
+                            .navigationBarTitle("")
+                            .navigationTitle("")
+                            .navigationBarBackButtonHidden(true)
+                            .navigationBarHidden(true)
+                                       , isActive: self.$postVM.isShowPostDetail){
+                                           EmptyView()
+                                           
+                                           
+                                       }
+                        
+                    )
 //                    .environmentObject(HubState)
+                    
 
                 }
 //                .ignoresSafeArea(.keyboard, edges: .bottom)
@@ -169,28 +184,6 @@ struct MovieHomePage: View {
             .onAppear {                    UITabBar.appearance().isTranslucent = false
                     UITabBar.appearance().backgroundColor = UIColor(named:"DarkMode2")
              }
-            .sheet(isPresented: $isShowLikedMovie){
-                LikedPostCardGridView()
-                    .environmentObject(postVM)
-                    .environmentObject(userVM)
-                    .padding(.vertical,3)
-                    .onAppear{
-                        //TODO: NEED TO BE FIXED
-                        
-                        userVM.getUserLikedMovie()
-                        
-                    }
-            }
-            .sheet(isPresented: $isShowMovieList){
-//                CustomListView(addList: $isAddingList,isViewMovieList:$isViewMovieList, listIndex:$listIndex)
-//                    .environmentObject(userVM)
-//                    .padding(.vertical,3)
-//                    .onAppear{
-//                        //TODO: NEED TO BE FIXED
-//                        userVM.getUserList()
-//
-//                    }
-            }
             
         }
 //            .onRotate { newOrientation in

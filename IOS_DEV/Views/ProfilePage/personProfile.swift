@@ -14,14 +14,13 @@ import Refresher
 
 struct PersonProfileView : View{
     @Binding var isShowMenu : Bool
-    @Binding var isShowLikedMovie : Bool
-    @Binding var isShowMovieList : Bool
     @StateObject var HubState : BenHubState = BenHubState.shared
+    @EnvironmentObject private var userVM : UserViewModel
     var body: some View{
         
         GeometryReader{proxy in
             let topEdge = proxy.safeAreaInsets.top
-            personProfile(isShowMenu: $isShowMenu,isShowLikedMovie:$isShowLikedMovie,topEdge: topEdge)
+            personProfile(isShowMenu: $isShowMenu,topEdge: topEdge)
                 .ignoresSafeArea(.all, edges: .top)
         }
         .wait(isLoading: $HubState.isWait){
@@ -35,6 +34,14 @@ struct PersonProfileView : View{
                 BenHubAlertWithUserInfo(user: HubState.senderInfo!, message: HubState.message)
             case .message:
                 BenHubAlertWithMessage(user: HubState.senderInfo!, message: HubState.message)
+            }
+        }
+        .onAppear{
+//            self.userVM.getUserPosts()
+            self.userVM.GetUserGenresSetting()
+            
+            Task.init{
+                await userVM.AsyncGetPost(userID: userVM.profile!.id)
             }
         }
     }
@@ -650,17 +657,11 @@ struct profileCardCell : View {
 }
 
 struct PersonPostCardGridView : View{
-//    let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
+    //    let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var postVM : PostVM
     var body: some View{
-        if userVM.profile!.UserCollection == nil {
-            if self.userVM.IsPostLoading {
-                LoadingView(isLoading: self.userVM.IsPostLoading, error: self.userVM.PostError as NSError?){
-                    self.userVM.getUserPosts()
-                }
-            }
-        } else if userVM.profile!.UserCollection != nil{
+        if userVM.profile?.UserCollection != nil{
             if userVM.profile!.UserCollection!.isEmpty{
                 VStack{
                     Spacer()
@@ -673,18 +674,27 @@ struct PersonPostCardGridView : View{
             }else{
                 FlowLayoutView(list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollAble: $userVM.isAllowToScroll){ info in
                 
-                    profileCardCell(Id: userVM.GetPostIndex(postId: info.id)){
-                        self.postVM.selectedPostInfo = info
-                        withAnimation{
-                            self.postVM.isShowPostDetail.toggle()
+                    profileCardCell(Id : userVM.GetPostIndex(postId: info.id)){
+                        DispatchQueue.main.async {
+                            self.postVM.selectedPostInfo = info
+                            self.postVM.selectedPostFrom = .Profile
+                            withAnimation{
+                                self.postVM.isShowPostDetail.toggle()
+                            }
+                        
                         }
                     }
                 }
+
+//
+
+                
             }
             
         }
+
     }
-        
+    
 }
 
 //is liked by user
@@ -954,7 +964,14 @@ struct CustomListView : View{
                 }
             }else if self.userVM.profile!.UserCustomList != nil{
                 ScrollView{
-                    ListInfo()
+                    if self.userVM.profile!.UserCustomList!.isEmpty {
+                        Text("無收藏專輯")
+                            .font(.system(size:15))
+                            .foregroundColor(.gray)
+                        
+                    } else {
+                        ListInfo()
+                    }
                 }.introspectScrollView{ ScrollView in
                     ScrollView.isScrollEnabled = userVM.isAllowToScroll
                 }
@@ -1295,7 +1312,7 @@ struct RefershState {
 
 struct personProfile: View {
     @Binding var isShowMenu : Bool
-    @Binding var isShowLikedMovie : Bool
+//    @Binding var isShowLikedMovie : Bool
     @EnvironmentObject private var userVM : UserViewModel
     @EnvironmentObject private var postVM : PostVM
     @State private var isEditProfile : Bool = false
@@ -1331,23 +1348,6 @@ struct personProfile: View {
         GeometryReader { globalProxy in
             ZStack(alignment:.top){
                 ZStack{
-                    HStack{
-                        Button(action:{
-                            withAnimation{
-                                self.isShowMenu = true
-                            }
-                        }){
-                            Image(systemName: "line.3.horizontal")
-                                .foregroundColor(.white)
-                                .font(.title2)
-                        }
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    .frame(height: topEdge)
-                    .padding(.top,30)
-                    .zIndex(1)
-                    
                     VStack(alignment:.center){
                         Spacer()
                         HStack{
@@ -1390,9 +1390,27 @@ struct personProfile: View {
                         }
                         
                     }
+                    
+                    HStack{
+                        Button(action:{
+                            withAnimation{
+                                self.isShowMenu = true
+                            }
+                        }){
+                            Image(systemName: "line.3.horizontal")
+                                .foregroundColor(.white)
+                                .font(.title2)
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                    .frame(height: topEdge)
+                    .padding(.top,30)
+                    .zIndex(1)
                 }
                 .background(Color("appleDark").opacity(getOpacity()))
                 .zIndex(1)
+                
                 
                 
                 GeometryReader { proxy in
@@ -1498,10 +1516,7 @@ struct personProfile: View {
 //                    .disabled(self.isAbleToScroll)
                     .coordinateSpace(name: "SCROLL") //cotroll relate coordinateSpace
                     .zIndex(0)
-                    .onAppear{
-                        self.userVM.getUserPosts()
-                        self.userVM.GetUserGenresSetting()
-                    }
+
                 }
 
             }
@@ -1517,28 +1532,6 @@ struct personProfile: View {
                                    EmptyView()
                                }
             )
-            .background(
-                ZStack{
-            
-                    NavigationLink(destination:   PostDetailView(postForm: .Profile, isFromProfile: true,postInfo:
-                                                                    self.$postVM.selectedPostInfo)
-                        .navigationBarTitle("")
-                        .navigationTitle("")
-                        .navigationBarBackButtonHidden(true)
-                        .navigationBarHidden(true)
-                        .environmentObject(userVM)
-                        .environmentObject(postVM), isActive: self.$postVM.isShowPostDetail){
-                            EmptyView()
-                            
-                            
-                        }
-                    
-                    
-                    
-                }
-            )
-            
-            
         }
        
     }
@@ -1558,28 +1551,27 @@ struct personProfile: View {
                     .environmentObject(userVM)
                     .padding(.vertical,3)
                     .frame(width: UIScreen.main.bounds.width)
-                    .onAppear{
-                       
-                        if userVM.profile!.UserLikedMovies == nil{
-                            print("init liked movie")
-                            userVM.getUserLikedMovie()
-                        }
-                    }
-//                    .disabled(!userVM.isAllowToScroll)
+
                 
                 CustomListView(addList: $isAddingList,isViewMovieList:$isViewMovieList, listIndex:$listIndex)
                     .environmentObject(userVM)
                     .padding(.vertical,3)
                     .frame(width: UIScreen.main.bounds.width)
-                    .onAppear{
-                        if userVM.profile!.UserCustomList == nil{
-                            print("init list movie")
-                            userVM.getUserList()
-                        }
-                    }
-//
             }
             .offset(x : CGFloat(self.tabIndex) * -UIScreen.main.bounds.width)
+            .onChange(of: self.tabIndex){index in
+                if index == 1 {
+                    if userVM.profile!.UserLikedMovies == nil{
+                        print("init liked movie")
+                        userVM.getUserLikedMovie()
+                    }
+                }else if index == 2{
+                    if userVM.profile!.UserCustomList == nil{
+                        print("init list movie")
+                        userVM.getUserList()
+                    }
+                }
+            }
  
         }
         .frame(width: UIScreen.main.bounds.width,alignment:.top)
@@ -1811,32 +1803,6 @@ struct personProfile: View {
 
     }
     
-//    private func getFollower(){
-//        let req = CountFollowedReq(user_id: self.userVM.profile!.id)
-//        APIService.shared.CountFollowedUser(req: req) { result in
-//            switch result{
-//            case .success(let data):
-//                print(data.total)
-//                self.follower = data.total
-//            case .failure(let err):
-//                print(err.localizedDescription)
-//            }
-//
-//        }
-//    }
-//    private func getFollowing(){
-//            let req = CountFollowingReq(user_id: self.userVM.profile!.id)
-//            APIService.shared.CountFollowingUser(req: req) { result in
-//                switch result{
-//                case .success(let data):
-//                    print(data.total)
-//                    self.following = data.total
-//                case .failure(let err):
-//                    print(err.localizedDescription)
-//                }
-//
-//            }
-//    }
     
     private func getHeaderHigth() -> CGFloat{
         //setting the height of the header
@@ -1853,8 +1819,6 @@ struct personProfile: View {
     }
     
 }
-
-
 
 //struct personProfile: View {
 //    @EnvironmentObject private var userVM : UserViewModel

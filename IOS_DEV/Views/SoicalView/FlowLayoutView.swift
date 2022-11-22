@@ -19,7 +19,7 @@ struct FlowLayoutView< T : Identifiable,Content : View> : View where T : Hashabl
     var VSpacing : CGFloat
     
     @Binding var isScrollable : Bool
-    
+    @State private var setUp = false
     
     private func customList() -> [[T]] {
         var curIndx = 0
@@ -47,38 +47,50 @@ struct FlowLayoutView< T : Identifiable,Content : View> : View where T : Hashabl
     }
     
     var body: some View {
-        ScrollView{
-            if list.isEmpty {
-                VStack{
-                    Text("There is no any post yet...")
-                        .foregroundColor(.gray)
-                        .font(.system(size: 16, weight: .semibold))
+        ScrollView(.vertical, showsIndicators: false){
+            VStack{
+                if !setUp{
+                    if list.isEmpty {
+                         VStack{
+                             Text("無文章")
+                                 .foregroundColor(.gray)
+                                 .font(.system(size: 16, weight: .semibold))
+                         }
+                         
+                         .padding(.vertical)
+                         
+                     }else {
+                         HStack(alignment:.top,spacing:HSpacing){
+                             ForEach(customList(),id:\.self){datas in
+                                 LazyVStack(spacing:VSpacing){
+                                     ForEach(datas) { data in
+                                         content(data)
+                                            
+                                     }
+                                 }
+                             }
+                             
+                         }
+                         .padding(.vertical,5)
+                         .padding(.horizontal,3)
+                     }
                 }
-                
-                .padding(.vertical)
 
-            }else {
-                HStack(alignment:.top,spacing:HSpacing){
-                    ForEach(customList(),id:\.self){datas in
-                        LazyVStack(spacing:VSpacing){
-                            ForEach(datas) { data in
-                                content(data)
-                            }
-                        }
-                    }
-                    
+
+            }
+            .introspectScrollView{scroll in
+                scroll.isScrollEnabled = self.isScrollable
+            }
+            .onAppear() {
+                self.setUp = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15){
+                    self.setUp = false
                 }
-                .padding(.vertical,5)
-                .padding(.horizontal,3)
-//                .background(Color("DarkMode2").frame(maxWidth:.infinity))
             }
         }
-        .introspectScrollView{scroll in
-            print("?//\(isScrollable)" )
-            scroll.isScrollEnabled = self.isScrollable
-        }
-//        .background(Color("DarkMode2").frame(maxWidth:.infinity))
-        .listStyle(.plain)
+
+
+
 
     }
 }

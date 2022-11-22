@@ -323,6 +323,16 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         
     }
     
+    func AsyncGetUserProfileById(userID : Int) async -> Result<Profile,Error>{
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.UserInfo.apiUri + userID.description) else{
+            return .failure(APIError.badUrl)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        return await AsyncFetchAndDecode(request: request)
+    }
+    
     func UserLogin(req: UserLoginReq, completion: @escaping (Result<UserLoginResp, Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.UserLogin.apiUri) else{
             completion(.failure(APIError.badUrl))
@@ -646,6 +656,16 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         FetchAndDecode(request: request, completion: completion)
     }
     
+    func AsyncGetAllUserLikedMoive(userID : Int) async -> Result<AllUserLikedMovieResp,Error> {
+        guard let url = URL(string: "\(API_SERVER_HOST)\(APIEndPoint.GetAllLikedMovie.apiUri)\(userID)") else{
+            return .failure(APIError.apiError)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        return await AsyncFetchAndDecode(request: request)
+    }
+    
     func IsLikedMovie(req: IsLikedMovieReq, completion: @escaping (Result<IsLikedMovieResp, Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.IsLikedMovie.apiUri + req.movie_id.description) else {
             completion(.failure(APIError.badUrl))
@@ -728,7 +748,7 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         PostAndDecode(req: request, completion: completion)
     }
     
-    func GetAllCustomLists(userID : Int, page : Int = 1,limit : Int = 20,completion: @escaping (Result<AllUserListResp, Error>) -> ()){
+    func GetAllCustomLists(userID : Int, page : Int = 1,limit : Int = 10,completion: @escaping (Result<AllUserListResp, Error>) -> ()){
         guard let url = URL(string: "\(API_SERVER_HOST)\(APIEndPoint.GetAllUserLists.apiUri)\(userID)") else{
             completion(.failure(APIError.apiError))
             return
@@ -739,6 +759,17 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         
         FetchAndDecode(request: request, completion: completion)
 
+    }
+    
+    func AsyncGetAllCustomLists(userID : Int, page : Int = 1,limit : Int = 10) async -> Result<AllUserListResp,Error> {
+        guard let url = URL(string: "\(API_SERVER_HOST)\(APIEndPoint.GetAllUserLists.apiUri)\(userID)") else{
+            return .failure(APIError.apiError)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        
+         return await AsyncFetchAndDecode(request: request)
     }
     
     func GetUserList(listID : Int , completion : @escaping (Result<UserListResp,Error> ) -> ()){
@@ -894,6 +925,17 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         FetchAndDecode(request: request, completion: completion)
+    }
+    
+    func AsyncGetUserPostByUserID(userID : Int) async -> Result <UserPostResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetUserPosts.apiUri + userID.description) else{
+            return .failure(APIError.apiError)
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        return await AsyncFetchAndDecode(request: request)
     }
     
     func CountUserPosts(req : CountUserPostReq, completion : @escaping (Result<CountUserPostResp,Error>) -> ()) {

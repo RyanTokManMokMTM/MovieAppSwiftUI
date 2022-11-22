@@ -18,6 +18,7 @@ struct CardFlowLayout: View {
                 CardPostView(postInfo: self.$postVM.postData[self.postVM.getPostIndexFromDiscoveryList(postId: info.id)]){
                         DispatchQueue.main.async {
                             self.postVM.selectedPostInfo = info
+                            self.postVM.selectedPostFrom = .AllPost
                             withAnimation{
                                 self.postVM.isShowPostDetail.toggle()
                             }
@@ -38,36 +39,8 @@ struct CardFlowLayout: View {
                     }
             }
         })
-//        FlowLayoutView(list: self.postVM.postData, columns: 2,HSpacing: 5,VSpacing: 10,content: { info in
-//            CardPostView(postInfo: self.$postVM.postData[self.postVM.getPostIndexFromDiscoveryList(postId: info.id)]){
-//                DispatchQueue.main.async {
-//                    self.postVM.selectedPostInfo = info
-//                    withAnimation{
-//                        self.postVM.isShowPostDetail.toggle()
-//                    }
-//                }
-//            }
-//            
-//            
-//        })
         .frame(maxWidth:.infinity)
         .background(Color("DarkMode2").frame(maxWidth:.infinity))
-        .background(
-            NavigationLink(destination:
-                            PostDetailView(postForm: .AllPost, isFromProfile: false,postInfo: self.$postVM.selectedPostInfo)
-                .environmentObject(postVM)
-                .environmentObject(userVM)
-                .navigationBarTitle("")
-                .navigationTitle("")
-                .navigationBarBackButtonHidden(true)
-                .navigationBarHidden(true)
-                           , isActive: self.$postVM.isShowPostDetail){
-                               EmptyView()
-                               
-                               
-                           }
-            
-        )
         .onAppear{
             if postVM.initAllData {
                 HubState.SetWait(message: "Loading")
@@ -80,13 +53,6 @@ struct CardFlowLayout: View {
                 postVM.initAllData = false
             }
         }
-//        .wait(isLoading: $HubState.isWait){
-//            BenHubLoadingView(message: HubState.message)
-//        }
-//        .alert(isAlert: $HubState.isPresented){
-//            BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
-//        }
-//
 
     }
     

@@ -14,7 +14,6 @@ class PostVM : ObservableObject {
     @Published var isSharePost = false
     @Published var sharedData : Post? = nil
     @Published var isPostUploading = false
-//    @Published var uploadProgress : Double = 0
     @Published var isRefersh = false
 
 //    @Published var isFetchMoreData : Bool = false
@@ -27,8 +26,8 @@ class PostVM : ObservableObject {
     @Published var index : TabItem = .Explore
     @Published var isShowPostDetail : Bool = false
     @Published var selectedPost : Post? // need this ?
-//    @Published var selectedPostID : Int = -1
     @Published var selectedPostInfo : Post
+    @Published var selectedPostFrom : postDataFrom = .AllPost
 //    
     @Published var isReadMorePostInfo : Bool = false
     @Published var selectedReadMorePost : Post? = nil

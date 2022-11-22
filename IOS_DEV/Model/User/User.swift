@@ -26,7 +26,6 @@ struct User: Decodable{
     }
 }
 
-
 class UserViewModel : ObservableObject{
 //    @Published var user : Me?//???
     @Published var isAllowToScroll = false
@@ -63,7 +62,7 @@ class UserViewModel : ObservableObject{
     func setUserID(userID : Int){
         self.userID = userID
     }
-    
+
     //Use for other user
     func getUserProfile(){
         if self.userID == nil{
@@ -91,6 +90,41 @@ class UserViewModel : ObservableObject{
         }
         
     }
+    
+    @MainActor
+    func AsyncGetProfile(userID : Int) async {
+        let resp = await APIService.shared.AsyncGetUserProfileById(userID: userID)
+        switch resp {
+        case .success(let data):
+            
+            self.profile = data
+        case .failure(let err):
+            print(err.localizedDescription)
+            BenHubState.shared.AlertMessage(sysImg: "xmark", message: err.localizedDescription)
+        }
+    }
+    
+    @MainActor
+    func AsyncGetPost(userID : Int) async {
+        let resp = await APIService.shared.AsyncGetUserPostByUserID(userID: userID)
+        switch resp {
+        case .success(let data):
+//            userVM.profil
+            self.profile!.UserCollection = []
+            guard let posts = data.post_info else {
+                return
+            }
+           
+            for var info in posts{
+                info.comments = []
+                self.profile!.UserCollection!.append(info)
+            }
+        case .failure(let err):
+            print(err.localizedDescription)
+            BenHubState.shared.AlertMessage(sysImg: "xmark", message: err.localizedDescription)
+        }
+    }
+    
     
     func getUserProfileByID(){
         if self.userID == nil{
@@ -184,7 +218,23 @@ class UserViewModel : ObservableObject{
             }
         }
     }
-
+    
+    @MainActor
+    func AsyncGetUserLikedMoive(userID : Int) async {
+        let resp = await APIService.shared.AsyncGetAllUserLikedMoive(userID: userID)
+        switch resp {
+        case .success(let data):
+            if data.liked_movies == nil{
+                self.profile!.UserLikedMovies = []
+            }else{
+                self.profile!.UserLikedMovies = data.liked_movies!
+            }
+        case .failure(let err):
+            print(err.localizedDescription)
+            BenHubState.shared.AlertMessage(sysImg: "xmark", message: err.localizedDescription)
+        }
+    }
+    
     func getUserList() {
         if self.userID == nil{
             return
@@ -209,6 +259,22 @@ class UserViewModel : ObservableObject{
                     self.ListError = err
                 }
             }
+        }
+    }
+    
+    @MainActor
+    func AsyncGetUserList(userID : Int) async{
+        let resp = await APIService.shared.AsyncGetAllCustomLists(userID: userID)
+        switch resp {
+        case .success(let data):
+            if data.lists == nil{
+                self.profile!.UserCustomList = []
+            }else{
+                self.profile!.UserCustomList = data.lists!
+            }
+        case .failure(let err):
+            print(err.localizedDescription)
+            BenHubState.shared.AlertMessage(sysImg: "xmark", message: err.localizedDescription)
         }
     }
     

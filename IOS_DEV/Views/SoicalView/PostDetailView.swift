@@ -8,14 +8,14 @@
 import SwiftUI
 import SDWebImageSwiftUI
 import Refresher
-enum postDatFrom{
+enum postDataFrom{
     case AllPost
     case Profile
 }
 
 struct PostDetailView: View {
     
-    var postForm : postDatFrom
+    var postForm : postDataFrom
     var isFromProfile : Bool
     
     @State private var metaData : MetaData? = nil
@@ -55,13 +55,6 @@ struct PostDetailView: View {
                    postBody()
                         
                 }
-//                .refresher(style: .system){ done in
-//                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2){
-//                        print("done")
-//                        done()
-//                    }
-//                }
-                //                .frame(maxHeight:.infinity,alignment:.top)
                 CommentArea()
             }
             
@@ -160,7 +153,7 @@ struct PostDetailView: View {
                         
                         
                 }
-                .padding(.horizontal,5)
+                .padding(.horizontal,10)
                 
                 
                 Group {

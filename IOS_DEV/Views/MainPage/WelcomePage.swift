@@ -58,6 +58,7 @@ struct HomePage: View {
             .onAppear(){
                 WebsocketManager.shared.userVM = UserVM
             }
+
         }
 //        .navigationViewStyle(.)
 //        .onAppear{

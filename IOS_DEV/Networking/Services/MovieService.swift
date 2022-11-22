@@ -39,6 +39,7 @@ protocol ServerAPIServerServiceInterface {
     func UserSignUp(req : UserSignUpReq,completion : @escaping (Result<UserSignUpResp,Error>)->())
     func GetUserProfile(completion : @escaping (Result<Profile,Error>) -> ())
     func GetUserProfileById(userID : Int,completion : @escaping (Result<Profile,Error>) -> ())
+    func AsyncGetUserProfileById(userID : Int) async -> Result<Profile,Error>
     func UpdateUserProfile(req : UserProfileUpdateReq, completion: @escaping (Result<UserProfileUpdateResp,Error>) -> ())
     func UploadImage(imgData : Data,uploadType: UploadImageType, completion: @escaping (Result<UploadImageResp,Error>) -> ())
         
@@ -63,6 +64,7 @@ protocol ServerAPIServerServiceInterface {
     func PostLikedMovie(req:NewUserLikeMoviedReq,completion : @escaping (Result<CreateUserLikedMovieResp,Error>) -> ())
     func DeleteLikedMovie(req : DeleteUserLikedMovie,completion : @escaping (Result<DeleteUserLikedMovieResp,Error>) -> ())
     func GetAllUserLikedMoive(userID : Int, completion : @escaping (Result<AllUserLikedMovieResp,Error>) -> ())
+    func AsyncGetAllUserLikedMoive(userID : Int) async -> Result<AllUserLikedMovieResp,Error>
     
     func IsLikedMovie(req : IsLikedMovieReq , completion: @escaping (Result<IsLikedMovieResp,Error>) -> ())
 
@@ -71,6 +73,8 @@ protocol ServerAPIServerServiceInterface {
     func UpdateCustomList(req : UpdateCustomListReq, completion : @escaping (Result<UpdateCustomListResp,Error>) -> ())
     func DeleteCustomList(req : DeleteCustomListReq, completion : @escaping (Result<DeleteCustomListResp,Error>) -> ())
     func GetAllCustomLists(userID : Int, page : Int,limit : Int,completion : @escaping (Result<AllUserListResp,Error>) -> ())
+    func AsyncGetAllCustomLists(userID : Int, page : Int,limit : Int) async -> Result<AllUserListResp,Error>
+    
     func GetUserList(listID : Int , completion : @escaping (Result<UserListResp,Error> ) -> ())
     func InsertMovieToList(movieID : Int, listID : Int, completion : @escaping (Result<InsertMovieToListResp,Error>)->())
     func RemoveMovieFromList(req : RemoveMovieFromListReq , completion: @escaping (Result<RemoveMovieFromListResp,Error>)->()) //???
@@ -88,6 +92,7 @@ protocol ServerAPIServerServiceInterface {
     //Async Version
     func AsyncGetFollowUserPost( page : Int ,limit : Int) async -> Result <FollowingUserPostResp,Error>
     func GetUserPostByUserID(userID : Int ,completion : @escaping (Result <UserPostResp,Error>) -> ())
+    func AsyncGetUserPostByUserID(userID : Int) async -> Result <UserPostResp,Error>
     func CountUserPosts(req : CountUserPostReq, completion : @escaping (Result<CountUserPostResp,Error>) -> ())
     
     //TODO: POST LIKED
