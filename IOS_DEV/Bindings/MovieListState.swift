@@ -13,6 +13,10 @@ class MovieListState: ObservableObject {
     @Published var movies: [Movie]?
     @Published var isLoading: Bool = false
     @Published var error: NSError?
+    @Published var page : Int = 1
+    @Published var total : Int = 0
+    
+//    @Published var initData : Bool = false
 
     private let movieService: MovieService
     private let apiService : APIService
@@ -24,20 +28,35 @@ class MovieListState: ObservableObject {
 //        loadMovies()
     }
     
-    func loadMovies(endpoint: MovieListEndpoint) {
+    func loadMovies(endpoint: MovieListEndpoint) {        
         self.movies = nil
         self.isLoading = true
-        self.movieService.fetchMovies(from: endpoint) { [weak self] (result) in
+        self.movieService.fetchMovies(from: endpoint,page: 1) { [weak self] (result) in
             guard let self = self else { return }
 
             switch result {
             case .success(let response):
                 self.movies = response.results
-  
+                self.total = response.totalPages
             case .failure(let error):
                 self.error = error as NSError
             }
             self.isLoading = false
+        }
+    }
+    
+    @MainActor
+    func loadMoreMovies(endpoint: MovieListEndpoint) async {
+        if self.page > self.total || self.total == 0 {
+            return
+        }
+        self.page += 1
+        let resp = await self.movieService.AsyncfetchMovies(from: endpoint, page: self.page)
+        switch resp {
+        case .success(let data):
+            self.movies?.append(contentsOf: data.results)
+        case .failure(let err):
+            print(err.localizedDescription)
         }
     }
     

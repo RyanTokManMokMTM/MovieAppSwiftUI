@@ -16,8 +16,7 @@ import BottomSheet
 import MapKit
 import Combine
 import Refresher
-import UIKit
-import YTPageController
+
 
 @main
 struct IOS_DEVApp: App {
@@ -36,6 +35,7 @@ struct IOS_DEVApp: App {
 struct SideMenu : View {
     @EnvironmentObject private var userVM : UserViewModel
     @Binding var isShow : Bool
+    @Binding var isLogout : Bool
     @State private var offset = 0.0
     @State private var isAnimated = false
     @State private var isEditProfile = false
@@ -85,7 +85,9 @@ struct SideMenu : View {
             }
             .padding(.vertical,5)
             
-            memuButton(imageName: "person.fill.badge.plus", title: "添加好友")
+            memuButton(imageName: "person.fill.badge.plus", title: "添加好友") {
+                print("to add friend?")
+            }
             Divider()
             
             
@@ -115,7 +117,11 @@ struct SideMenu : View {
             
             
             Spacer()
-            memuButton(imageName: "arrow.uturn.left", title: "登出")
+            memuButton(imageName: "arrow.uturn.left", title: "登出"){
+                withAnimation{
+                    self.isLogout = true
+                }
+            }
             //setting?
 //            Spacer()
         }
@@ -157,10 +163,8 @@ struct SideMenu : View {
     }
     
     @ViewBuilder
-    private func memuButton(imageName : String, title: String) -> some View{
-        Button(action:{
-            
-        }){
+    private func memuButton(imageName : String, title: String,action : @escaping ()->()) -> some View{
+        Button(action:action){
             HStack(spacing:18){
                 Image(systemName: imageName)
                     .imageScale(.large)

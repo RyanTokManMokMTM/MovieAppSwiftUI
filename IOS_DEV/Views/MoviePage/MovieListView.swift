@@ -88,7 +88,7 @@ struct HomeNavTabView : View {
         }.overlay(
             HStack(spacing:20){
 //                Spacer()
-                Text("OTTSoSo")
+                Text("SociFun")
                     .LeckerliOneRegularFont(size:22)
                 Spacer()
 //                HomeTabButton(index: $index,tab: .TV) //TODO: NOT AVAILABLE YET
@@ -227,20 +227,16 @@ struct MovieStateView : View{
     var info : MovieList
     var body : some View {
         VStack{
-            if State.movies != nil {
-                MoviePosterCarousel(title: info.title)
+            MoviePosterCarousel(title: info.title,endpoint: info.list_end_point)
                     .environmentObject(State)
-//                    .padding(.bottom)
-                
-            } else {
-                LoadingView(isLoading: self.State.isLoading, error: self.State.error) {
-                    //                self.State.loadMovies()
-                    self.State.loadMovies(endpoint: info.list_end_point)
-                }
-            }
+                    .redacted(reason: self.State.isLoading ? .placeholder : [])
+                    .padding(.bottom)
+//
         }
         .onAppear{
-            self.State.loadMovies(endpoint: info.list_end_point)
+            if self.State.movies == nil{
+                self.State.loadMovies(endpoint: info.list_end_point)
+            }
         }
     }
 

@@ -11,8 +11,9 @@ import SDWebImageSwiftUI
 struct ShowMoreStateMovieView: View {
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var state : MovieListState
+    let endPoint : MovieListEndpoint
     var stateTitle : String
-    var stateMovies : [Movie]
     @Binding var isShowAll : Bool
     @State private var isShowMovieDetail : Bool = false
     @State private var selectedMovieID : Int = -1
@@ -23,19 +24,33 @@ struct ShowMoreStateMovieView: View {
                 NavBar()
                 
                 ScrollView(.vertical,showsIndicators: false){
-                    LazyVGrid(columns: grids,spacing:20) {
-                        ForEach(self.stateMovies){ movie in
-                            Button(action:{
-                                withAnimation{
-                                    self.isShowMovieDetail.toggle()
-                                    self.selectedMovieID = movie.id
+                    LazyVStack(spacing:0){
+                        LazyVGrid(columns: grids,spacing:20) {
+                            ForEach(self.state.movies!){ movie in
+                                Button(action:{
+                                    withAnimation{
+                                        self.isShowMovieDetail.toggle()
+                                        self.selectedMovieID = movie.id
+                                    }
+                                }){
+                                    MovieCard(movie: movie)
                                 }
-                            }){
-                                MovieCard(movie: movie)
+                                
                             }
-                            
+                        }.padding(.horizontal,15).padding(.top,5)
+                        
+                        
+                        if self.state.page < self.state.total && self.state.total != 0{
+                            ActivityIndicatorView()
+                                .padding(.vertical)
+                                .task {
+                                    print("loading more movie")
+                                    await self.state.loadMoreMovies(endpoint: self.endPoint)
+                                }
                         }
-                    }.padding(.horizontal,15).padding(.top,5)
+                    }
+                    
+                   
                 }
                 .background(
                     NavigationLink(destination: MovieDetailView(movieId: self.selectedMovieID, isShowDetail: self.$isShowMovieDetail)
@@ -92,15 +107,9 @@ struct ShowMoreStateMovieView: View {
             WebImage(url: movie.posterURL)
                 .resizable()
                 .placeholder {
-                    ZStack{
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .cornerRadius(8)
-                            .shadow(radius: 4)
-                        Text(movie.title)
-                            .multilineTextAlignment(.center)
-                            .font(.caption)
-                    }
+                    Rectangle()
+                        .foregroundColor(Color("appleDark"))
+                        .aspectRatio(contentMode: .fit)
                 }
                 .indicator(.activity) // Activity Indicator
                 .transition(.fade(duration: 0.5)) // Fade Transition with duration

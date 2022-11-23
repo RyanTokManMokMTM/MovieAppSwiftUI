@@ -39,7 +39,7 @@ struct SignInView: View   {
             VStack(alignment:.leading){
                 VStack(alignment:.leading,spacing:0){
                     HStack{
-                        Text("歡迎來到OTT SoSo！")
+                        Text("歡迎來到SociFun！")
                             .TekoBold(size: 40)
                             .foregroundColor(.white)
                         

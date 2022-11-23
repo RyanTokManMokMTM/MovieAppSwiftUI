@@ -16,7 +16,8 @@ protocol MovieService {
 //    func UserProfile(completion: @escaping (Result<UserProfile,Error>)->())
     
     
-    func fetchMovies(from endpoint: MovieListEndpoint, completion: @escaping (Result<MovieResponse, MovieError>) -> ())
+    func fetchMovies(from endpoint: MovieListEndpoint,page : Int,completion: @escaping (Result<MovieResponse, MovieError>) -> ())
+    func AsyncfetchMovies(from endpoint: MovieListEndpoint,page : Int) async -> Result<MovieResponse, MovieError>
     func fetchMovie(id: Int, completion: @escaping (Result<Movie, MovieError>) -> ())
     func fetchMovieWithEng(id: Int, completion: @escaping (Result<Movie, MovieError>) -> ())
     func MovieReccomend(id: Int, completion: @escaping (Result<MovieResponse, MovieError>) -> ())

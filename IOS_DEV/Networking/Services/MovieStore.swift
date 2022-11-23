@@ -36,14 +36,27 @@ class MovieStore: MovieService {
         ], completion: completion)
     }
     
-    func fetchMovies(from endpoint: MovieListEndpoint, completion: @escaping (Result<MovieResponse, MovieError>) -> ()) {
+    func fetchMovies(from endpoint: MovieListEndpoint, page : Int = 1,completion: @escaping (Result<MovieResponse, MovieError>) -> ()) {
         guard let url = URL(string: "\(baseAPIURL)\(endpoint.description)") else {
             completion(.failure(.invalidEndpoint))
             return
         }
         self.loadURLAndDecode(url: url, params: [
-            "language": "zh-TW"
+            "language": "zh-TW",
+            "page" : "\(page)"
         ], completion: completion)
+    }
+    
+    func AsyncfetchMovies(from endpoint: MovieListEndpoint,page : Int) async -> Result<MovieResponse, MovieError> {
+        guard let url = URL(string: "\(baseAPIURL)\(endpoint.description)") else {
+           return .failure(.invalidEndpoint)
+        }
+        
+        
+        return await self.AsyncloadURLAndDecode(url: url, params: [
+            "language": "zh-TW",
+            "page" : "\(page)"
+        ])
     }
 
     func fetchMovie(id: Int, completion: @escaping (Result<Movie, MovieError>) -> ()) {
@@ -179,6 +192,44 @@ class MovieStore: MovieService {
         }.resume()
 //        dataTask.resume()
 //        return dataTask
+    }
+    
+    private func AsyncloadURLAndDecode<D: Decodable>(url: URL, params: [String: String]? = nil) async -> Result<D, MovieError> {
+        guard var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+           return .failure(.invalidEndpoint)
+        }
+
+        var queryItems = [URLQueryItem(name: "api_key", value: apiKey)]
+        if params != nil{
+            if let params = params {
+                queryItems.append(contentsOf: params.map { URLQueryItem(name: $0.key, value: $0.value) })
+            }
+        }
+        
+        urlComponents.queryItems = queryItems
+
+        guard let finalURL = urlComponents.url else {
+            return .failure(.invalidEndpoint)
+        }
+        
+//        print("//////////////////////")
+        print(finalURL)
+        
+        do {
+            let (data , resp) = try await urlSession.data(from: finalURL)
+            guard let httpResponse = resp as? HTTPURLResponse, 200..<300 ~= httpResponse.statusCode else {
+                return .failure(.invalidResponse)
+            }
+
+            do {
+                let decodedResponse = try self.jsonDecoder.decode(D.self, from: data)
+                return .success(decodedResponse)
+            } catch {
+               return .failure(.serializationError)
+            }
+        } catch {
+            return .failure(.invalidResponse)
+        }
     }
     
     private func executeCompletionHandlerInMainThread<D: Decodable>(with result: Result<D, MovieError>, completion: @escaping (Result<D, MovieError>) -> ()) {

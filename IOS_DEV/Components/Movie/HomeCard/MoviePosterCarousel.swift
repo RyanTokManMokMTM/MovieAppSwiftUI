@@ -11,6 +11,7 @@ import SwiftUI
 struct MoviePosterCarousel: View {
     
     let title: String
+    let endpoint : MovieListEndpoint
     @EnvironmentObject var State : MovieListState
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
@@ -40,13 +41,14 @@ struct MoviePosterCarousel: View {
                         .foregroundColor(Color(uiColor: UIColor.darkGray))
                 }.buttonStyle(PlainButtonStyle())
             }
+            .padding(.horizontal,5)
             
             if self.State.movies == nil {
                 Text("暫時沒有任何**\(title)**相關電影資訊.")
             }else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack(alignment: .top, spacing: 16) {
-                        ForEach(0..<(self.State.movies!.count < 10 ? self.State.movies!.count : 10)) { i in
+                        ForEach(0..<(self.State.movies!.count < 10 ? self.State.movies!.count : 10),id:\.self) { i in
                             Button(action:{
                                 self.selectedMovieID = self.State.movies![i].id
                                 self.isAction.toggle()
@@ -69,9 +71,10 @@ struct MoviePosterCarousel: View {
                 .background(
                 
                     NavigationLink(destination:
-                                    ShowMoreStateMovieView(stateTitle: title, stateMovies: self.State.movies!, isShowAll: self.$isShowAll)
+                                    ShowMoreStateMovieView(endPoint: endpoint, stateTitle: title, isShowAll: self.$isShowAll)
                                     .environmentObject(postVM)
                                     .environmentObject(userVM)
+                                    .environmentObject(State)
                                     ,isActive: self.$isShowAll
                                   ){EmptyView()}
                 

@@ -13,12 +13,9 @@ struct HomePage: View {
     @State private var ServerInternalError : Bool = false //for checking server connected
     @ObservedObject private var networkingService = NetworkingService.shared
     @AppStorage("userToken") private var userToken : String = ""
-    @State private var isLoggedIn : Bool = false
     @State private var isLoading : Bool = false
     
     @StateObject private var UserVM : UserViewModel = UserViewModel()
-    @State private var currentBG = 0
-    @State private var isStarted = false
 
     init(){
         UIActivityIndicatorView.appearance().style = .medium
@@ -36,7 +33,7 @@ struct HomePage: View {
                 
                 
                 if UserVM.isLogIn{
-                    MovieHomePage(isLogOut: $isLoggedIn)
+                    MovieHomePage()
                         .transition(.identity)
                         .accentColor(.white)
                         .environmentObject(UserVM)

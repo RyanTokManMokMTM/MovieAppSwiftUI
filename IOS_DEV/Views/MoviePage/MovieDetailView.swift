@@ -13,11 +13,12 @@ import SDWebImageSwiftUI
     
 struct MovieDetailView: View {
     @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var postVM : PostVM
     let movieId: Int
     @StateObject private var movieDetailState = MovieDetailState()
     @StateObject private var movieImagesState = MovieImagesState()
     @Binding var isShowDetail : Bool
-    @State private var isShowCustomList = false
+    @State private var isShowSheet = false
     @State private var isAddToUserList = false
     @State private var isCreateNewMoiveList = false
     
@@ -25,21 +26,26 @@ struct MovieDetailView: View {
     @State private var collectedListId : Int = 0
     @State private var movieLikes : Int = 0
     @State private var movieCollectes : Int = 0
-    
+    @State private var isAddPost = false
     var body: some View {
         VStack {
             if movieDetailState.movie != nil && self.movieImagesState.movieImage != nil{
                 GeometryReader{ proxy in
-                    NewDetailView(movie: self.movieDetailState.movie!,movieImages: self.movieImagesState.movieImage!,isShow: $isShowDetail ,isShowCustomList: $isShowCustomList,isAddToList: $isAddToUserList,isUserLiked: $isUserLiked,collectedListId: $collectedListId,movieLikes: $movieLikes,movieCollected: $movieCollectes,topEdge: proxy.safeAreaInsets.top)
-                        .SheetWithDetents(isPresented: self.$isShowCustomList, detents: [.medium()]){
-                            self.isShowCustomList = false
+                    NewDetailView(movie: self.movieDetailState.movie!,movieImages: self.movieImagesState.movieImage!,isShow: $isShowDetail ,isShowSheet: $isShowSheet,isAddToList: $isAddToUserList,isUserLiked: $isUserLiked,collectedListId: $collectedListId,movieLikes: $movieLikes,movieCollected: $movieCollectes,isAddPost: $isAddPost, topEdge: proxy.safeAreaInsets.top)
+                        .SheetWithDetents(isPresented: self.$isShowSheet, detents: [.medium(),.large()]){
+                            self.isShowSheet = false
                             self.isAddToUserList = false
+                            self.isAddPost = false
                         } content :{
                             VStack{
-                                if isCreateNewMoiveList {
-                                    AddNewUserListView(movie: self.movieDetailState.movie!, isShowCustomList: $isShowCustomList, isAddToUserList: $isAddToUserList, isCreateNewMoiveList: $isCreateNewMoiveList,movieCollected:$movieCollectes)
-                                }else{
-                                    UserListView(movieId: movieId, isShowCustomList: self.$isShowCustomList, isCreateNewMoiveList: self.$isCreateNewMoiveList, isAddToUserList: $isAddToUserList,movieCollected:$movieCollectes)
+                                if isAddPost {
+                                    AddMoviePostView(movie:self.movieDetailState.movie!, isAddNewPost: $isAddPost,isShowSheet : $isShowSheet)
+                                        .environmentObject(postVM)
+                                        .environmentObject(userVM)
+                                } else if isCreateNewMoiveList {
+                                    AddNewUserListView(movie: self.movieDetailState.movie!, isShowCustomList: $isShowSheet, isAddToUserList: $isAddToUserList, isCreateNewMoiveList: $isCreateNewMoiveList,movieCollected:$movieCollectes)
+                                } else {
+                                    UserListView(movieId: movieId, isShowCustomList: self.$isShowSheet, isCreateNewMoiveList: self.$isCreateNewMoiveList, isAddToUserList: $isAddToUserList,movieCollected:$movieCollectes)
                                         .environmentObject(userVM)
                                 }
                             }
@@ -390,12 +396,13 @@ struct NewDetailView: View {
     var movie: Movie
     let movieImages: MovieImages
     @Binding var isShow : Bool
-    @Binding var isShowCustomList : Bool
+    @Binding var isShowSheet : Bool
     @Binding var isAddToList : Bool
     @Binding var isUserLiked :  Bool
     @Binding var collectedListId : Int
     @Binding var movieLikes : Int
     @Binding var movieCollected : Int
+    @Binding var isAddPost : Bool
     
 //    @Binding var isUserCollected : Bool
     private let max = UIScreen.main.bounds.height / 2.5
@@ -406,8 +413,6 @@ struct NewDetailView: View {
     @State private var isShowIcon : Bool = false
     @State private var tabIndex : MovieDetailTabItem = .More
     @State private var topOffset : CGFloat = 0
-    
-    @State private var isAddPost : Bool = false
     @State private var isShowMore : Bool = false
 
     
@@ -512,7 +517,9 @@ struct NewDetailView: View {
                             BackgroundButton(systemImg: "plus", buttonTitle: "發表文章", backgroundColor: .blue, fontColor: .white){
                                 //TODO: JOIN THE GROUP
                                 withAnimation{
+                                    self.isShowSheet.toggle()
                                     self.isAddPost.toggle()
+                                
                                 }
                             }
                             Spacer()
@@ -532,7 +539,7 @@ struct NewDetailView: View {
                                         self.RemoveMovieFromList()
                                     } else {
                                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
-                                            self.isShowCustomList.toggle()
+                                            self.isShowSheet.toggle()
                                             userVM.getUserList()
                                         }
                                     }
@@ -568,20 +575,20 @@ struct NewDetailView: View {
                         }
                         .padding(.vertical,5)
                         .padding(.horizontal,5)
-                        .background(
-                            NavigationLink(destination:
-                                            AddPostView(selectedMovie: self.movie, isSelectedMovie: self.$isAddPost, isAddPost: self.$isAddPost)
-                                            .navigationBarTitle("")
-                                            .navigationTitle("")
-                                            .navigationBarHidden(true)
-                                            .environmentObject(postVM)
-                                            .environmentObject(userVM),
-                                           isActive: self.$isAddPost){
-                                               EmptyView()
-                                           }
-                            
-                        )
-                        
+//                        .background(
+//                            NavigationLink(destination:
+//                                            AddMoviePostView(movie:self.movie,isAddNewPost:$isAddPost)
+//                                            .navigationBarTitle("")
+//                                            .navigationTitle("")
+//                                            .navigationBarHidden(true)
+//                                            .environmentObject(postVM)
+//                                            .environmentObject(userVM),
+//                                           isActive: self.$isAddPost){
+//                                               EmptyView()
+//                                           }
+//
+//                        )
+
                         //SrcollTabBar
                         /*
                          1.More Detail View
@@ -592,11 +599,14 @@ struct NewDetailView: View {
                             switch tabIndex {
                             case .More:
                                 MoreDetail()
+                                    .padding(.horizontal,5)
 
                             case .Online:
                                 MovieOTT(movieTitle: movie.title)
+                                    .padding(.horizontal,5)
                             case .Similar:
                                 GetMoreMovie(movieID: movie.id)
+                                    .padding(.horizontal,5)
                             }
                         } header: {
     
@@ -625,9 +635,7 @@ struct NewDetailView: View {
             }
             
         }
-
-//            self..movidId = movie.id
-//        }
+//
     }
     
     @ViewBuilder

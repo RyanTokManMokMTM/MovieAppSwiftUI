@@ -33,12 +33,14 @@ class MovieDetailManager : ObservableObject {
 
 
 struct MovieHomePage: View {
+    @State var isLogOut : Bool = false
+    
     @EnvironmentObject var userVM : UserViewModel
     @StateObject var HubState : BenHubState = BenHubState.shared
     @StateObject var StateManager  = SeachingViewStateManager()
     @StateObject var postVM = PostVM()
 
-    @Binding var isLogOut : Bool
+//    @Binding var isLogOut : Bool
     @State private var showHomePage : Bool = false // show it by default
 //    @State private var orientation = UIDeviceOrientation.unknown
     @State private var mainPageHeight : CGFloat = 0
@@ -173,7 +175,7 @@ struct MovieHomePage: View {
                 }
 //
                 if isShowSideMenu {
-                    SideMenu(isShow: $isShowSideMenu)
+                    SideMenu(isShow: $isShowSideMenu,isLogout: $isLogOut)
                         .zIndex(5)
                         .environmentObject(userVM)
                 }
@@ -184,6 +186,20 @@ struct MovieHomePage: View {
             .onAppear {                    UITabBar.appearance().isTranslucent = false
                     UITabBar.appearance().backgroundColor = UIColor(named:"DarkMode2")
              }
+            .alert(isPresented: self.$isLogOut){
+                withAnimation(){
+                    Alert(title: Text("用戶登出"), message: Text("確定要登出當前帳戶?"),
+                          primaryButton: .default(Text("取消")){
+                            //
+                          },
+                          secondaryButton: .default(Text("確定")){
+//                            withAnimation{
+                                self.userVM.isLogIn = false
+//                            }
+                          })
+                }
+                
+            }
             
         }
 //            .onRotate { newOrientation in

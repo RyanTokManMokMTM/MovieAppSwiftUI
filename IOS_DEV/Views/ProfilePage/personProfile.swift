@@ -1533,6 +1533,7 @@ struct personProfile: View {
                                }
             )
         }
+
        
     }
     

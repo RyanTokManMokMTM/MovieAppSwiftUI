@@ -71,15 +71,6 @@
         "branch" : "main",
         "revision" : "669d20f0ab90dc6cac5aadbb8462505875805459"
       }
-    },
-    {
-      "identity" : "ytpagecontroller",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/iWECon/YTPageController",
-      "state" : {
-        "revision" : "e340d1fa04a24bd00f6db4d432cfd27a4f871ad2",
-        "version" : "1.1.9"
-      }
     }
   ],
   "version" : 2

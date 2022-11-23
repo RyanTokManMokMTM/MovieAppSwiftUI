@@ -86,11 +86,12 @@ class PostVM : ObservableObject {
     
     func refershDiscoverData() async {
         print("updateing....")
-        let resp = await APIService.shared.AsyncGetAllUserPost()
+        let resp = await APIService.shared.AsyncGetAllUserPost(limit:10)
         switch resp {
         case .success(let data):
             self.postData = data.post_info
             self.discoverMetaData = data.meta_data
+//            print(self.discoverMetaData)
         case .failure(let err):
             print("upload post err : \(err.localizedDescription)")
             BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
