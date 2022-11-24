@@ -27,7 +27,7 @@ struct FollowUserPostView: View {
             
             if postVM.followingData.isEmpty {
                 VStack{
-                    Text("You haven't follow any people yet")
+                    Text("朋友圈暫無任何文章")
                         .foregroundColor(.gray)
                         .font(.system(size: 16, weight: .semibold))
                 }
@@ -42,10 +42,6 @@ struct FollowUserPostView: View {
                     if self.postVM.followingMetaData?.page ?? 0  < self.postVM.followingMetaData?.total_pages ?? 0{
                         ActivityIndicatorView()
                             .padding(.vertical,5)
-                            .onAppear(){
-                                //do some request here
-                                print("loading...")
-                            }
                             .task{
                                 await self.postVM.LoadMoreFollowingData()
                             }

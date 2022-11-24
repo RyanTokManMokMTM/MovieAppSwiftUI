@@ -16,20 +16,42 @@ import BottomSheet
 import MapKit
 import Combine
 import Refresher
+import SwiftUI_Pull_To_Refresh
 
 
 @main
 struct IOS_DEVApp: App {
     @UIApplicationDelegateAdaptor(Appdelegate.self) var delegate
-    
+   
     var body: some Scene {
         WindowGroup {
 //            Refersh()
-            HomePage()
+            TestScrolling()
         }
     }
 }
 
+struct TestScrolling : View {
+    let colors : [Color] = [.red,.gray,.yellow]
+    var body: some View {
+        ExtenedScrollView(onRefershHeader: { done in
+            DispatchQueue.main.asyncAfter(deadline:.now() + 1.5){
+                print("request is done 1")
+                done()
+            }
+        }, onRefershFooter: { done in
+            DispatchQueue.main.asyncAfter(deadline:.now() + 1.5){
+                print("request is done 2")
+                done()
+            }
+        }){
+            ForEach(0..<20) {i in
+                colors[ i % colors.count]
+                    .frame(height:100)
+            }
+        }
+    }
+}
 
 
 struct SideMenu : View {

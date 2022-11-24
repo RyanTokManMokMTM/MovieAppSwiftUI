@@ -19,6 +19,7 @@ struct HomePage: View {
 
     init(){
         UIActivityIndicatorView.appearance().style = .medium
+//        UINavigationBar.a
     }
     
     var body: some View {

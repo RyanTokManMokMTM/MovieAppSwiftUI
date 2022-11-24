@@ -184,6 +184,7 @@
 		7A7398692883F4B400724B8F /* Post.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7398682883F4B400724B8F /* Post.swift */; };
 		7A73986D2883F5E200724B8F /* PostVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A73986C2883F5E200724B8F /* PostVM.swift */; };
 		7A74EECD2611A8A000B722CF /* TrailerMainPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A74EECC2611A8A000B722CF /* TrailerMainPage.swift */; };
+		7A756B05292F2D91007334F5 /* ExtenedScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A756B04292F2D91007334F5 /* ExtenedScrollView.swift */; };
 		7A7896D82886E6C500FFF95A /* SwiftUIPager in Frameworks */ = {isa = PBXBuildFile; productRef = 7A7896D72886E6C500FFF95A /* SwiftUIPager */; };
 		7A795521289FEF4500600AA2 /* UISheetPresentationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A795520289FEF4500600AA2 /* UISheetPresentationView.swift */; };
 		7A7A7F56289A2DCB00E1EB38 /* YoutubeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7A7F55289A2DC900E1EB38 /* YoutubeView.swift */; };
@@ -414,6 +415,7 @@
 		7A7398682883F4B400724B8F /* Post.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Post.swift; sourceTree = "<group>"; };
 		7A73986C2883F5E200724B8F /* PostVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostVM.swift; sourceTree = "<group>"; };
 		7A74EECC2611A8A000B722CF /* TrailerMainPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrailerMainPage.swift; sourceTree = "<group>"; };
+		7A756B04292F2D91007334F5 /* ExtenedScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtenedScrollView.swift; sourceTree = "<group>"; };
 		7A795520289FEF4500600AA2 /* UISheetPresentationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UISheetPresentationView.swift; sourceTree = "<group>"; };
 		7A7A7F55289A2DC900E1EB38 /* YoutubeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YoutubeView.swift; sourceTree = "<group>"; };
 		7A7A7F59289A57B800E1EB38 /* ShowMoreStateMovieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowMoreStateMovieView.swift; sourceTree = "<group>"; };
@@ -676,6 +678,7 @@
 		01AB4530263F9F6300F95CC0 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				7A756B03292F2D6E007334F5 /* PullAndLoadScrollView */,
 				7AEA8FDA290682E40016DD47 /* websocket */,
 				7A58CB6028C31EEB009A155A /* BenHubVIew */,
 				7A303BAA2877EF04004CCEB3 /* SoicalView */,
@@ -1057,6 +1060,14 @@
 				7A73986C2883F5E200724B8F /* PostVM.swift */,
 			);
 			path = post;
+			sourceTree = "<group>";
+		};
+		7A756B03292F2D6E007334F5 /* PullAndLoadScrollView */ = {
+			isa = PBXGroup;
+			children = (
+				7A756B04292F2D91007334F5 /* ExtenedScrollView.swift */,
+			);
+			path = PullAndLoadScrollView;
 			sourceTree = "<group>";
 		};
 		7A82758127A3C74E007EAC61 /* MessageView */ = {
@@ -1496,6 +1507,7 @@
 				0175AAF22658DE05001BCD2E /* Article.swift in Sources */,
 				01E90A1126B7AD3E00609B0F /* ListDetailView.swift in Sources */,
 				01CF13AF266B396000066FC2 /* MovieInfoView.swift in Sources */,
+				7A756B05292F2D91007334F5 /* ExtenedScrollView.swift in Sources */,
 				6FCFFE10274FBDEE00C46710 /* ManagerAndModel.swift in Sources */,
 				7ADA5A57261042F4000A84D9 /* test.swift in Sources */,
 				01715CC726FDF9E500161866 /* EditListCard.swift in Sources */,

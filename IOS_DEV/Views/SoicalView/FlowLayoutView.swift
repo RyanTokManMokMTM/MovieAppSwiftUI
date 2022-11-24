@@ -120,7 +120,6 @@ struct FlowLayoutWithPullView< T : Identifiable,Content : View,Content2 : View> 
                 curIndx += 1
             }
         }
-        print("updated?????????")
         return gridList
     }
     init(list : [T],columns : Int,HSpacing : CGFloat = 10,VSpacing : CGFloat = 10,onRefersh : @escaping () async ->(),@ViewBuilder content :@escaping (T) -> Content, @ViewBuilder loadMoreContent :@escaping () -> Content2){
@@ -138,7 +137,7 @@ struct FlowLayoutWithPullView< T : Identifiable,Content : View,Content2 : View> 
             LazyVStack(spacing:0){
                 if list.isEmpty {
                     VStack{
-                        Text("There is no any post yet...")
+                        Text("暫無任何文章")
                             .foregroundColor(.gray)
                             .font(.system(size: 16, weight: .semibold))
                     }
