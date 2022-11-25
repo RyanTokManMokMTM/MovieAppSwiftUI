@@ -30,12 +30,12 @@ class MovieResourceState: ObservableObject {
         self.resource = []
         self.isLoading = false
         self.error = nil
+        self.query = query
         
         guard !query.isEmpty else {
             return
         }
         
-        self.query = query
         
         self.isLoading = true
         self.movieService.fetchMovieResource(query: query) {[weak self] (result) in

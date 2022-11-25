@@ -8,32 +8,37 @@
 
 import SwiftUI
 import SafariServices
-
+import Introspect
 
 struct MovieOTT: View {
 
     let movieTitle: String
-    @StateObject private var movieResourceState = MovieResourceState()
+    @Binding var isAbleToScroll : Bool
+    @EnvironmentObject var movieResourceState : MovieResourceState
 
     var body: some View {
-        VStack {
-            if self.movieResourceState.isLoading || self.movieResourceState.error != nil{
-                LoadingView(isLoading: self.movieResourceState.isLoading, error: self.movieResourceState.error) {
-                    self.movieResourceState.fetchMovieResource(query:movieTitle )
+        ScrollView(.vertical){
+            VStack {
+                if self.movieResourceState.isLoading {
+                    ActivityIndicatorView()
+                        .padding()
+                } else if self.movieResourceState.resource != nil {
+                    if self.movieResourceState.resource!.isEmpty {
+                        VStack{
+                            Text("暫無任何資源")
+                                .foregroundColor(.gray)
+                                .font(.system(size: 16, weight: .semibold))
+                        }
+                        .padding(.vertical)
+                   } else {
+                       MovieOTTView(OTT: self.movieResourceState.resource!)
+                   
+                   }
                 }
                 
-            }else if self.movieResourceState.resource != nil {
-                if self.movieResourceState.resource!.isEmpty {
-                   Text("No resources.")
-               } else {
-                   MovieOTTView(OTT: self.movieResourceState.resource!)
-               
-               }
             }
-            
-        }
-        .onAppear {
-            self.movieResourceState.fetchMovieResource(query: movieTitle)
+        }.introspectScrollView{ scroll in
+            scroll.isScrollEnabled = isAbleToScroll
         }
     }
 }

@@ -185,12 +185,11 @@
 		7A73986D2883F5E200724B8F /* PostVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A73986C2883F5E200724B8F /* PostVM.swift */; };
 		7A74EECD2611A8A000B722CF /* TrailerMainPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A74EECC2611A8A000B722CF /* TrailerMainPage.swift */; };
 		7A756B05292F2D91007334F5 /* ExtenedScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A756B04292F2D91007334F5 /* ExtenedScrollView.swift */; };
-		7A7896D82886E6C500FFF95A /* SwiftUIPager in Frameworks */ = {isa = PBXBuildFile; productRef = 7A7896D72886E6C500FFF95A /* SwiftUIPager */; };
+		7A756B07292F6FBE007334F5 /* SideMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A756B06292F6FBE007334F5 /* SideMenu.swift */; };
+		7A756B09292F6FDE007334F5 /* postShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A756B08292F6FDE007334F5 /* postShareView.swift */; };
 		7A795521289FEF4500600AA2 /* UISheetPresentationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A795520289FEF4500600AA2 /* UISheetPresentationView.swift */; };
 		7A7A7F56289A2DCB00E1EB38 /* YoutubeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7A7F55289A2DC900E1EB38 /* YoutubeView.swift */; };
 		7A7A7F5A289A57B800E1EB38 /* ShowMoreStateMovieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7A7F59289A57B800E1EB38 /* ShowMoreStateMovieView.swift */; };
-		7A80F232288708F500A58356 /* BottomSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 7A80F231288708F500A58356 /* BottomSheet */; };
-		7A80F2382887100F00A58356 /* Drawer in Frameworks */ = {isa = PBXBuildFile; productRef = 7A80F2372887100F00A58356 /* Drawer */; };
 		7A82758327A3C781007EAC61 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A82758227A3C781007EAC61 /* MessageView.swift */; };
 		7A900EDF279FEC390076DC34 /* ImageCropping.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A900EDE279FEC390076DC34 /* ImageCropping.swift */; };
 		7A900EE1279FED4C0076DC34 /* ImageCropVIew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A900EE0279FED4C0076DC34 /* ImageCropVIew.swift */; };
@@ -204,6 +203,7 @@
 		7AB1E4E828BF59860092A509 /* FollowingNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB1E4E728BF59860092A509 /* FollowingNotification.swift */; };
 		7AB42EC4263184A300AC7FA6 /* HScrollList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB42EC3263184A300AC7FA6 /* HScrollList.swift */; };
 		7AC620F228ACED1C00684579 /* MovieMainSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC620F128ACED1C00684579 /* MovieMainSearch.swift */; };
+		7AC898C42930811F009E6591 /* Algorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7AC898C32930811F009E6591 /* Algorithms */; };
 		7ACC9C5026217FAE00351E8D /* GlobalHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACC9C4F26217FAE00351E8D /* GlobalHelper.swift */; };
 		7ADA5A57261042F4000A84D9 /* test.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA5A55261042F4000A84D9 /* test.swift */; };
 		7ADA5A58261042F4000A84D9 /* tryy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA5A56261042F4000A84D9 /* tryy.swift */; };
@@ -416,6 +416,8 @@
 		7A73986C2883F5E200724B8F /* PostVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostVM.swift; sourceTree = "<group>"; };
 		7A74EECC2611A8A000B722CF /* TrailerMainPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrailerMainPage.swift; sourceTree = "<group>"; };
 		7A756B04292F2D91007334F5 /* ExtenedScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtenedScrollView.swift; sourceTree = "<group>"; };
+		7A756B06292F6FBE007334F5 /* SideMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SideMenu.swift; sourceTree = "<group>"; };
+		7A756B08292F6FDE007334F5 /* postShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = postShareView.swift; sourceTree = "<group>"; };
 		7A795520289FEF4500600AA2 /* UISheetPresentationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UISheetPresentationView.swift; sourceTree = "<group>"; };
 		7A7A7F55289A2DC900E1EB38 /* YoutubeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YoutubeView.swift; sourceTree = "<group>"; };
 		7A7A7F59289A57B800E1EB38 /* ShowMoreStateMovieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowMoreStateMovieView.swift; sourceTree = "<group>"; };
@@ -465,11 +467,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7AC898C42930811F009E6591 /* Algorithms in Frameworks */,
 				7A26B1D1288FE0240041492E /* SDWebImageSwiftUI in Frameworks */,
-				7A7896D82886E6C500FFF95A /* SwiftUIPager in Frameworks */,
-				7A80F232288708F500A58356 /* BottomSheet in Frameworks */,
 				0EFBEEB402995C63C993EF15 /* Pods_IOS_DEV.framework in Frameworks */,
-				7A80F2382887100F00A58356 /* Drawer in Frameworks */,
 				7AA67676291796B1002D9BFC /* Refresher in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -826,6 +826,7 @@
 				6F7DD5CE278FDD180035FCFA /* personProfile.swift */,
 				7A900EE0279FED4C0076DC34 /* ImageCropVIew.swift */,
 				7AFBE716289FBA7E0000B267 /* OtherUserProfile.swift */,
+				7A756B06292F6FBE007334F5 /* SideMenu.swift */,
 			);
 			path = ProfilePage;
 			sourceTree = "<group>";
@@ -1007,6 +1008,7 @@
 				7AF98345287EDF69009FEDAC /* PostMovieSelection.swift */,
 				7A41C01528815703005FAEBD /* FollowUserPostView.swift */,
 				7A41C0172881633E005FAEBD /* PostBottomSheet.swift */,
+				7A756B08292F6FDE007334F5 /* postShareView.swift */,
 			);
 			path = SoicalView;
 			sourceTree = "<group>";
@@ -1265,11 +1267,9 @@
 			);
 			name = IOS_DEV;
 			packageProductDependencies = (
-				7A7896D72886E6C500FFF95A /* SwiftUIPager */,
-				7A80F231288708F500A58356 /* BottomSheet */,
-				7A80F2372887100F00A58356 /* Drawer */,
 				7A26B1D0288FE0240041492E /* SDWebImageSwiftUI */,
 				7AA67675291796B1002D9BFC /* Refresher */,
+				7AC898C32930811F009E6591 /* Algorithms */,
 			);
 			productName = IOS_DEV;
 			productReference = 7A0EE92E261041690056BC8C /* IOS_DEV.app */;
@@ -1299,11 +1299,9 @@
 			);
 			mainGroup = 7A0EE925261041690056BC8C;
 			packageReferences = (
-				7A7896D62886E6C400FFF95A /* XCRemoteSwiftPackageReference "SwiftUIPager" */,
-				7A80F230288708F400A58356 /* XCRemoteSwiftPackageReference "BottomSheet" */,
-				7A80F2362887100F00A58356 /* XCRemoteSwiftPackageReference "SwiftUI-Drawer" */,
 				7A26B1CF288FE0240041492E /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
 				7AA67674291796B1002D9BFC /* XCRemoteSwiftPackageReference "SwiftUI-Refresher" */,
+				7AC898C22930811F009E6591 /* XCRemoteSwiftPackageReference "swift-algorithms" */,
 			);
 			productRefGroup = 7A0EE92F261041690056BC8C /* Products */;
 			projectDirPath = "";
@@ -1480,6 +1478,7 @@
 				0124A46F2729822900D0A7CC /* FavoriteService.swift in Sources */,
 				01061E7E2702DA8900017F75 /* NewArticleCard.swift in Sources */,
 				7ADA5A8726104396000A84D9 /* TopicView.swift in Sources */,
+				7A756B09292F6FDE007334F5 /* postShareView.swift in Sources */,
 				01C0E26326AC0A470027B9A9 /* MovieImages.swift in Sources */,
 				01ED279926FAE004007C0C00 /* ListDetailController.swift in Sources */,
 				7ADA5A7926104355000A84D9 /* CircleButton.swift in Sources */,
@@ -1587,6 +1586,7 @@
 				0175AAE32658BA30001BCD2E /* Me.swift in Sources */,
 				01571B88263F99FD00C97164 /* MessageBoardView.swift in Sources */,
 				7A47D57327A661BC00C9DEBC /* HotTopicView.swift in Sources */,
+				7A756B07292F6FBE007334F5 /* SideMenu.swift in Sources */,
 				0170180C2696A33C00E51209 /* MovieListView.swift in Sources */,
 				6FCFFE14274FBDEE00C46710 /* UsageDatas.swift in Sources */,
 				6FF3A22027510C920084637D /* LoadingView.swift in Sources */,
@@ -1745,7 +1745,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "Jackson-TMM.IOS-DEV";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ios-dev";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
@@ -1772,7 +1772,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "Jackson-TMM.IOS-DEV";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ios-dev";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
@@ -1812,33 +1812,17 @@
 				minimumVersion = 2.0.0;
 			};
 		};
-		7A7896D62886E6C400FFF95A /* XCRemoteSwiftPackageReference "SwiftUIPager" */ = {
+		7AA67674291796B1002D9BFC /* XCRemoteSwiftPackageReference "SwiftUI-Refresher" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/fermoya/SwiftUIPager.git";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
-		7A80F230288708F400A58356 /* XCRemoteSwiftPackageReference "BottomSheet" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/lucaszischka/BottomSheet";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.0;
-			};
-		};
-		7A80F2362887100F00A58356 /* XCRemoteSwiftPackageReference "SwiftUI-Drawer" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/bwide/SwiftUI-Drawer";
+			repositoryURL = "https://github.com/gh123man/SwiftUI-Refresher.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.0.0;
 			};
 		};
-		7AA67674291796B1002D9BFC /* XCRemoteSwiftPackageReference "SwiftUI-Refresher" */ = {
+		7AC898C22930811F009E6591 /* XCRemoteSwiftPackageReference "swift-algorithms" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/gh123man/SwiftUI-Refresher.git";
+			repositoryURL = "https://github.com/apple/swift-algorithms.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.0.0;
@@ -1852,25 +1836,15 @@
 			package = 7A26B1CF288FE0240041492E /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */;
 			productName = SDWebImageSwiftUI;
 		};
-		7A7896D72886E6C500FFF95A /* SwiftUIPager */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7A7896D62886E6C400FFF95A /* XCRemoteSwiftPackageReference "SwiftUIPager" */;
-			productName = SwiftUIPager;
-		};
-		7A80F231288708F500A58356 /* BottomSheet */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7A80F230288708F400A58356 /* XCRemoteSwiftPackageReference "BottomSheet" */;
-			productName = BottomSheet;
-		};
-		7A80F2372887100F00A58356 /* Drawer */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7A80F2362887100F00A58356 /* XCRemoteSwiftPackageReference "SwiftUI-Drawer" */;
-			productName = Drawer;
-		};
 		7AA67675291796B1002D9BFC /* Refresher */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7AA67674291796B1002D9BFC /* XCRemoteSwiftPackageReference "SwiftUI-Refresher" */;
 			productName = Refresher;
+		};
+		7AC898C32930811F009E6591 /* Algorithms */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7AC898C22930811F009E6591 /* XCRemoteSwiftPackageReference "swift-algorithms" */;
+			productName = Algorithms;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -15,12 +15,18 @@ class PostVM : ObservableObject {
     @Published var sharedData : Post? = nil
     @Published var isPostUploading = false
     @Published var isRefersh = false
+    
+    //MARK: isMoreData to load?
+    @Published var isFollowingLoadMore = false
+    @Published var isAllLoadMore = false
 
 //    @Published var isFetchMoreData : Bool = false
     @Published var discoverMetaData : MetaData?
     @Published var followingMetaData : MetaData?
+    
     @Published var initAllData : Bool = true
     @Published var initFollowing : Bool = true
+    
     @Published var postData : [Post] = [] //set to nil for first time
     @Published var followingData : [Post] = [] //set to nil for firs time
     @Published var index : TabItem = .Explore
@@ -131,6 +137,9 @@ class PostVM : ObservableObject {
             print(data.post_info)
             self.followingData.append(contentsOf: data.post_info)
             self.followingMetaData = data.meta_data
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.isFollowingLoadMore = data.meta_data.page < data.meta_data.total_pages
+            }
         case .failure(let err):
             print("load post err : \(err.localizedDescription)")
             BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
@@ -186,7 +195,12 @@ class PostVM : ObservableObject {
 //                    self.followingData = data.post_info
                     
                     self.followingMetaData = data.meta_data
-                    print(self.followingMetaData)
+//                    DispatchQueue.main
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self.isFollowingLoadMore = data.meta_data.page < data.meta_data.total_pages
+                    }
+                    
+//                    print(self.followingMetaData)
                 case .failure(let err):
 //                    print("POST DATA")
                     print(err.localizedDescription)

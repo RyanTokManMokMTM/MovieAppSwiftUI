@@ -65,7 +65,7 @@ struct ChatData : Decodable, Identifiable{
     
     var last_sent : Date? { //for sorting the chat room
         let last_message = messages.last ?? nil
-        print(last_message)
+//        print(last_message)
         if last_message == nil {
             return nil
         }

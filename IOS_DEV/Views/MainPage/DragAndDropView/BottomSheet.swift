@@ -117,7 +117,7 @@ struct BottomSheet : View{
                                             //                                            .lineLimit(1)
                                             if self.previewModel.previewData!.casts != nil{
                                                 HStack(spacing:0){
-                                                    ForEach(0..<self.previewModel.previewData!.casts!.count){i in
+                                                    ForEach(0..<self.previewModel.previewData!.casts!.count,id:\.self){i in
 
                                                         Text(self.previewModel.previewData!.casts![i])
                                                             .font(.system(size: 14))

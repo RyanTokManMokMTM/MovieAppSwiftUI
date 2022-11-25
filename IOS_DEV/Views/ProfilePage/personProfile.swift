@@ -1344,6 +1344,7 @@ struct personProfile: View {
     @State private var friends : Int = 0
     @State private var posts : Int = 0
     @State private var collected : Int = 0
+
     var body: some View {
         GeometryReader { globalProxy in
             ZStack(alignment:.top){

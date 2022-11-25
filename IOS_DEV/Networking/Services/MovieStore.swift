@@ -11,8 +11,8 @@ import SwiftUI
 import BottomSheet
 
 
-let SERVER_HOST = "http://ec2-18-138-229-136.ap-southeast-1.compute.amazonaws.com:8000"
-let SERVER_WS = "ws://ec2-18-138-229-136.ap-southeast-1.compute.amazonaws.com:8000/ws"
+let SERVER_HOST = "http://ec2-13-251-129-145.ap-southeast-1.compute.amazonaws.com:8000"
+let SERVER_WS = "ws://ec2-13-251-129-145.ap-southeast-1.compute.amazonaws.com:8000/ws"
 
 class MovieStore: MovieService {
     static let shared = MovieStore()
@@ -89,6 +89,16 @@ class MovieStore: MovieService {
         self.loadURLAndDecode(url: url, params: [
             "language": "zh-TW"
         ], completion: completion)
+    }
+    
+    func AsyncMovieReccomend(id: Int,page: Int = 1) async -> Result<MovieResponse, MovieError>{
+        guard let url = URL(string: "\(baseAPIURL)/movie/\(id)/recommendations") else {
+           return .failure(.invalidEndpoint)
+        }
+        return await self.AsyncloadURLAndDecode(url: url, params: [
+            "language": "zh-TW",
+            "page" : "\(page)"
+        ])
     }
     
     func searchMovieInfo(query: String, page : Int = 1,completion: @escaping (Result<MovieResponse, MovieError>) -> ()) {

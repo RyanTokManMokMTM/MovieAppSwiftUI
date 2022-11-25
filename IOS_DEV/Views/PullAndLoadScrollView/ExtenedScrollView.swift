@@ -109,21 +109,19 @@ struct ExtenedScrollView<Content : View>: View {
     var content : () -> (Content)
     var onRefershHeader : ScrollOnRefersh
     var onRefershFooter : ScrollOnRefersh
-    init(onRefershHeader : @escaping ScrollOnRefersh,onRefershFooter: @escaping ScrollOnRefersh,@ViewBuilder content : @escaping  ()->(Content) ){
+    
+    @Binding var isRefershHeader : Bool
+    @Binding var isRefershFooter : Bool
+    init(isRefershHeader : Binding<Bool> = .constant(true),isRefershFooter : Binding<Bool>  = .constant(true),onRefershHeader : @escaping ScrollOnRefersh,onRefershFooter: @escaping ScrollOnRefersh,@ViewBuilder content : @escaping  ()->(Content) ){
         self.content = content
         self.onRefershHeader = onRefershHeader
         self.onRefershFooter = onRefershFooter
+        self._isRefershHeader = isRefershHeader
+        self._isRefershFooter = isRefershFooter
     }
     
     var body: some View {
         VStack(spacing:0){
-            Text("Refershing...")
-                .font(.system(size:20,weight:.semibold))
-                .foregroundColor(.blue)
-                .frame(width:UIScreen.main.bounds.width,height:50)
-                .padding()
-                .background(Color.pink)
-            
             ScrollView(.vertical){
                 ZStack(alignment:.bottom){
                     VStack(spacing:0){
@@ -138,51 +136,58 @@ struct ExtenedScrollView<Content : View>: View {
 
                                 state.currOffset = minY
                                 
-                                let _refershFooterCurrentHeigh = state.initOffsetY - minY + state.scrollHeight - state.scrollContentHeight
+//                                if self.isRefershFooter{
+                                    let _refershFooterCurrentHeigh = state.initOffsetY - minY + state.scrollHeight - state.scrollContentHeight
 
-                                if _refershFooterCurrentHeigh > 0 && state.state != .refershFooter {
-                                    state.refershFooterCurHeight = _refershFooterCurrentHeigh
-                                }
+                                    if _refershFooterCurrentHeigh > 0 && state.state != .refershFooter {
+                                        state.refershFooterCurHeight = _refershFooterCurrentHeigh
+                                    }
 
-                                if _refershFooterCurrentHeigh > state.progressViewHeight && state.state == .normal{
-                                    withAnimation{
-                                        state.state = .pullUp
+                                    if _refershFooterCurrentHeigh > state.progressViewHeight && state.state == .normal{
+                                        withAnimation{
+                                            state.state = .pullUp
+                                        }
                                     }
-                                }
 
-                                if _refershFooterCurrentHeigh < state.progressViewHeight && state.state == .pullUp {
-                                    withAnimation{
-                                        state.state = .refershFooter
+                                    if _refershFooterCurrentHeigh < state.progressViewHeight && state.state == .pullUp {
+                                        withAnimation{
+                                            state.state = .refershFooter
+                                        }
                                     }
-                                }
-                                //setting scrolling state
-                                if state.currOffset - state.initOffsetY > state.progressViewHeight && state.state == .normal {
-                                    withAnimation{
-                                        print("pull up")
-                                        state.state = .PullDown //can pulled
-                                    }
-                                }
+//                                }
                                 
+                                //setting scrolling state
+//                                if self.isRefershHeader {
+                                    if state.currOffset - state.initOffsetY > state.progressViewHeight && state.state == .normal {
+                                        withAnimation{
+                                            state.state = .PullDown //can pulled
+                                        }
+                                    }
+                                    
+//                                }
+       
                             }
                             
                             return AnyView(Color.clear)
                         }
                         
-                        VStack(spacing:0){
-                            Spacer(minLength: 0)
-                            if state.state == .refershHeader{
-                                ActivityIndicatorView()
-                                    .frame(height: state.progressViewHeight)
-                            } else {
-                                Image(systemName: "arrow.down")
-                                    .frame(height: state.progressViewHeight)
-                                    .rotationEffect(.degrees(self.state.state == .normal ? 0 : 180))
-                                    .opacity(self.state.progressViewCurrentHeight == 0 ? 0 : 1)
+                        if self.isRefershHeader{
+                            VStack(spacing:0){
+                                Spacer(minLength: 0)
+                                if state.state == .refershHeader{
+                                    ActivityIndicatorView()
+                                        .frame(height: state.progressViewHeight)
+                                } else {
+                                    Image(systemName: "arrow.down")
+                                        .frame(height: state.progressViewHeight)
+                                        .rotationEffect(.degrees(self.state.state == .normal ? 0 : 180))
+                                        .opacity(self.state.progressViewCurrentHeight == 0 ? 0 : 1)
+                                }
                             }
+                            .frame(height:state.progressViewCurrentHeight)
+                            .frame(maxWidth:.infinity)
+                            .clipped()
                         }
-                        .frame(height:state.progressViewCurrentHeight)
-                        .frame(maxWidth:.infinity)
-                        .clipped()
                         //
                         content()
                         
@@ -200,7 +205,7 @@ struct ExtenedScrollView<Content : View>: View {
                             return AnyView(Color.clear)
                         }
                     }
-                    .offset(y : self.state.state == .refershFooter ? -self.state.progressViewHeight : 0)
+                    .offset(y : self.state.state == .refershFooter && self.isRefershFooter ? -self.state.progressViewHeight : 0)
                     
                     
                     VStack {
@@ -215,9 +220,9 @@ struct ExtenedScrollView<Content : View>: View {
                                 .opacity(self.state.refershFooterCurHeight == 0 ? 0 : 1)
                         }
                     }
-                    .frame(height:state.state == .refershFooter ? state.progressViewHeight : state.refershFooterCurHeight)
+                    .frame(height:state.state == .refershFooter && self.isRefershFooter ? state.progressViewHeight : state.refershFooterCurHeight)
                     .clipped()
-                    .offset(y : state.state == .refershFooter ? 0 : state.refershFooterCurHeight)
+                    .offset(y : state.state == .refershFooter && self.isRefershFooter ? 0 : state.refershFooterCurHeight)
                     .zIndex(1)
                 }
                 
@@ -238,7 +243,6 @@ struct ExtenedScrollView<Content : View>: View {
             }
             .onChange(of: state.state){ newVal in
                 if newVal == .refershHeader {
-                    print("??refering???")
                     onRefershHeader {
                         DispatchQueue.main.async {
                             self.state.state = .normal
@@ -247,6 +251,7 @@ struct ExtenedScrollView<Content : View>: View {
                 }
                 
                 if newVal == .refershFooter {
+                    print("??refering???")
                     onRefershFooter {
                         DispatchQueue.main.async {
                             self.state.state = .normal

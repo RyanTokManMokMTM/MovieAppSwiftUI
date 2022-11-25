@@ -404,7 +404,7 @@ class SearchBarViewModel : ObservableObject{
                     self.isNoResult = true
                     break
                 }
-                self.isNoData =  response.totalPages <= self.searchResultPage
+//                self.isNoData =  response.total_pages <= self.searchResultPage
 
             
                 self.searchResult.append(contentsOf: response.results.map{$0})
@@ -432,7 +432,7 @@ class SearchBarViewModel : ObservableObject{
                 self.searchResult.append(contentsOf: response.results.map{$0})
                 self.searchResultPage += 1
                 DispatchQueue.main.asyncAfter(deadline: .now()+0.3){
-                    self.isNoData =  response.totalPages <= self.searchResultPage
+//                    self.isNoData =  response.total_pages <= self.searchResultPage
                 }
                 actionSucceed()
 

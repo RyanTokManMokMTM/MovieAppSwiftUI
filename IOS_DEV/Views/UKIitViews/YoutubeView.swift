@@ -14,7 +14,7 @@ struct YoutubeView : UIViewRepresentable {
     var video_id : String
     
     func makeUIView(context: Context) -> WKWebView {
-        return WKWebView()
+        return WKWebView(frame: CGRect(x: 0.0, y: 0.0, width: 0.1, height: 0.1))
     }
     
     func updateUIView(_ uiView: WKWebView, context: Context) {

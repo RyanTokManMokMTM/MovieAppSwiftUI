@@ -12,39 +12,44 @@ struct GetMoreMovie: View{
     @EnvironmentObject var postVM : PostVM
     
     let movieID: Int
-    @StateObject private var recommendState = RecommendState()
+    @Binding var isAbleToScroll : Bool
+    @EnvironmentObject private var recommendState : RecommendState
     @State private var isShowMovieDetail = false
     @State private var showDetailId = 0
     var body: some View {
         VStack {
-            
-            if recommendState.isLoading || recommendState.error != nil {
-                LoadingView(isLoading: self.recommendState.isLoading, error: self.recommendState.error) {
-                    self.recommendState.RecommendMovies(id: movieID)
-                }
-            } else if recommendState.movies != nil {
-                if recommendState.movies!.isEmpty {
-                    Text("No recommended movie.")
-                }else {
-                    FlowLayoutView(list: recommendState.movies!, columns: 2,HSpacing: 10,VSpacing: 20, isScrollAble: .constant(true)){ info in
-                        Button(action: {
-                            self.showDetailId = info.id
-                            self.isShowMovieDetail = true
-                        }){
-                            MovieCardView(movieData: info)
-                        }
+            if recommendState.movies != nil {
+                
+                FlowLayoutView(list: recommendState.movies!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollAble: $isAbleToScroll){ info in
+                    Button(action: {
+                        self.showDetailId = info.id
+                        self.isShowMovieDetail = true
+                    }){
+                        MovieCardView(movieData: info)
                     }
                 }
+//                } loadMoreContent: {
+//                    if self.recommendState.page  < self.recommendState.total{
+//                        ActivityIndicatorView()
+//                            .padding(.vertical,5)
+//                            .onAppear(){
+//                                //do some request here
+//                                print("loading...")
+//                            }
+//                            .task{
+//                                await self.recommendState.LoadMoreRecommendMovies(id: self.movieID)
+//                            }
+//                    }
+//
+//                }
+                
+                
             }
-        }
-        .onAppear {
-            self.recommendState.RecommendMovies(id: movieID)
-            
         }
         .background(
             NavigationLink(destination: MovieDetailView(movieId: self.showDetailId, isShowDetail: $isShowMovieDetail)
-                            .environmentObject(postVM)
-                            .environmentObject(userVM)
+                .environmentObject(postVM)
+                .environmentObject(userVM)
                            , isActive: $isShowMovieDetail) {
                 EmptyView()
             }

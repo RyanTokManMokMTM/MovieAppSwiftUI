@@ -7,7 +7,7 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
-
+import Introspect
 
 
     
@@ -386,8 +386,23 @@ enum MovieDetailTabItem : String,CaseIterable {
 //    case OnShow = "院線" // new feature
     case Online = "OTT資源" //get netfilx ... etc
     case Similar = "相似電影"
+    
+    var name : String {
+        return self.rawValue
+    }
 }
 
+
+struct MovieDetailTab : Identifiable{
+    let id : Int
+    let tabName : MovieDetailTabItem
+}
+
+let movieDetailtabs : [MovieDetailTab] = [
+    MovieDetailTab(id: 0, tabName: .More),
+    MovieDetailTab(id: 1, tabName: .Online),
+    MovieDetailTab(id: 2, tabName: .Similar),
+]
 struct NewDetailView: View {
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
@@ -412,230 +427,250 @@ struct NewDetailView: View {
     @State private var offset:CGFloat = 0.0
     @State private var isShowIcon : Bool = false
     @State private var tabIndex : MovieDetailTabItem = .More
+    @State private var index = 0
     @State private var topOffset : CGFloat = 0
     @State private var isShowMore : Bool = false
 
     
-
+    @State private var headerHeight : CGFloat = 0.0
+    @State private var navHeigh : CGFloat = 0.0
+//    @State private var follower : Int = 0
+//    @State private var following : Int = 0
+    @State private var menuOffset:CGFloat = 0.0
+    
+    @State private var headerOffset : CGFloat = 0
+    @State private var headerMinY : CGFloat = 0
+    @State private var height : CGFloat = 0
+    @State private var isAllowToScroll = false
     @Namespace var namespace
+    
+    @StateObject private var movieResourceState = MovieResourceState()
+    @StateObject private var recommendState = RecommendState()
     
     @Environment(\.dismiss) private var dissmiss
     var body: some View {
-        ZStack(alignment:.top){
-            ZStack{
-                HStack{
-                    Button(action:{
-                        dissmiss()
-                    }){
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.white)
-                            .font(.title2)
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal)
-                .frame(height: topEdge)
-                .padding(.top,30)
-                .zIndex(1)
-                VStack(alignment:.center){
-                    Spacer()
+        GeometryReader { globalProxy in
+            ZStack(alignment:.top){
+                ZStack{
                     HStack{
-                        WebImage(url: movie.posterURL)
-                            .resizable()
-                            .indicator(.activity) // Activity Indicator
-                            .transition(.fade(duration: 0.5)) // Fade Transition with duration
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 30, height: 30, alignment: .center)
-                            .clipShape(Circle())
-                        
-                        Text(movie.title)
-                            .font(.footnote)
-                            .foregroundColor(.white)
-                    }
-                    Spacer()
-                }
-                .transition(.move(edge: .bottom))
-                .offset(y:self.isShowIcon ? 0 : 40)
-                .padding(.horizontal,20)
-                .frame(width:UIScreen.main.bounds.width ,height: topEdge)
-                .padding(.top,30)
-                .zIndex(10)
-                .clipped()
-            }
-            .background(Color.black.opacity(getOpacity()))
-            .zIndex(1)
-            .overlay(
-                GeometryReader{ proxy -> Color in
-                    let maxY = proxy.frame(in: .global).maxY
-                    DispatchQueue.main.async {
-                        if topOffset == 0{
-                            topOffset = maxY
+                        Button(action:{
+                            dissmiss()
+                        }){
+                            Image(systemName: "chevron.left")
+                                .foregroundColor(.white)
+                                .font(.title2)
                         }
+                        Spacer()
                     }
-                    return Color.clear
-                }
-            )
-            
-            
-            
-            GeometryReader { proxy in
-                ScrollView(showsIndicators: false){
-                    LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]){
-                        GeometryReader{ proxy  in
-                            ZStack(alignment:.top){
-                                WebImage(url:movie.backdropURL)
-                                    .resizable()
-                                    .aspectRatio( contentMode: .fill)
-                                    .frame(width: UIScreen.main.bounds.width, height: offset > 0 ? offset + max + 20 : getHeaderHigth() + 20, alignment: .bottom)
-                                    .overlay(
-                                        LinearGradient(colors: [
-                                            Color("PersonCellColor").opacity(0.3),
-                                            Color("PersonCellColor").opacity(0.6),
-                                            Color("PersonCellColor").opacity(0.8),
-                                            Color("PersonCellColor"),
-                                            Color.black
-                                        ], startPoint: .top, endPoint: .bottom).frame(width: UIScreen.main.bounds.width, height: offset > 0 ? offset + max + 20 : getHeaderHigth() + 20, alignment: .bottom)
-                                            .scaleEffect(offset > 0 ? (offset / 500) + 1 : 1)
-                                    )
-                                    .blur(radius: self.offset / 10)
-                                    .zIndex(0)
-                                
-                                
-                                MovieInfo()
-                                    .frame(maxWidth:.infinity)
-                                    .frame(height:  getHeaderHigth() ,alignment: .bottom)
-                                    .zIndex(1)
-                                
-                            }
-                        }
-                        .frame(height:max)
-                        .offset(y:-offset)
+                    .padding(.horizontal)
+                    .frame(height: topEdge)
+                    .padding(.top,30)
+                    .zIndex(1)
                     
-                        
+                    VStack(alignment:.center){
+                        Spacer()
                         HStack{
+                            WebImage(url: movie.posterURL)
+                                .resizable()
+                                .indicator(.activity) // Activity Indicator
+                                .transition(.fade(duration: 0.5)) // Fade Transition with duration
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 30, height: 30, alignment: .center)
+                                .clipShape(Circle())
                             
-                            BackgroundButton(systemImg: "plus", buttonTitle: "發表文章", backgroundColor: .blue, fontColor: .white){
-                                //TODO: JOIN THE GROUP
-                                withAnimation{
-                                    self.isShowSheet.toggle()
-                                    self.isAddPost.toggle()
-                                
+                            Text(movie.title)
+                                .font(.footnote)
+                                .foregroundColor(.white)
+                        }
+                        Spacer()
+                    }
+                    .transition(.move(edge: .bottom))
+                    .offset(y:self.isShowIcon ? 0 : 40)
+                    .padding(.horizontal,20)
+                    .frame(width:UIScreen.main.bounds.width ,height: topEdge)
+                    .padding(.top,30)
+                    .zIndex(10)
+                    .clipped()
+                    .overlay{
+                        GeometryReader{ cal  -> AnyView  in
+                            let frame = cal.frame(in:.global)
+                            if navHeigh == 0 {
+                                DispatchQueue.main.async {
+                                    self.navHeigh = frame.height
                                 }
                             }
-                            Spacer()
                             
-                            HStack(spacing:3){
-                                circleButton(systemImg:self.isAddToList ? "star.fill" : "star", imageScale: .large,background: .clear , buttonColor: self.isAddToList  ? .yellow : .white,width:40,height:40){
-                                    //TODO: ADD TO LIST OF REMOVE
-                                    //                                withAnimation{
+                            if headerMinY == 0 {
+                                DispatchQueue.main.async {
+                                    self.navHeigh = frame.maxY
+                                    //                                print(self.navHeigh)
+                                }
+                            }
+                            
+                            return AnyView(Color.clear)
+                        }
+                        
+                    }
+                }
+                .background(Color.black.opacity(getOpacity()))
+                .zIndex(1)
+                
+                GeometryReader { proxy in
+                    ScrollView(showsIndicators: false){
+                        LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]){
+                            ZStack {
+                                GeometryReader{ reader -> AnyView in
+                                    let frame = reader.frame(in: .global)
+                                    DispatchQueue.main.async {
+                                        //                                        print( headerOffset -  height + 78)
+                                        
+                                        if self.height != frame.height && frame.height != 0{
+                                            self.height = frame.height - 78
+                                        }
+                                        //                                        print(frame.height)
+                                        //                                        print(frame.minY)
+                                        headerOffset = headerMinY - frame.minY
+                                        
+                                        
+                                        //                                        print(headerOffset)
+                                        let newValue = headerOffset > height
+                                        if isAllowToScroll != newValue {
+                                            //                                            print()
+                                            isAllowToScroll = newValue
+                                        }
+                                    }
                                     
-                                    if isAddToList{
-                                        //Remove From List
-                                        withAnimation{
-                                            self.isAddToList.toggle()
-                                            self.movieCollected = self.movieCollected - 1
+                                    //                                    print(frame.minY)
+                                    return AnyView(Color.clear)
+                                    
+                                    
+                                }
+                                
+                                GeometryReader{ proxy  in
+                                    ZStack(alignment:.top){
+                                        WebImage(url:movie.backdropURL)
+                                            .resizable()
+                                            .aspectRatio( contentMode: .fill)
+                                            .frame(width: UIScreen.main.bounds.width, height: offset > 0 ? offset + max + 20 : getHeaderHigth() + 20, alignment: .bottom)
+                                            .overlay(
+                                                LinearGradient(colors: [
+                                                    Color("PersonCellColor").opacity(0.3),
+                                                    Color("PersonCellColor").opacity(0.6),
+                                                    Color("PersonCellColor").opacity(0.8),
+                                                    Color("PersonCellColor"),
+                                                    Color.black
+                                                ], startPoint: .top, endPoint: .bottom).frame(width: UIScreen.main.bounds.width, height: offset > 0 ? offset + max + 20 : getHeaderHigth() + 20, alignment: .bottom)
+                                                    .scaleEffect(offset > 0 ? (offset / 500) + 1 : 1)
+                                            )
+                                            .blur(radius: self.offset / 10)
+                                            .zIndex(0)
+                                        
+                                        
+                                        MovieInfo()
+                                            .frame(maxWidth:.infinity)
+                                            .frame(height:  getHeaderHigth() ,alignment: .bottom)
+                                            .zIndex(2)
+                                        
+                                    }
+                                }
+                                .frame(height:max)
+                                .offset(y:-offset)
+                                
+                                
+                            }
+                            
+                            Section{
+                                //TODO: Need to find the solution
+                                tabCellItems()
+                                    .frame(height: globalProxy.frame(in: .global).height - 78 - self.headerHeight)
+                            } header: {
+                                VStack(spacing:0){
+                                    MovieDetailTabBar()
+                                }
+                                .offset(y:self.menuOffset < 77 ? -self.menuOffset + 77: 0)
+                                .overlay(
+                                    GeometryReader{proxy -> Color in
+                                        let minY = proxy.frame(in: .global).minY
+                                        if headerHeight == 0 {
+                                            DispatchQueue.main.async {
+                                                self.headerHeight = proxy.frame(in: .global).height
+                                            }
                                         }
                                         
-                                        self.RemoveMovieFromList()
-                                    } else {
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
-                                            self.isShowSheet.toggle()
-                                            userVM.getUserList()
+                                        DispatchQueue.main.async {
+                                            self.menuOffset = minY
                                         }
+                                        return Color.clear
                                     }
-                                    //                                }
-                                }
-                                
-                                Text(self.movieCollected > 0 ?  self.movieCollected.description : "收藏")
-                                    .font(.system(size: 14,weight:.semibold))
-                            }
-                            
-                            HStack(spacing:3){
-                                circleButton(systemImg: self.isUserLiked ? "heart.fill" : "heart",imageScale: .large, background: .clear , buttonColor: self.isUserLiked ? .red : .white,width:40,height:40){
-                                    //TODO: ADD TO LIST OF REMOVE
-                                    //                                print(self.isUserLiked)
-                                    withAnimation{
-                                        self.isUserLiked.toggle()
-                                    }
-                                    
-                                    if self.isUserLiked {
-                                        self.movieLikes = self.movieLikes + 1
-                                        AddikedMovie()
-                                    }else {
-                                        self.movieLikes = self.movieLikes - 1
-                                        RemoveLikedMovie()
-                                    }
-                                    
-                                }
-                                Text(self.movieLikes > 0 ?  self.movieLikes.description : "點讚")
-                                    .font(.system(size: 14,weight:.semibold))
-                            }
-                            //Share to social page?
-                            
-                        }
-                        .padding(.vertical,5)
-                        .padding(.horizontal,5)
-//                        .background(
-//                            NavigationLink(destination:
-//                                            AddMoviePostView(movie:self.movie,isAddNewPost:$isAddPost)
-//                                            .navigationBarTitle("")
-//                                            .navigationTitle("")
-//                                            .navigationBarHidden(true)
-//                                            .environmentObject(postVM)
-//                                            .environmentObject(userVM),
-//                                           isActive: self.$isAddPost){
-//                                               EmptyView()
-//                                           }
-//
-//                        )
-
-                        //SrcollTabBar
-                        /*
-                         1.More Detail View
-                         2.
-                         */
-                        Section{
-                            //TODO: Need to find the solution
-                            switch tabIndex {
-                            case .More:
-                                MoreDetail()
-                                    .padding(.horizontal,5)
-
-                            case .Online:
-                                MovieOTT(movieTitle: movie.title)
-                                    .padding(.horizontal,5)
-                            case .Similar:
-                                GetMoreMovie(movieID: movie.id)
-                                    .padding(.horizontal,5)
-                            }
-                        } header: {
-    
-                            GeometryReader {geo -> AnyView in
-                                let minY = geo.frame(in: .global).minY
-                                let offset  = minY - self.topOffset
-                                return AnyView(
-                                    VStack(spacing:0){
-                                        MovieDetailTabBar()
-                                        Divider()
-                                            .background(.gray)
-                                    }
-                                        .frame(height: 60,alignment: .bottom)
-                                        .background(Color.black.edgesIgnoringSafeArea(.all))
-                                        .offset(y : offset < 0 ? -offset : 0)
                                 )
-                            } .frame(height: 60)
+                             
+                            }
                         }
+                        .modifier(MovieDetailPageOffsetModifier(offset: $offset,isShowIcon:$isShowIcon))
+                        .frame(alignment:.top)
                     }
-                    .modifier(MovieDetailPageOffsetModifier(offset: $offset,isShowIcon:$isShowIcon))
-                    .frame(alignment:.top)
+                    .coordinateSpace(name: "SCROLL") //cotroll relate coordinateSpace
+                    .zIndex(0)
                 }
-                .coordinateSpace(name: "SCROLL") //cotroll relate coordinateSpace
-                .zIndex(0)
-//                .background(Color("appleDark"))
+                
+            }
+        }
+        //
+    }
+
+    
+    @ViewBuilder
+    private func tabCellItems() -> some View{
+        GeometryReader{ proxy in
+            HStack(spacing:0){
+                MoreDetail()
+                    .padding(.horizontal,5)
+                    .frame(width: UIScreen.main.bounds.width)
+                
+                MovieOTT(movieTitle: movie.title, isAbleToScroll: $isAllowToScroll)
+                    .padding(.horizontal,5)
+                    .frame(width: UIScreen.main.bounds.width)
+                    .environmentObject(movieResourceState)
+
+                
+                GetMoreMovie(movieID: movie.id,isAbleToScroll: $isAllowToScroll)
+                    .padding(.horizontal,5)
+                    .frame(width: UIScreen.main.bounds.width)
+                    .environmentObject(recommendState)
+
+            }
+            .offset(x : CGFloat(self.index) * -UIScreen.main.bounds.width)
+            .onChange(of: self.index){ index in
+//                if index == 1 {
+//                    print("??")
+//                    if movieResourceState.resource == nil{
+//                        movieResourceState.fetchMovieResource(query: movie.title)
+//                    }
+//                }else if index == 2{
+//                    if self.recommendState.movies == nil{
+//                        self.recommendState.RecommendMovies(id: movie.id)
+//                    }
+//                }
+                
             }
             
         }
-//
+        .frame(width: UIScreen.main.bounds.width,alignment:.top)
+        .gesture(DragGesture().onEnded{ t in
+            let cur = t.translation.width
+            var curInd = self.index
+            print(cur)
+            if cur > 50 {
+                curInd -= 1
+            } else if cur < -50 {
+                curInd += 1
+            }
+            
+            curInd = Swift.max(min(curInd,4),0)
+            withAnimation(.spring()){
+                self.index = curInd
+            }
+        })
     }
     
     @ViewBuilder
@@ -760,6 +795,71 @@ struct NewDetailView: View {
                 Spacer()
             }
             .padding(.bottom)
+            
+            
+            HStack{
+                
+                BackgroundButton(systemImg: "plus", buttonTitle: "發表文章", backgroundColor: .blue, fontColor: .white){
+                    //TODO: JOIN THE GROUP
+                    withAnimation{
+                        self.isShowSheet.toggle()
+                        self.isAddPost.toggle()
+                    
+                    }
+                }
+                Spacer()
+                
+                HStack(spacing:3){
+                    circleButton(systemImg:self.isAddToList ? "star.fill" : "star", imageScale: .large,background: .clear , buttonColor: self.isAddToList  ? .yellow : .white,width:40,height:40){
+                        //TODO: ADD TO LIST OF REMOVE
+                        //                                withAnimation{
+                        
+                        if isAddToList{
+                            //Remove From List
+                            withAnimation{
+                                self.isAddToList.toggle()
+                                self.movieCollected = self.movieCollected - 1
+                            }
+                            
+                            self.RemoveMovieFromList()
+                        } else {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
+                                self.isShowSheet.toggle()
+                                userVM.getUserList()
+                            }
+                        }
+                        //                                }
+                    }
+                    
+                    Text(self.movieCollected > 0 ?  self.movieCollected.description : "收藏")
+                        .font(.system(size: 14,weight:.semibold))
+                }
+                
+                HStack(spacing:3){
+                    circleButton(systemImg: self.isUserLiked ? "heart.fill" : "heart",imageScale: .large, background: .clear , buttonColor: self.isUserLiked ? .red : .white,width:40,height:40){
+                        //TODO: ADD TO LIST OF REMOVE
+                        //                                print(self.isUserLiked)
+                        withAnimation{
+                            self.isUserLiked.toggle()
+                        }
+                        
+                        if self.isUserLiked {
+                            self.movieLikes = self.movieLikes + 1
+                            AddikedMovie()
+                        }else {
+                            self.movieLikes = self.movieLikes - 1
+                            RemoveLikedMovie()
+                        }
+                        
+                    }
+                    Text(self.movieLikes > 0 ?  self.movieLikes.description : "點讚")
+                        .font(.system(size: 14,weight:.semibold))
+                }
+                //Share to social page?
+                
+            }
+            .padding(.vertical,5)
+            .padding(.horizontal,5)
         }
         .padding(.horizontal)
         
@@ -767,214 +867,187 @@ struct NewDetailView: View {
     
     @ViewBuilder
     func MoreDetail() -> some View {
-        VStack(alignment:.leading,spacing:25){
-            //More Detail
-            VStack(alignment:.leading,spacing:10){
-                Text("簡介")
-                    .font(.system(size: 16,weight: .semibold))
-                
-                //Need to be expand the test
-                
-                if movie.overview.isEmpty {
-                    Text("抱歉,沒有相關電影簡介")
-                        .foregroundColor(.gray)
-                        .font(.system(size: 14))
-                       
-                }else {
-                    Button(action:{
-                        withAnimation{
-                            self.isShowMore.toggle()
-                        }
-                    }){
-                        VStack(alignment:.leading,spacing:10){
-                            Text(movie.overview)
-                                .foregroundColor(.gray)
-                                .font(.system(size: 14))
-                                .lineLimit(self.isShowMore ? nil : 3)
-                                .multilineTextAlignment(.leading)
-                            
-                            Text(self.isShowMore ? "顯示更少" : "顯示更多")
-                                .foregroundColor(Color(uiColor: UIColor.white))
-                                .font(.system(size: 12))
-                        }
-                    }
-                }
-
-            }
-            
-            
-            if self.movie.credits != nil && self.movie.credits!.cast.count > 0{
+        ScrollView(.vertical){
+//            ForEach(0..<50){ i in
+//                Text("\(i)")
+//            }
+            VStack(alignment:.leading,spacing:25){
+                //More Detail
                 VStack(alignment:.leading,spacing:10){
-                    HStack{
-                        Text("演員")
-                            .font(.system(size: 16,weight: .semibold))
-                        
-                        Spacer()
-//                        Button(action:{
-//
-//                        }){
-//                            Text("顯示更多")
-//                                .font(.system(size: 14,weight: .semibold))
-//                                .foregroundColor(Color(uiColor: UIColor.darkGray))
-//                        }
-                    }
-                    
-                    
-                    ScrollView(.horizontal, showsIndicators: false){
-                        LazyHStack{
-                            ForEach(0..<(self.movie.credits!.cast.count < 10 ? self.movie.credits!.cast.count :10 )){i in
-                                if self.movie.credits!.cast[i].profilePath != nil{
-                                    VStack(alignment:.center){
-                                        WebImage(url: self.movie.credits!.cast[i].posterURL)
-                                            .resizable()
-                                            .indicator(.activity) // Activity Indicator
-                                            .transition(.fade(duration: 0.5)) // Fade Transition with duration
-                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: 80)
-                                            .cornerRadius(10)
-                                    
-                                        Text(self.movie.credits!.cast[i].name)
-                                            .foregroundColor(.white)
-                                            .font(.caption)
-                                            .frame(width:120)
-                                            .lineLimit(1)
-                                        
-                                        Text(self.movie.credits!.cast[i].character)
-                                            .foregroundColor(.gray)
-                                            .font(.caption)
-                                            .frame(width:120)
-                                            .lineLimit(1)
-                                    }
-       
-                                }
-                            }
-                        }
-                        
-                        
-                    }
-                    
-                    
-                }
-            }
-            
-            if self.movie.credits != nil && self.movie.credits!.crew.count > 0{
-                VStack(alignment:.leading,spacing:10){
-                    HStack{
-                        Text("團隊")
-                            .font(.system(size: 16,weight: .semibold))
-                        
-                        Spacer()
-//                        Button(action:{
-//
-//                        }){
-//                            Text("顯示更多")
-//                                .font(.system(size: 14,weight: .semibold))
-//                                .foregroundColor(Color(uiColor: UIColor.darkGray))
-//                        }
-                    }
-                    
-                    
-                    ScrollView(.horizontal, showsIndicators: false){
-                        LazyHStack{
-                            ForEach(0..<(self.movie.credits!.crew.count < 10 ? self.movie.credits!.crew.count :10 )){i in
-                                if self.movie.credits!.crew[i].profilePath != nil{
-                                    VStack(alignment:.center){
-                                        WebImage(url: self.movie.credits!.crew[i].posterURL)
-                                            .resizable()
-                                            .indicator(.activity) // Activity Indicator
-                                            .transition(.fade(duration: 0.5)) // Fade Transition with duration
-                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: 80)
-                                            .cornerRadius(10)
-                                    
-                                        Text(self.movie.credits!.crew[i].name)
-                                            .foregroundColor(.white)
-                                            .font(.caption)
-                                            .frame(width:120)
-                                            .lineLimit(1)
-                                        
-                                        Text(self.movie.credits!.crew[i].job)
-                                            .foregroundColor(.gray)
-                                            .font(.caption)
-                                            .frame(width:120)
-                                            .lineLimit(1)
-                                    }
-                                    
-                                }
-                            }
-                        }
-                        
-                        
-                    }
-                    
-                    
-                }
-            }
-            
-            VStack(alignment:.leading,spacing:10){
-                HStack{
-                    Text("劇情")
+                    Text("簡介")
                         .font(.system(size: 16,weight: .semibold))
-                    Spacer()
-//                    Button(action:{
-//
-//                    }){
-//                        Text("顯示更多")
-//                            .font(.system(size: 14,weight: .semibold))
-//                            .foregroundColor(Color(uiColor: UIColor.darkGray))
-//                    }
+
+                    //Need to be expand the test
+
+                    if movie.overview.isEmpty {
+                        Text("抱歉,沒有相關電影簡介")
+                            .foregroundColor(.gray)
+                            .font(.system(size: 14))
+
+                    }else {
+                        Button(action:{
+                            withAnimation{
+                                self.isShowMore.toggle()
+                            }
+                        }){
+                            VStack(alignment:.leading,spacing:10){
+                                Text(movie.overview)
+                                    .foregroundColor(.gray)
+                                    .font(.system(size: 14))
+                                    .lineLimit(self.isShowMore ? nil : 3)
+                                    .multilineTextAlignment(.leading)
+
+                                Text(self.isShowMore ? "顯示更少" : "顯示更多")
+                                    .foregroundColor(Color(uiColor: UIColor.white))
+                                    .font(.system(size: 12))
+                            }
+                        }
+                    }
+
                 }
 
-                
-                ScrollView(.horizontal, showsIndicators: false){
-                    LazyHStack(){
-                        ForEach(0..<(self.movieImages.backdrops.count < 20 ? self.movieImages.backdrops.count : 20)){ i in
-                            WebImage(url: self.movieImages.backdrops[i].MovieImageURL)
-                                .resizable()
-                                .indicator(.activity) // Activity Indicator
-                                .transition(.fade(duration: 0.5)) // Fade Transition with duration
-                                .aspectRatio(contentMode: .fit)
-                                .cornerRadius(5)
+
+                if self.movie.credits != nil && self.movie.credits!.cast.count > 0{
+                    VStack(alignment:.leading,spacing:10){
+                        HStack{
+                            Text("演員")
+                                .font(.system(size: 16,weight: .semibold))
+
+                            Spacer()
                         }
-                        
-                        
+
+
+                        ScrollView(.horizontal, showsIndicators: false){
+                            LazyHStack{
+                                ForEach(0..<(self.movie.credits!.cast.count < 10 ? self.movie.credits!.cast.count :10 ),id:\.self){i in
+                                    if self.movie.credits!.cast[i].profilePath != nil{
+                                        VStack(alignment:.center){
+                                            WebImage(url: self.movie.credits!.cast[i].posterURL)
+                                                .resizable()
+                                                .indicator(.activity) // Activity Indicator
+                                                .transition(.fade(duration: 0.5)) // Fade Transition with duration
+                                                .aspectRatio(contentMode: .fit)
+                                                .frame(width: 80)
+                                                .cornerRadius(10)
+
+                                            Text(self.movie.credits!.cast[i].name)
+                                                .foregroundColor(.white)
+                                                .font(.caption)
+                                                .frame(width:120)
+                                                .lineLimit(1)
+
+                                            Text(self.movie.credits!.cast[i].character)
+                                                .foregroundColor(.gray)
+                                                .font(.caption)
+                                                .frame(width:120)
+                                                .lineLimit(1)
+                                        }
+
+                                    }
+                                }
+                            }
+
+
+                        }
+                      
+
+
                     }
-                    
-                }.frame(height: 150)
-            }
-            
-            VStack(alignment:.leading, spacing:8) {
-                if movie.videos != nil && movie.videos!.results.count > 0 {
+                }
+
+                if self.movie.credits != nil && self.movie.credits!.crew.count > 0{
+                    VStack(alignment:.leading,spacing:10){
+                        HStack{
+                            Text("團隊")
+                                .font(.system(size: 16,weight: .semibold))
+
+                            Spacer()
+                        }
+                        ScrollView(.horizontal, showsIndicators: false){
+                            LazyHStack{
+                                ForEach(0..<(self.movie.credits!.crew.count < 10 ? self.movie.credits!.crew.count :10 ),id:\.self){i in
+                                    if self.movie.credits!.crew[i].profilePath != nil{
+                                        VStack(alignment:.center){
+                                            WebImage(url: self.movie.credits!.crew[i].posterURL)
+                                                .resizable()
+                                                .indicator(.activity) // Activity Indicator
+                                                .transition(.fade(duration: 0.5)) // Fade Transition with duration
+                                                .aspectRatio(contentMode: .fit)
+                                                .frame(width: 80)
+                                                .cornerRadius(10)
+
+                                            Text(self.movie.credits!.crew[i].name)
+                                                .foregroundColor(.white)
+                                                .font(.caption)
+                                                .frame(width:120)
+                                                .lineLimit(1)
+
+                                            Text(self.movie.credits!.crew[i].job)
+                                                .foregroundColor(.gray)
+                                                .font(.caption)
+                                                .frame(width:120)
+                                                .lineLimit(1)
+                                        }
+
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+//
+                VStack(alignment:.leading,spacing:10){
                     HStack{
-                        Text("宣傳片")
+                        Text("劇情")
                             .font(.system(size: 16,weight: .semibold))
                         Spacer()
-//
-//                        if self.movie.videos!.results.count >= 10 {
-//                            Button(action:{
-//                                //TODO: Load More Video
-//                            }){
-//                                Text("顯示更多")
-//                                    .font(.system(size: 14,weight: .semibold))
-//                                    .foregroundColor(Color(uiColor: UIColor.darkGray))
-//                            }
-//                        }
                     }
                     
+                    
                     ScrollView(.horizontal, showsIndicators: false){
-                        HStack(spacing:10){
-                            ForEach(0..<(self.movie.videos!.results.count < 10 ? self.movie.videos!.results.count : 10)) { i in
-                                YoutubeView(video_id: self.movie.videos!.results[i].key)
-                                    .frame(width:UIScreen.main.bounds.width - 20,height:UIScreen.main.bounds.height * 0.3)
-                                    .cornerRadius(10)
-//                                    .padding(.horizontal)
+                        LazyHStack(){
+                            ForEach(0..<(self.movieImages.backdrops.count < 20 ? self.movieImages.backdrops.count : 20),id:\.self){ i in
+                                WebImage(url: self.movieImages.backdrops[i].MovieImageURL)
+                                    .resizable()
+                                    .indicator(.activity) // Activity Indicator
+                                    .transition(.fade(duration: 0.5)) // Fade Transition with duration
+                                    .aspectRatio(contentMode: .fit)
+                                    .cornerRadius(5)
+                                    .frame(width: UIScreen.main.bounds.width / 1.2)
+                            }
+                            
+                            
+                        }
+                        
+                    }
+                }
+//
+                VStack(alignment:.leading, spacing:8) {
+                    if movie.videos != nil && movie.videos!.results.count > 0 {
+                        HStack{
+                            Text("宣傳片")
+                                .font(.system(size: 16,weight: .semibold))
+                            Spacer()
+                        }
+
+                        ScrollView(.horizontal, showsIndicators: false){
+                            HStack(spacing:10){
+                                ForEach(0..<(self.movie.videos!.results.count < 10 ? self.movie.videos!.results.count : 10),id:\.self) { i in
+                                    YoutubeView(video_id: self.movie.videos!.results[i].key)
+                                        .frame(width:UIScreen.main.bounds.width - 20,height:UIScreen.main.bounds.height * 0.3)
+                                        .cornerRadius(10)
+                                }
                             }
                         }
                     }
                 }
             }
+            .padding(5)
         }
-        .padding(5)
+        .introspectScrollView{scroll in
+            scroll.isScrollEnabled = self.isAllowToScroll
+        }
+        
     }
     
     @ViewBuilder
@@ -1015,14 +1088,14 @@ struct NewDetailView: View {
     @ViewBuilder
     func MovieDetailTabBar() -> some View {
         HStack(spacing:10){
-            ForEach(MovieDetailTabItem.allCases,id:\.self){ tab in
+            ForEach(movieDetailtabs,id:\.id){ tab in
                 VStack(spacing:12){
-                    Text(tab.rawValue)
+                    Text(tab.tabName.name)
                         .fontWeight(.semibold)
-                        .foregroundColor(tabIndex == tab ? .white : .gray)
+                        .foregroundColor(index == tab.id ? .white : .gray)
                     
                     ZStack{
-                        if tabIndex == tab {
+                        if index == tab.id {
                             RoundedRectangle(cornerRadius: 4, style: .continuous)
                                 .fill(.white)
                                 .matchedGeometryEffect(id: "TAB", in: namespace)
@@ -1037,14 +1110,16 @@ struct NewDetailView: View {
                 .contentShape(Rectangle())
                 .onTapGesture(){
                     withAnimation(.easeInOut){
-                        tabIndex = tab
+//                        tabIndex = tab
+                        index = tab.id
+                        
                     }
                 }
             }
         }
-        .padding(.horizontal)
-//        .padding(.top,25)
+        .frame(height:50,alignment: .bottom)
         .padding(.bottom,5)
+        .background(Color.black)
     }
 
     private func getHeaderHigth() -> CGFloat {
@@ -1114,3 +1189,712 @@ struct NewDetailView: View {
     }
     
 }
+
+//struct NewDetailView: View {
+//    @EnvironmentObject var postVM : PostVM
+//    @EnvironmentObject var userVM : UserViewModel
+////    @EnvironmentObject var movieDetailManager : MovieDetailManager
+//
+//    var movie: Movie
+//    let movieImages: MovieImages
+//    @Binding var isShow : Bool
+//    @Binding var isShowSheet : Bool
+//    @Binding var isAddToList : Bool
+//    @Binding var isUserLiked :  Bool
+//    @Binding var collectedListId : Int
+//    @Binding var movieLikes : Int
+//    @Binding var movieCollected : Int
+//    @Binding var isAddPost : Bool
+//
+////    @Binding var isUserCollected : Bool
+//    private let max = UIScreen.main.bounds.height / 2.5
+//    var topEdge : CGFloat
+//
+//
+//    @State private var offset:CGFloat = 0.0
+//    @State private var isShowIcon : Bool = false
+//    @State private var tabIndex : MovieDetailTabItem = .More
+//    @State private var topOffset : CGFloat = 0
+//    @State private var isShowMore : Bool = false
+//
+//
+//
+//    @Namespace var namespace
+//
+//    @Environment(\.dismiss) private var dissmiss
+//    var body: some View {
+//        ZStack(alignment:.top){
+//            ZStack{
+//                HStack{
+//                    Button(action:{
+//                        dissmiss()
+//                    }){
+//                        Image(systemName: "chevron.left")
+//                            .foregroundColor(.white)
+//                            .font(.title2)
+//                    }
+//                    Spacer()
+//                }
+//                .padding(.horizontal)
+//                .frame(height: topEdge)
+//                .padding(.top,30)
+//                .zIndex(1)
+//                VStack(alignment:.center){
+//                    Spacer()
+//                    HStack{
+//                        WebImage(url: movie.posterURL)
+//                            .resizable()
+//                            .indicator(.activity) // Activity Indicator
+//                            .transition(.fade(duration: 0.5)) // Fade Transition with duration
+//                            .aspectRatio(contentMode: .fill)
+//                            .frame(width: 30, height: 30, alignment: .center)
+//                            .clipShape(Circle())
+//
+//                        Text(movie.title)
+//                            .font(.footnote)
+//                            .foregroundColor(.white)
+//                    }
+//                    Spacer()
+//                }
+//                .transition(.move(edge: .bottom))
+//                .offset(y:self.isShowIcon ? 0 : 40)
+//                .padding(.horizontal,20)
+//                .frame(width:UIScreen.main.bounds.width ,height: topEdge)
+//                .padding(.top,30)
+//                .zIndex(10)
+//                .clipped()
+//            }
+//            .background(Color.black.opacity(getOpacity()))
+//            .zIndex(1)
+//            .overlay(
+//                GeometryReader{ proxy -> Color in
+//                    let maxY = proxy.frame(in: .global).maxY
+//                    DispatchQueue.main.async {
+//                        if topOffset == 0{
+//                            topOffset = maxY
+//                        }
+//                    }
+//                    return Color.clear
+//                }
+//            )
+//
+//
+//
+//            GeometryReader { proxy in
+//                ScrollView(showsIndicators: false){
+//                    LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]){
+//                        GeometryReader{ proxy  in
+//                            ZStack(alignment:.top){
+//                                WebImage(url:movie.backdropURL)
+//                                    .resizable()
+//                                    .aspectRatio( contentMode: .fill)
+//                                    .frame(width: UIScreen.main.bounds.width, height: offset > 0 ? offset + max + 20 : getHeaderHigth() + 20, alignment: .bottom)
+//                                    .overlay(
+//                                        LinearGradient(colors: [
+//                                            Color("PersonCellColor").opacity(0.3),
+//                                            Color("PersonCellColor").opacity(0.6),
+//                                            Color("PersonCellColor").opacity(0.8),
+//                                            Color("PersonCellColor"),
+//                                            Color.black
+//                                        ], startPoint: .top, endPoint: .bottom).frame(width: UIScreen.main.bounds.width, height: offset > 0 ? offset + max + 20 : getHeaderHigth() + 20, alignment: .bottom)
+//                                            .scaleEffect(offset > 0 ? (offset / 500) + 1 : 1)
+//                                    )
+//                                    .blur(radius: self.offset / 10)
+//                                    .zIndex(0)
+//
+//
+//                                MovieInfo()
+//                                    .frame(maxWidth:.infinity)
+//                                    .frame(height:  getHeaderHigth() ,alignment: .bottom)
+//                                    .zIndex(1)
+//
+//                            }
+//                        }
+//                        .frame(height:max)
+//                        .offset(y:-offset)
+//
+//
+//                        HStack{
+//
+//                            BackgroundButton(systemImg: "plus", buttonTitle: "發表文章", backgroundColor: .blue, fontColor: .white){
+//                                //TODO: JOIN THE GROUP
+//                                withAnimation{
+//                                    self.isShowSheet.toggle()
+//                                    self.isAddPost.toggle()
+//
+//                                }
+//                            }
+//                            Spacer()
+//
+//                            HStack(spacing:3){
+//                                circleButton(systemImg:self.isAddToList ? "star.fill" : "star", imageScale: .large,background: .clear , buttonColor: self.isAddToList  ? .yellow : .white,width:40,height:40){
+//                                    //TODO: ADD TO LIST OF REMOVE
+//                                    //                                withAnimation{
+//
+//                                    if isAddToList{
+//                                        //Remove From List
+//                                        withAnimation{
+//                                            self.isAddToList.toggle()
+//                                            self.movieCollected = self.movieCollected - 1
+//                                        }
+//
+//                                        self.RemoveMovieFromList()
+//                                    } else {
+//                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
+//                                            self.isShowSheet.toggle()
+//                                            userVM.getUserList()
+//                                        }
+//                                    }
+//                                    //                                }
+//                                }
+//
+//                                Text(self.movieCollected > 0 ?  self.movieCollected.description : "收藏")
+//                                    .font(.system(size: 14,weight:.semibold))
+//                            }
+//
+//                            HStack(spacing:3){
+//                                circleButton(systemImg: self.isUserLiked ? "heart.fill" : "heart",imageScale: .large, background: .clear , buttonColor: self.isUserLiked ? .red : .white,width:40,height:40){
+//                                    //TODO: ADD TO LIST OF REMOVE
+//                                    //                                print(self.isUserLiked)
+//                                    withAnimation{
+//                                        self.isUserLiked.toggle()
+//                                    }
+//
+//                                    if self.isUserLiked {
+//                                        self.movieLikes = self.movieLikes + 1
+//                                        AddikedMovie()
+//                                    }else {
+//                                        self.movieLikes = self.movieLikes - 1
+//                                        RemoveLikedMovie()
+//                                    }
+//
+//                                }
+//                                Text(self.movieLikes > 0 ?  self.movieLikes.description : "點讚")
+//                                    .font(.system(size: 14,weight:.semibold))
+//                            }
+//                            //Share to social page?
+//
+//                        }
+//                        .padding(.vertical,5)
+//                        .padding(.horizontal,5)
+//
+//                        Section{
+//                            //TODO: Need to find the solution
+//                            switch tabIndex {
+//                            case .More:
+//                                MoreDetail()
+//                                    .padding(.horizontal,5)
+//
+//                            case .Online:
+//                                MovieOTT(movieTitle: movie.title)
+//                                    .padding(.horizontal,5)
+//                            case .Similar:
+//                                GetMoreMovie(movieID: movie.id)
+//                                    .padding(.horizontal,5)
+//                            }
+//                        } header: {
+//
+//                            GeometryReader {geo -> AnyView in
+//                                let minY = geo.frame(in: .global).minY
+//                                let offset  = minY - self.topOffset
+//                                return AnyView(
+//                                    VStack(spacing:0){
+//                                        MovieDetailTabBar()
+//                                        Divider()
+//                                            .background(.gray)
+//                                    }
+//                                        .frame(height: 60,alignment: .bottom)
+//                                        .background(Color.black.edgesIgnoringSafeArea(.all))
+//                                        .offset(y : offset < 0 ? -offset : 0)
+//                                )
+//                            } .frame(height: 60)
+//                        }
+//                    }
+//                    .modifier(MovieDetailPageOffsetModifier(offset: $offset,isShowIcon:$isShowIcon))
+//                    .frame(alignment:.top)
+//                }
+//                .coordinateSpace(name: "SCROLL") //cotroll relate coordinateSpace
+//                .zIndex(0)
+////                .background(Color("appleDark"))
+//            }
+//
+//        }
+////
+//    }
+//
+//    @ViewBuilder
+//    func MovieInfo() -> some View{
+//        VStack(alignment:.leading){
+//            Spacer()
+//            HStack(alignment:.center){
+//                WebImage(url: movie.posterURL)
+//                    .resizable()
+//                    .aspectRatio(contentMode: .fit)
+//                    .frame(width: 120, alignment: .center)
+//                    .cornerRadius(10)
+////                    .overlay(
+////                        circleButton(systemImg: "play.fill",imageScale: .medium ,background: .red, buttonColor: .white,width: 35,height: 35){
+////                            //TODO: play trailer!!
+////                        }
+////                            .shadow(color: .red, radius: 10, x: 0, y: 0)
+////                    )
+//
+//                VStack(alignment:.leading){
+//                    Text(movie.title)
+//                        .bold()
+//                        .font(.system(size: 18))
+//                        .lineLimit(3)
+//                        .multilineTextAlignment(.leading)
+//
+//                    VStack(spacing:5){
+//                        HStack(spacing:5){
+//                            Text("類型:")
+//                                .foregroundColor(.gray)
+//                            Spacer()
+//
+//                            if movie.genres == nil{
+//                                Text("N/A")
+//                            }else {
+//                                VStack(alignment:.trailing,spacing:5){
+//                                    HStack(spacing:5){
+//                                        ForEach(0..<(movie.genres!.count < 3 ? movie.genres!.count : 3)){i in
+//                                            Text(movie.genres![i].name)
+//                                            if i < ((movie.genres!.count < 3 ? movie.genres!.count : 3) - 1){
+//                                                Circle()
+//                                                    .fill(.red)
+//                                                    .frame(width: 5, height: 5)
+//                                            }
+//                                        }
+//                                    }
+//
+//                                    if movie.genres!.count > 3 {
+//                                        HStack(spacing:5){
+//                                            ForEach(3..<movie.genres!.count){i in
+//                                                Text(movie.genres![i].name)
+//                                                if i < movie.genres!.count - 1 {
+//                                                    Circle()
+//                                                        .fill(.red)
+//                                                        .frame(width: 5, height: 5)
+//                                                }
+//                                            }
+//                                        }
+//                                    }
+//                                }
+//
+//                            }
+//                        }
+//                        .font(.system(size: 14))
+//
+//                        HStack{
+//                            Text("上映日期:")
+//                                .foregroundColor(.gray)
+//                            Spacer()
+//
+//                            if movie.releaseDate == nil {
+//                                Text("N/A")
+//                            }else {
+//                                Text(movie.releaseDate!)
+//                            }
+//                        }
+//                        .font(.system(size: 14))
+//
+//                        HStack{
+//                            Text("片長:")
+//                                .foregroundColor(.gray)
+//                            Spacer()
+//
+//                            Text(movie.durationText)
+//                        }
+//                        .font(.system(size: 14))
+//
+//                        HStack{
+//                            Text("語言:")
+//                                .foregroundColor(.gray)
+//                            Spacer()
+//
+//                            Text(movie.originalLanguage)
+//                        }
+//                        .font(.system(size: 14))
+//
+//                        HStack{
+//                            Text("均分:")
+//                                .foregroundColor(.gray)
+//                            Spacer()
+//
+//                            HStack(spacing:3){
+//                                if (movie.voteAverage)/2 == 0{
+//                                    Text("N/A")
+//                                        .font(.caption)
+//                                }else{
+//                                    ForEach(1...5,id:\.self){index in
+//                                        Image(systemName: "star.fill")
+//                                            .imageScale(.small)
+//                                            .foregroundColor(index <= Int(movie.voteAverage)/2 ? .yellow: .gray)
+//                                    }
+//                                }
+//
+//                            }
+//                        }
+//                        .font(.system(size: 14))
+//
+//
+//                    }
+//                }
+//
+//                Spacer()
+//            }
+//            .padding(.bottom)
+//        }
+//        .padding(.horizontal)
+//
+//    }
+//
+//    @ViewBuilder
+//    func MoreDetail() -> some View {
+//        VStack(alignment:.leading,spacing:25){
+//            //More Detail
+//            VStack(alignment:.leading,spacing:10){
+//                Text("簡介")
+//                    .font(.system(size: 16,weight: .semibold))
+//
+//                //Need to be expand the test
+//
+//                if movie.overview.isEmpty {
+//                    Text("抱歉,沒有相關電影簡介")
+//                        .foregroundColor(.gray)
+//                        .font(.system(size: 14))
+//
+//                }else {
+//                    Button(action:{
+//                        withAnimation{
+//                            self.isShowMore.toggle()
+//                        }
+//                    }){
+//                        VStack(alignment:.leading,spacing:10){
+//                            Text(movie.overview)
+//                                .foregroundColor(.gray)
+//                                .font(.system(size: 14))
+//                                .lineLimit(self.isShowMore ? nil : 3)
+//                                .multilineTextAlignment(.leading)
+//
+//                            Text(self.isShowMore ? "顯示更少" : "顯示更多")
+//                                .foregroundColor(Color(uiColor: UIColor.white))
+//                                .font(.system(size: 12))
+//                        }
+//                    }
+//                }
+//
+//            }
+//
+//
+//            if self.movie.credits != nil && self.movie.credits!.cast.count > 0{
+//                VStack(alignment:.leading,spacing:10){
+//                    HStack{
+//                        Text("演員")
+//                            .font(.system(size: 16,weight: .semibold))
+//
+//                        Spacer()
+////                        Button(action:{
+////
+////                        }){
+////                            Text("顯示更多")
+////                                .font(.system(size: 14,weight: .semibold))
+////                                .foregroundColor(Color(uiColor: UIColor.darkGray))
+////                        }
+//                    }
+//
+//
+//                    ScrollView(.horizontal, showsIndicators: false){
+//                        LazyHStack{
+//                            ForEach(0..<(self.movie.credits!.cast.count < 10 ? self.movie.credits!.cast.count :10 )){i in
+//                                if self.movie.credits!.cast[i].profilePath != nil{
+//                                    VStack(alignment:.center){
+//                                        WebImage(url: self.movie.credits!.cast[i].posterURL)
+//                                            .resizable()
+//                                            .indicator(.activity) // Activity Indicator
+//                                            .transition(.fade(duration: 0.5)) // Fade Transition with duration
+//                                            .aspectRatio(contentMode: .fit)
+//                                            .frame(width: 80)
+//                                            .cornerRadius(10)
+//
+//                                        Text(self.movie.credits!.cast[i].name)
+//                                            .foregroundColor(.white)
+//                                            .font(.caption)
+//                                            .frame(width:120)
+//                                            .lineLimit(1)
+//
+//                                        Text(self.movie.credits!.cast[i].character)
+//                                            .foregroundColor(.gray)
+//                                            .font(.caption)
+//                                            .frame(width:120)
+//                                            .lineLimit(1)
+//                                    }
+//
+//                                }
+//                            }
+//                        }
+//
+//
+//                    }
+//
+//
+//                }
+//            }
+//
+//            if self.movie.credits != nil && self.movie.credits!.crew.count > 0{
+//                VStack(alignment:.leading,spacing:10){
+//                    HStack{
+//                        Text("團隊")
+//                            .font(.system(size: 16,weight: .semibold))
+//
+//                        Spacer()
+////                        Button(action:{
+////
+////                        }){
+////                            Text("顯示更多")
+////                                .font(.system(size: 14,weight: .semibold))
+////                                .foregroundColor(Color(uiColor: UIColor.darkGray))
+////                        }
+//                    }
+//
+//
+//                    ScrollView(.horizontal, showsIndicators: false){
+//                        LazyHStack{
+//                            ForEach(0..<(self.movie.credits!.crew.count < 10 ? self.movie.credits!.crew.count :10 )){i in
+//                                if self.movie.credits!.crew[i].profilePath != nil{
+//                                    VStack(alignment:.center){
+//                                        WebImage(url: self.movie.credits!.crew[i].posterURL)
+//                                            .resizable()
+//                                            .indicator(.activity) // Activity Indicator
+//                                            .transition(.fade(duration: 0.5)) // Fade Transition with duration
+//                                            .aspectRatio(contentMode: .fit)
+//                                            .frame(width: 80)
+//                                            .cornerRadius(10)
+//
+//                                        Text(self.movie.credits!.crew[i].name)
+//                                            .foregroundColor(.white)
+//                                            .font(.caption)
+//                                            .frame(width:120)
+//                                            .lineLimit(1)
+//
+//                                        Text(self.movie.credits!.crew[i].job)
+//                                            .foregroundColor(.gray)
+//                                            .font(.caption)
+//                                            .frame(width:120)
+//                                            .lineLimit(1)
+//                                    }
+//
+//                                }
+//                            }
+//                        }
+//
+//
+//                    }
+//
+//
+//                }
+//            }
+//
+//            VStack(alignment:.leading,spacing:10){
+//                HStack{
+//                    Text("劇情")
+//                        .font(.system(size: 16,weight: .semibold))
+//                    Spacer()
+////                    Button(action:{
+////
+////                    }){
+////                        Text("顯示更多")
+////                            .font(.system(size: 14,weight: .semibold))
+////                            .foregroundColor(Color(uiColor: UIColor.darkGray))
+////                    }
+//                }
+//
+//
+//                ScrollView(.horizontal, showsIndicators: false){
+//                    LazyHStack(){
+//                        ForEach(0..<(self.movieImages.backdrops.count < 20 ? self.movieImages.backdrops.count : 20)){ i in
+//                            WebImage(url: self.movieImages.backdrops[i].MovieImageURL)
+//                                .resizable()
+//                                .indicator(.activity) // Activity Indicator
+//                                .transition(.fade(duration: 0.5)) // Fade Transition with duration
+//                                .aspectRatio(contentMode: .fit)
+//                                .cornerRadius(5)
+//                        }
+//
+//
+//                    }
+//
+//                }.frame(height: 150)
+//            }
+//
+//            VStack(alignment:.leading, spacing:8) {
+//                if movie.videos != nil && movie.videos!.results.count > 0 {
+//                    HStack{
+//                        Text("宣傳片")
+//                            .font(.system(size: 16,weight: .semibold))
+//                        Spacer()
+////
+////                        if self.movie.videos!.results.count >= 10 {
+////                            Button(action:{
+////                                //TODO: Load More Video
+////                            }){
+////                                Text("顯示更多")
+////                                    .font(.system(size: 14,weight: .semibold))
+////                                    .foregroundColor(Color(uiColor: UIColor.darkGray))
+////                            }
+////                        }
+//                    }
+//
+//                    ScrollView(.horizontal, showsIndicators: false){
+//                        HStack(spacing:10){
+//                            ForEach(0..<(self.movie.videos!.results.count < 10 ? self.movie.videos!.results.count : 10)) { i in
+//                                YoutubeView(video_id: self.movie.videos!.results[i].key)
+//                                    .frame(width:UIScreen.main.bounds.width - 20,height:UIScreen.main.bounds.height * 0.3)
+//                                    .cornerRadius(10)
+////                                    .padding(.horizontal)
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        .padding(5)
+//    }
+//
+//    @ViewBuilder
+//    func circleButton(systemImg: String,imageScale:Image.Scale,background:Color,buttonColor : Color,width:CGFloat,height:CGFloat,action: @escaping ()->()) -> some View{
+//        Button(action: action){
+//            ZStack(alignment:.center){
+//                Circle()
+//                    .fill(background)
+//                    .frame(width: width, height: height)
+//
+//                Image(systemName: systemImg)
+//                    .imageScale(imageScale)
+//                    .foregroundColor(buttonColor)
+//            }
+//        }
+//
+//    }
+//
+//    @ViewBuilder
+//    func BackgroundButton(systemImg: String,buttonTitle: String,backgroundColor:Color,fontColor : Color,action: @escaping ()->()) -> some View{
+//        Button(action:action){
+//            HStack(spacing:5){
+//                Image(systemName: systemImg)
+//                    .imageScale(.medium)
+//                Text(buttonTitle)
+//                    .font(.system(size:16,weight:.semibold))
+//            }
+//            .padding(.horizontal,5)
+//            .foregroundColor(fontColor)
+//            .frame(height: 40)
+//            .cornerRadius(10)
+//            .background(backgroundColor            .cornerRadius(10))
+//        }
+//        .padding(.horizontal,5)
+//
+//    }
+//
+//    @ViewBuilder
+//    func MovieDetailTabBar() -> some View {
+//        HStack(spacing:10){
+//            ForEach(MovieDetailTabItem.allCases,id:\.self){ tab in
+//                VStack(spacing:12){
+//                    Text(tab.rawValue)
+//                        .fontWeight(.semibold)
+//                        .foregroundColor(tabIndex == tab ? .white : .gray)
+//
+//                    ZStack{
+//                        if tabIndex == tab {
+//                            RoundedRectangle(cornerRadius: 4, style: .continuous)
+//                                .fill(.white)
+//                                .matchedGeometryEffect(id: "TAB", in: namespace)
+//                        } else {
+//                            RoundedRectangle(cornerRadius: 4, style: .continuous)
+//                                .fill(.clear)
+//                        }
+//                    }
+//                    .padding(.horizontal,8)
+//                    .frame(height: 4)
+//                }
+//                .contentShape(Rectangle())
+//                .onTapGesture(){
+//                    withAnimation(.easeInOut){
+//                        tabIndex = tab
+//                    }
+//                }
+//            }
+//        }
+//        .padding(.horizontal)
+////        .padding(.top,25)
+//        .padding(.bottom,5)
+//    }
+//
+//    private func getHeaderHigth() -> CGFloat {
+//        //setting the height of the header
+//
+//        let top = max + offset
+//        //constrain is set to 80 now
+//        // < 60 + topEdge not at the top yet
+//        return top > (40 + topEdge) ? top : 40 + topEdge
+//    }
+//
+//    private func getOpacity() -> CGFloat {
+//        let progress = -(offset + 40 ) / 70
+//        return -offset > 40  ?  progress : 0
+//    }
+//
+//    private func AddikedMovie(){
+//        let req = NewUserLikeMoviedReq(movie_id: self.movie.id)
+//        APIService.shared.PostLikedMovie(req: req){(result ) in
+//            switch result {
+//            case .success(_):
+//                print("LIKED MOVIE")
+//
+//            case .failure(let err):
+//                print(err.localizedDescription)
+//                withAnimation{
+//                    self.isUserLiked.toggle()
+//                    self.movieLikes  = self.movieLikes - 1
+//                }
+////                HubState.AlertMessage(sysImg: "xamrk.circle.fill", message: err.localizedDescription)
+//            }
+//        }
+//    }
+//
+//    private func RemoveLikedMovie() {
+//        let req = DeleteUserLikedMovie(movie_id: self.movie.id)
+//        APIService.shared.DeleteLikedMovie(req: req){ (result ) in
+//            switch result {
+//            case .success(_):
+//                print("UNLIKED MOVIE")
+//            case .failure(let err):
+//                print(err.localizedDescription)
+//                withAnimation{
+//                    self.isUserLiked.toggle()
+//                    self.movieLikes =  self.movieLikes + 1
+//                }
+//            }
+//        }
+//    }
+//
+//    private func RemoveMovieFromList(){
+//        if self.collectedListId == 0 {return}
+//
+//        let req = RemoveMovieFromListReq(list_id: self.collectedListId, movie_id: self.movie.id)
+//        APIService.shared.RemoveMovieFromList(req: req){ result in
+//            switch result {
+//            case .success(_):
+//                print("Removed movie from list")
+//            case .failure(let err):
+//                print(err.localizedDescription)
+//                withAnimation{
+//                    self.isAddToList.toggle()
+//                    self.movieCollected = self.movieCollected + 1
+//                }
+//            }
+//        }
+//    }
+//
+//}

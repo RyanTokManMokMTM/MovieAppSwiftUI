@@ -17,40 +17,61 @@ struct ShowMoreStateMovieView: View {
     @Binding var isShowAll : Bool
     @State private var isShowMovieDetail : Bool = false
     @State private var selectedMovieID : Int = -1
+    
+
     var grids : [GridItem] = Array(repeating: GridItem(spacing:25), count: 2)
     var body: some View {
         GeometryReader { proxy  in
             VStack(spacing:0){
                 NavBar()
                 
-                ScrollView(.vertical,showsIndicators: false){
-                    LazyVStack(spacing:0){
-                        LazyVGrid(columns: grids,spacing:20) {
-                            ForEach(self.state.movies!){ movie in
-                                Button(action:{
-                                    withAnimation{
-                                        self.isShowMovieDetail.toggle()
-                                        self.selectedMovieID = movie.id
-                                    }
-                                }){
-                                    MovieCard(movie: movie)
-                                }
-                                
-                            }
-                        }.padding(.horizontal,15).padding(.top,5)
-                        
-                        
-                        if self.state.page < self.state.total && self.state.total != 0{
-                            ActivityIndicatorView()
-                                .padding(.vertical)
-                                .task {
-                                    print("loading more movie")
-                                    await self.state.loadMoreMovies(endpoint: self.endPoint)
-                                }
-                        }
+//                ScrollView(.vertical,showsIndicators: false){
+//                    LazyVStack(spacing:0){
+//
+////                        LazyVGrid(columns: grids,spacing:20) {
+////                            ForEach(0..<self.state.movies!.count,id:\.id){ i in
+////                                Button(action:{
+////                                    withAnimation{
+////                                        self.isShowMovieDetail.toggle()
+////                                        self.selectedMovieID = self.state.movies![i].id
+////                                    }
+////                                }){
+////                                    MovieCard(movie: self.state.movies![])
+////                                }
+////
+////                            }
+////                        }.padding(.horizontal,15).padding(.top,5)
+////
+////
+////
+////                        if self.state.page < self.state.total && self.state.total != 0{
+////                            ActivityIndicatorView()
+////                                .padding(.vertical)
+////                                .task {
+////                                    print("loading more movie")
+////                                    await self.state.loadMoreMovies(endpoint: self.endPoint)
+////                                }
+////                        }
+//                    }
+//
+//
+//                }
+                FlowLayoutWithLoadMoreView(list: state.movies!, columns: 2,HSpacing: 10,VSpacing: 20){ info in
+                    Button(action: {
+                        self.isShowMovieDetail.toggle()
+                        self.selectedMovieID = info.id
+                    }){
+                        MovieCardView(movieData: info)
                     }
-                    
-                   
+                } loadMoreContent: {
+                    if self.state.loadMore{
+                        ActivityIndicatorView()
+                            .padding(.vertical)
+                            .task {
+                                self.state.loadMore = false //repersent loading
+                                await self.state.loadMoreMovies(endpoint: self.endPoint)
+                            }
+                    }
                 }
                 .background(
                     NavigationLink(destination: MovieDetailView(movieId: self.selectedMovieID, isShowDetail: self.$isShowMovieDetail)

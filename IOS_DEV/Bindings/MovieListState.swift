@@ -7,6 +7,7 @@
 
 
 import SwiftUI
+import Algorithms
 
 class MovieListState: ObservableObject {
 
@@ -17,7 +18,8 @@ class MovieListState: ObservableObject {
     @Published var total : Int = 0
     
 //    @Published var initData : Bool = false
-
+    @Published var loadMore = false
+    
     private let movieService: MovieService
     private let apiService : APIService
 //    private let endpoint: MovieListEndpoint
@@ -37,7 +39,10 @@ class MovieListState: ObservableObject {
             switch result {
             case .success(let response):
                 self.movies = response.results
-                self.total = response.totalPages
+//                self.total = response.total_pages
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){
+                    self.loadMore = self.page < self.total
+                }
             case .failure(let error):
                 self.error = error as NSError
             }
@@ -55,10 +60,15 @@ class MovieListState: ObservableObject {
         switch resp {
         case .success(let data):
             self.movies?.append(contentsOf: data.results)
+            self.movies?.uniqued()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){
+                self.loadMore = self.page < self.total
+            }
         case .failure(let err):
             print(err.localizedDescription)
         }
     }
+    
     
     
     

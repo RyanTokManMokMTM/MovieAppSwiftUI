@@ -12,7 +12,8 @@ class RecommendState: ObservableObject {
     @Published var movies: [Movie]?
     @Published var isLoading: Bool = false
     @Published var error: NSError?
-
+    @Published var total : Int = 1
+    @Published var page : Int = 1
     private let movieService: MovieService
     
     init(movieService: MovieService = MovieStore.shared) {
@@ -28,10 +29,28 @@ class RecommendState: ObservableObject {
             switch result {
             case .success(let response):
                 self.movies = response.results
-                
+//                self.total = response.total_pages
             case .failure(let error):
                 self.error = error as NSError
             }
+        }
+    }
+    
+    func LoadMoreRecommendMovies(id:Int) async {
+        if self.page >= self.total {
+            return
+        }
+            
+        self.page = page + 1
+        let resp = await  self.movieService.AsyncMovieReccomend(id: id, page: self.page)
+        switch resp {
+        case .success(let response):
+            self.movies = (self.movies ?? []) + response.results
+//            self.total = response.total_pages
+            
+        case .failure(let error):
+            self.error = error as NSError
+            print(error.localizedDescription)
         }
     }
     

@@ -21,6 +21,7 @@ protocol MovieService {
     func fetchMovie(id: Int, completion: @escaping (Result<Movie, MovieError>) -> ())
     func fetchMovieWithEng(id: Int, completion: @escaping (Result<Movie, MovieError>) -> ())
     func MovieReccomend(id: Int, completion: @escaping (Result<MovieResponse, MovieError>) -> ())
+    func AsyncMovieReccomend(id: Int,page:Int) async -> Result<MovieResponse, MovieError>
     
     func searchRecommandMovie(query: String, completion: @escaping (Result<MovieSearchResponse, MovieError>) -> ())
     func searchMovieInfo(query: String,page:Int, completion: @escaping (Result<MovieResponse, MovieError>) -> ())
@@ -338,7 +339,7 @@ enum MovieListEndpoint: String, CaseIterable, Identifiable {
         switch self {
             case .nowPlaying: return "/movie/now_playing"
             case .upcoming: return "/movie/upcoming"
-            case .topRated: return "/movie/now_playing"
+            case .topRated: return "/movie/top_rated"
             case .popular: return "/movie/popular"
             case .trending: return "/trending/movie/day"
         }

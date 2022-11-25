@@ -679,9 +679,8 @@ struct  MovieCardView : View {
                 .resizable()
                 .placeholder {
                     Rectangle()
-                        .foregroundColor(.clear)
+                        .foregroundColor(Color("appleDark"))
                         .aspectRatio(contentMode: .fit)
-                        .overlay(Text(movieData.title))
                 }
                 .indicator(.activity)
                 .transition(.fade(duration: 0.5))

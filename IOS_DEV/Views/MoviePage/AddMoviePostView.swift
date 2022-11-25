@@ -53,7 +53,7 @@ struct AddMoviePostView: View {
                         .padding(.horizontal,10)
                         .frame(width: UIScreen.main.bounds.width)
                 )
-                .padding(.vertical,8)
+                .padding(.bottom,8)
                 .padding(5)
             VStack(spacing:0){
                 HStack{
@@ -79,7 +79,7 @@ struct AddMoviePostView: View {
             .padding(5)
             
             Group{
-                AppTextEditor(isEditDesc:_isEditDesc,message: $desc, placeholder: "新增正文",backgrandColor: UIColor(Color("appleDark")))
+                AppTextEditor(isEditDesc:_isEditDesc,message: $desc, placeholder: "新增正文",backgrandColor: .clear)
                 
                 Spacer()
             }
