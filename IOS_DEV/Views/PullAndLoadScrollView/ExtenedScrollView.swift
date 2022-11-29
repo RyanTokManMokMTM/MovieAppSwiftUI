@@ -24,7 +24,7 @@ class ScrollState : ObservableObject {
     var initOffsetY : CGFloat = 0
     
     //update pull view hegiht
-    let progressViewHeight : CGFloat = 40
+    let progressViewHeight : CGFloat = 80
     @Published var progressViewCurrentHeight : CGFloat = 0 //pulling scrolling offset Y
     //current offset
     @Published var currOffset : CGFloat = 0
@@ -103,7 +103,6 @@ typealias ScrollRefershCompletion = () -> Void
 typealias ScrollOnRefersh = (@escaping ScrollRefershCompletion) -> Void
 
 struct ExtenedScrollView<Content : View>: View {
-    let colors = [Color.red,Color.yellow,Color.gray]
     @StateObject var state = ScrollState()
     
     var content : () -> (Content)
@@ -138,7 +137,7 @@ struct ExtenedScrollView<Content : View>: View {
                                 
 //                                if self.isRefershFooter{
                                     let _refershFooterCurrentHeigh = state.initOffsetY - minY + state.scrollHeight - state.scrollContentHeight
-
+                                    print(_refershFooterCurrentHeigh)
                                     if _refershFooterCurrentHeigh > 0 && state.state != .refershFooter {
                                         state.refershFooterCurHeight = _refershFooterCurrentHeigh
                                     }
@@ -220,27 +219,27 @@ struct ExtenedScrollView<Content : View>: View {
                                 .opacity(self.state.refershFooterCurHeight == 0 ? 0 : 1)
                         }
                     }
-                    .frame(height:state.state == .refershFooter && self.isRefershFooter ? state.progressViewHeight : state.refershFooterCurHeight)
+                    .frame(height:state.state == .refershFooter ? state.progressViewHeight : state.refershFooterCurHeight)
                     .clipped()
-                    .offset(y : state.state == .refershFooter && self.isRefershFooter ? 0 : state.refershFooterCurHeight)
+                    .offset(y : state.state == .refershFooter ? 0 : state.refershFooterCurHeight)
                     .zIndex(1)
                 }
                 
                 //offset a progress view
             }
             .edgesIgnoringSafeArea(.all)
-            .overlay{
-                GeometryReader { proxy -> AnyView in
-                    //Getting whole scroll view height
-                    let height = proxy.frame(in: .global).height
-                    DispatchQueue.main.async {
-                        if state.scrollHeight != height{
-                            state.scrollHeight = height
-                        }
-                    }
-                    return AnyView(Color.clear)
-                }
-            }
+//            .overlay{
+//                GeometryReader { proxy -> AnyView in
+//                    //Getting whole scroll view height
+//                    let height = proxy.frame(in: .global).height
+//                    DispatchQueue.main.async {
+//                        if state.scrollHeight != height{
+//                            state.scrollHeight = height
+//                        }
+//                    }
+//                    return AnyView(Color.clear)
+//                }
+//            }
             .onChange(of: state.state){ newVal in
                 if newVal == .refershHeader {
                     onRefershHeader {

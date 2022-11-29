@@ -26,7 +26,7 @@ struct EditMovieList: View {
                     HStack(){
                         Button(action:{
                             withAnimation{
-                                dissmiss()
+//                                dissmiss()
                             }
                         }){
                            Image(systemName: "chevron.left")
@@ -38,6 +38,12 @@ struct EditMovieList: View {
                         Button(action:{
 //                            if listTitle.isEmpty {return}
 //                            CreateNewList()
+                            //Update List Info
+                            
+                            Task.init{
+                                await self.updateList(listID:  self.userVM.profile!.UserCustomList?[self.listIndex].id ?? 0, title: self.title, intro: self.intro)
+                                dissmiss()
+                            }
 //
                         }){
                           Text("完成")
@@ -137,7 +143,11 @@ struct EditMovieList: View {
                       secondaryButton: .default(Text("刪除")){
                         withAnimation{
 //                            dissmiss()
+                            //remove list
                             self.isBackToRoot = false
+                            Task.init{
+                                await self.deleteList(listID:self.userVM.profile!.UserCustomList?[self.listIndex].id ?? 0)
+                            }
                             
                         }
                       })
@@ -146,12 +156,34 @@ struct EditMovieList: View {
         }
     }
     
-    private func deleteList(){
+    private func deleteList(listID : Int) async{
+        if listID == 0 {
+            return
+        }
+        
+        let resp = await APIService.shared.AsyncDeleteCustomList(req: DeleteCustomListReq(list_id: listID))
+        switch resp {
+        case .success(_):
+            self.userVM.profile!.UserCustomList!.remove(at: self.listIndex)
+        case .failure(let err):
+            print(err.localizedDescription)
+        }
         
     }
     
-    private func updateList(){
+    private func updateList(listID : Int,title : String,intro : String) async{
+        if title == self.userVM.profile!.UserCustomList![self.listIndex].title && intro == self.userVM.profile!.UserCustomList![self.listIndex].introStr || listID == 0 {
+            return
+        }
         
+        let resp = await APIService.shared.AsyncUpdateCustomList(req: UpdateCustomListReq(list_id: listID, title: title, intro: intro))
+        switch resp {
+        case .success(_):
+            self.userVM.profile!.UserCustomList![self.listIndex].title = title
+            self.userVM.profile!.UserCustomList![self.listIndex].intro = intro
+        case .failure(let err):
+            print(err.localizedDescription)
+        }
     }
 }
 

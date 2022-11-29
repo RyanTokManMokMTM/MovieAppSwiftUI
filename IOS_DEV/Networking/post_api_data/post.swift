@@ -24,9 +24,19 @@ struct CountUserPostReq {
     let user_id : Int
 }
 
+struct DeletePostReq : Encodable{
+    let post_id : Int
+}
+
 /// RESPONSE
 
 //Post
+struct DeletePostResp : Decodable {}
+
+struct CheckPostResp : Decodable {
+    let is_exist : Bool
+}
+
 struct CreatePostResp : Identifiable,Decodable {
     let id : Int
     let create_time : Int
@@ -45,6 +55,7 @@ struct FollowingUserPostResp : Decodable {
 
 struct UserPostResp : Decodable {
     let post_info : [Post]? // can be empty
+    let meta_data : MetaData
 }
 
 struct PostInfoReq : Decodable {

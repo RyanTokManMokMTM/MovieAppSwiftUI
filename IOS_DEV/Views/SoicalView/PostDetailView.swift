@@ -45,17 +45,24 @@ struct PostDetailView: View {
     @State private var isReply : Bool = false
     @State private var scrollTo : Int = 0
     @Binding var postInfo : Post
+    
+    @State var isChecking : Bool = false
+    
+    @State var isDelete : Bool = false
     var body: some View {
         ZStack(alignment: .top){
-            VStack(spacing:0){
-                PostTopBar()
-                
-                //Image tab view
-                ScrollView(.vertical, showsIndicators: false){
-                   postBody()
-                        
+            
+            if !isChecking {
+                VStack(spacing:0){
+                    PostTopBar()
+                    
+                    //Image tab view
+                    ScrollView(.vertical, showsIndicators: false){
+                       postBody()
+                            
+                    }
+                    CommentArea()
                 }
-                CommentArea()
             }
             
             if self.postVM.isSharePost && self.postVM.sharedData != nil{
@@ -82,12 +89,34 @@ struct PostDetailView: View {
         
         )
         .onAppear{
-//            IsUserFollowing()
-            print(postInfo)
-            GetPostComments()
+            //Here we need to know post is delete or not...
+            self.isChecking = true
+            Task.init{
+                await self.checkPostIsExist()
+                if !self.isChecking {
+//                    Get
+                    await AsyncGetPostComments()
+                }
+            }
+//            GetPostComments()
         }
 
         
+    }
+    
+    private func checkPostIsExist() async{
+        let resp = await APIService.shared.AsyncCheckPost(postID:postInfo.id)
+        switch resp {
+        case.success(let data):
+            if data.is_exist {
+                self.isChecking = false
+            }else {
+                BenHubState.shared.AlertMessage(sysImg: "xmark", message: "文章已被移除")
+            }
+        case .failure(let err):
+            print(err)
+            BenHubState.shared.AlertMessage(sysImg: "xmark", message: err.localizedDescription)
+        }
     }
     
     private func LoadMoreCommentInfo(postID :Int) async {
@@ -183,72 +212,69 @@ struct PostDetailView: View {
                 }
                 
                 Spacer()
-                Button(action:{
-                    //TODO: SHARE - Yes
-                    DispatchQueue.main.async {
-                        withAnimation{
-                            self.postVM.sharedData = self.postInfo
-                            self.postVM.isSharePost.toggle()
+                
+                HStack{
+                    Menu(content: {
+                        if self.postInfo.user_info.id == userVM.userID {
+                            Button(action: {
+                                // delete the selected post if user is owner
+                            }) {
+                                HStack {
+                                    Text("編輯")
+                                    Image(systemName: "square.and.pencil")
+                                }
+                            }
+                            
+                            Button(action: {
+                                // delete the selected post if user is owner
+                                withAnimation{
+                                    isDelete = true
+                                }
+                            }) {
+                                HStack {
+                                    Text("刪除")
+                                    Image(systemName: "trash")
+                                }
+                            }
+                            
                         }
-                    }
-                }){
-                    HStack{
-                        Image(systemName: "square.and.arrow.up")
+                        Button(action: {
+                            // share the post
+                            DispatchQueue.main.async {
+                                withAnimation{
+                                    self.postVM.sharedData = self.postInfo
+                                    self.postVM.isSharePost.toggle()
+                                }
+                            }
+                        }) {
+                            HStack {
+                                Text("分享")
+                                Image(systemName: "square.and.arrow.up")
+                            }
+                        }
+                    }){
+                        Label("", systemImage: "ellipsis")
                             .imageScale(.large)
+                            .foregroundColor(.white)
                     }
-                    .foregroundColor(.white)
                 }
-//                if self.postVM.selectedPost!.user_info.id != self.userVM.userID! {
-//                    Button(action:{
-//    //                    withAnimation{
-////                        withAnimation{
-////                            self.isUserFollowing.toggle()
-////                        }
-////                        if self.isUserFollowing{
-////                            followUser()
-////                        }else {
-////                            UnFollowUser()
-////                        }
-//                            //TODO: Update following state
-//    //                    }
-//                    }){
-//                        Text("未知狀態")
-//                            .foregroundColor(.white)
-//                            .font(.system(size: 14))
-//                            .padding(5)
-//                            .padding(.horizontal,5)
-//                            .background(
-//                                ZStack{
-//                                    if self.isUserFollowing  {
-//                                        BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners))
-//                                            .overlay(RoundedRectangle(cornerRadius: 25).stroke().fill(self.isUserFollowing ? Color.white : Color.clear))
-//                                    }else {
-//                                        Color.red.clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners))
-//                                    }
-//                                }
-//                            )
-//
-//                    }
-//                }
-//                else {
-//                    Button(action:{
-//                        //TODO: MODIFY THE POST
-//                    }){
-//                        Image(systemName: "ellipsis")
-//                            .foregroundColor(.white)
-//                            .imageScale(.large)
-//                    }
-//                }
 
             }
-    //        .edgesIgnoringSafeArea(.all)
+
             .padding(.horizontal,5)
             .frame(width:UIScreen.main.bounds.width,height:50)
             .background(Color("appleDark").edgesIgnoringSafeArea(.all))
-//            .onAppear{
-//                print(self.userVM.profile!.name)
-//                print(self.postVM.followingData.count)
-//            }
+            .alert(isPresented: $isDelete){
+                withAnimation(){
+                    Alert(title: Text("刪除當前文章"), message: Text("確定刪掉?"),
+                          primaryButton: .default(Text("取消")){},
+                          secondaryButton: .default(Text("刪除")){
+                            Task.init{
+                                await self.DeletePost(postID:self.postInfo.id)
+                            }
+                    })
+                }
+            }
         }
     
     
@@ -425,6 +451,21 @@ struct PostDetailView: View {
         }
     }
         
+    @MainActor
+    private func DeletePost(postID : Int) async{
+        let resp = await APIService.shared.AsyncDeletePost(req: DeletePostReq(post_id: postID))
+        switch resp {
+        case .success(_):
+            withAnimation(){
+                self.postVM.isShowPostDetail = false
+            }
+            
+            self.userVM.profile!.UserCollection!.removeAll{$0.id == postID}
+        case .failure(let err):
+            print(err.localizedDescription)
+        }
+    }
+    
     private func CreatePostComment(){
         if message.isEmpty { return }
         let postId =  postInfo.id
@@ -480,19 +521,20 @@ struct PostDetailView: View {
         
     }
     
-    private func GetPostComments(){
+    private func AsyncGetPostComments() async{
         self.isLoadingComment = true
         let postId = postInfo.id
-        APIService.shared.GetPostComments(postId: postId){ result in
-            self.isLoadingComment = false
-            switch result {
-            case .success(let data):
-                self.commentInfos = data.comments
-                self.metaData = data.meta_data
-            case .failure(let err):
-                print("get comment failed : \(err.localizedDescription)")
-            }
+        
+        let resp =  await APIService.shared.AsyncGetPostComments(postId: postId)
+        self.isLoadingComment = false
+        switch resp {
+        case .success(let data):
+            self.commentInfos = data.comments
+            self.metaData = data.meta_data
+        case .failure(let err):
+            print("get comment failed : \(err.localizedDescription)")
         }
+        
     }
     
     private func GetCommentReply(commentId : Int){

@@ -49,6 +49,7 @@ struct HomePage: View {
 
                 }
             }
+            
             .navigationTitle("")
             .navigationBarHidden(true)
             .navigationBarTitle("")
@@ -58,7 +59,7 @@ struct HomePage: View {
             }
 
         }
-//        .navigationViewStyle(.)
+        .navigationViewStyle(.stack)
 //        .onAppear{
 //            APIService.shared.serverConnection(){ result in
 //                self.isLoading = true

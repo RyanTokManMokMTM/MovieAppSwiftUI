@@ -113,11 +113,10 @@ class PostVM : ObservableObject {
         let resp = await APIService.shared.AsyncGetAllUserPost(page: self.discoverMetaData!.page + 1,limit: 10)
         switch resp {
         case .success(let data):
-            print(data.post_info)
-            self.postData.append(contentsOf: data.post_info)
-            print(postData.count)
+            withAnimation(.spring()){
+                self.postData.append(contentsOf: data.post_info)
+            }
             self.discoverMetaData = data.meta_data
-            print(data.meta_data)
         case .failure(let err):
             print("loading more post(discovery) err : \(err.localizedDescription)")
             BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)

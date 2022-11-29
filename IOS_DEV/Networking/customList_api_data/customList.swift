@@ -14,13 +14,13 @@ struct CreateNewCustomListReq : Encodable{
 }
 
 struct UpdateCustomListReq : Encodable {
-    let id : Int
+    let list_id : Int
     let title : String
     let intro : String
 }
 
 struct DeleteCustomListReq : Encodable {
-    let id : Int
+    let list_id : Int
 }
 
 struct GetOneMovieFromUserListReq{
@@ -31,6 +31,11 @@ struct RemoveMovieFromListReq  {
     let list_id : Int
     let movie_id : Int
 }
+
+struct RemoveListMovieReq  : Encodable{
+    let movie_ids : [Int]
+}
+
 
 
 /// RESPONSE
@@ -61,6 +66,9 @@ struct GetOneMovieFromUserListResp : Decodable {
 }
 
 struct RemoveMovieFromListResp  : Decodable{
+}
+
+struct RemoveListMovieResp   : Decodable {
 }
 
 //List

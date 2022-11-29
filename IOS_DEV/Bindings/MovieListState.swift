@@ -40,9 +40,7 @@ class MovieListState: ObservableObject {
             case .success(let response):
                 self.movies = response.results
 //                self.total = response.total_pages
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){
-                    self.loadMore = self.page < self.total
-                }
+                self.total = response.totalPages
             case .failure(let error):
                 self.error = error as NSError
             }
@@ -59,10 +57,17 @@ class MovieListState: ObservableObject {
         let resp = await self.movieService.AsyncfetchMovies(from: endpoint, page: self.page)
         switch resp {
         case .success(let data):
-            self.movies?.append(contentsOf: data.results)
-            self.movies?.uniqued()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){
-                self.loadMore = self.page < self.total
+            if var movies = self.movies {
+                movies.append(contentsOf: data.results)
+                self.movies = Array(movies.uniqued())
+            } else {
+                //if result is empty
+                self.movies = data.results
+            }
+            
+            self.total = 0 // waiting to render...
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.total = data.totalPages
             }
         case .failure(let err):
             print(err.localizedDescription)

@@ -52,11 +52,6 @@ protocol ServerAPIServerServiceInterface {
     func ResetFriendNotification(completion: @escaping (Result<ResetFriendNotificationResp,Error>)->())
     func ResetCommentNotification(completion: @escaping (Result<ResetCommentNotificationResp,Error>)->())
     func ResetLikesNotification(completion: @escaping (Result<ResetLikesNotificationResp,Error>)->())
-//    func CountFollowingUser(req: CountFollowingReq, completion : @escaping (Result<CountFollowingResp,Error>) -> ())
-//    func CountFollowedUser(req : CountFollowedReq, completion : @escaping (Result<CountFollowedResp,Error>) -> ())
-//    func GetUserFollowingList(req: GetFollowingListReq,completion : @escaping (Result<GetFollowingListResp,Error>) -> ())
-//    func GetUserFollowedList(req : GetFollowedListReq,completion : @escaping (Result<GetFollowedListResp,Error>) -> ())
-    //Conennection check
     
     //TODO: USER GENRES SETTING
     func UpdateUserGenre(req : UpdateUserGenreReq, completion : @escaping (Result<UpdateUserGenreResp,Error>) -> ())
@@ -66,26 +61,28 @@ protocol ServerAPIServerServiceInterface {
     func PostLikedMovie(req:NewUserLikeMoviedReq,completion : @escaping (Result<CreateUserLikedMovieResp,Error>) -> ())
     func DeleteLikedMovie(req : DeleteUserLikedMovie,completion : @escaping (Result<DeleteUserLikedMovieResp,Error>) -> ())
     func GetAllUserLikedMoive(userID : Int, completion : @escaping (Result<AllUserLikedMovieResp,Error>) -> ())
-    func AsyncGetAllUserLikedMoive(userID : Int) async -> Result<AllUserLikedMovieResp,Error>
+    func AsyncGetAllUserLikedMoive(userID : Int,page : Int, limit : Int) async -> Result<AllUserLikedMovieResp,Error>
     
     func IsLikedMovie(req : IsLikedMovieReq , completion: @escaping (Result<IsLikedMovieResp,Error>) -> ())
 
     //TODO: CUSTOM LIST
     func CreateCustomList(req : CreateNewCustomListReq ,completion : @escaping (Result<CreateNewCustomListResp,Error>) -> ())
     func UpdateCustomList(req : UpdateCustomListReq, completion : @escaping (Result<UpdateCustomListResp,Error>) -> ())
+    func AsyncUpdateCustomList(req : UpdateCustomListReq) async ->Result<UpdateCustomListResp,Error>
     func DeleteCustomList(req : DeleteCustomListReq, completion : @escaping (Result<DeleteCustomListResp,Error>) -> ())
+    func AsyncDeleteCustomList(req : DeleteCustomListReq) async -> Result<DeleteCustomListResp,Error>
     func GetAllCustomLists(userID : Int, page : Int,limit : Int,completion : @escaping (Result<AllUserListResp,Error>) -> ())
     func AsyncGetAllCustomLists(userID : Int, page : Int,limit : Int) async -> Result<AllUserListResp,Error>
     
     func GetUserList(listID : Int , completion : @escaping (Result<UserListResp,Error> ) -> ())
     func InsertMovieToList(movieID : Int, listID : Int, completion : @escaping (Result<InsertMovieToListResp,Error>)->())
     func RemoveMovieFromList(req : RemoveMovieFromListReq , completion: @escaping (Result<RemoveMovieFromListResp,Error>)->()) //???
+    func AsyncRemoveListMovies(listID : Int, movieIds : RemoveListMovieReq) async -> Result<RemoveListMovieResp,Error>
     func GetOneMovieFromUserList(req : GetOneMovieFromUserListReq, completion : @escaping (Result<GetOneMovieFromUserListResp,Error>) -> ())
     func GetCollectedMovieCount(userID : Int) async -> Result<GetCollectedMovieResp,Error>
     
     //TODO: POST
     func CreatePost(req : CreatePostReq,completion : @escaping (Result<CreatePostResp,Error>) -> ())
-    
     func GetAllUserPost(page : Int ,limit : Int ,completion : @escaping (Result <AllUserPostResp,Error>) -> ())
     //MARK: Async Version
     func AsyncGetAllUserPost(page : Int ,limit : Int) async -> Result<AllUserPostResp,Error>
@@ -94,8 +91,11 @@ protocol ServerAPIServerServiceInterface {
     //Async Version
     func AsyncGetFollowUserPost( page : Int ,limit : Int) async -> Result <FollowingUserPostResp,Error>
     func GetUserPostByUserID(userID : Int ,completion : @escaping (Result <UserPostResp,Error>) -> ())
-    func AsyncGetUserPostByUserID(userID : Int) async -> Result <UserPostResp,Error>
+    func AsyncGetUserPostByUserID(userID : Int,page : Int,limit : Int) async -> Result <UserPostResp,Error>
     func CountUserPosts(req : CountUserPostReq, completion : @escaping (Result<CountUserPostResp,Error>) -> ())
+    
+    func AsyncDeletePost(req : DeletePostReq) async -> Result<DeletePostResp,Error>
+    func AsyncCheckPost(postID : Int) async -> Result<CheckPostResp,Error>
     
     //TODO: POST LIKED
     func CreatePostLikes(req : CreatePostLikesReq,completion : @escaping (Result<CreatePostLikesResp,Error>) -> ())
@@ -108,7 +108,7 @@ protocol ServerAPIServerServiceInterface {
     func UpdatePostComment(commentId : Int, req : UpdateCommentReq, completion : @escaping (Result<UpdateCommentResp,Error>) -> ())
     func DeletePostComment(commentId : Int, completion : @escaping (Result<DeletePostCommentResp,Error>) -> ())
     func GetPostComments(postId : Int, page : Int ,limit : Int ,completion : @escaping (Result<GetPostCommentsResp,Error>) -> ())
-    
+    func AsyncGetPostComments(postId : Int,  page : Int,limit : Int ) async -> Result<GetPostCommentsResp,Error>
     //TODO: REPLY COMMENT
     func CreateReplyComment(req : CreateReplyCommentReq, completion : @escaping (Result<CreateReplyCommentResp,Error>) -> ())
     func GetReplyComment(req : GetReplyCommentReq,  page : Int,limit : Int ,completion : @escaping (Result<GetReplyCommentResp,Error>) -> ())
@@ -185,146 +185,146 @@ protocol ServerAPIServerServiceInterface {
     
 }
 
-protocol AsyncServerAPIServerServiceInterface {
-    //TODO: HELPER
-//    func serverConnection(completion : @escaping (Result<ServerStatus,Error>)->())
-    func AsyncServerConnection() async -> Result<ServerStatus,Error>
-    
-    //TODO: USER
-//    func UserLogin(req : UserLoginReq,completion: @escaping (Result<UserLoginResp,Error>)->())
-    func AsyncUserLogin(req : UserLoginReq) async -> Result<UserLoginResp,Error>
-    func AsyncUserSignUp(req : UserSignUpReq) async -> Result<UserSignUpResp,Error>
-    func AsyncGetUserProfile() async -> Result<Profile,Error>
-    func AsyncGetUserProfileById(userID : Int) async -> Result<Profile,Error>
-    func AsyncUpdateUserProfile(req : UserProfileUpdateReq) async -> Result<UserProfileUpdateResp,Error>
-    func AsyncUploadImage(imgData : Data,uploadType: UploadImageType) async -> Result<UploadImageResp,Error>
-        
-    
-    func CountFriend(req : CountFriendReq,completion: @escaping (Result<CountFriendResp,Error>)->())
-    func GetFriendList(req : GetFriendListReq,completion: @escaping (Result<GetFriendListResp,Error>)->())
-    func GetFriendRoomList(completion: @escaping (Result<GetFriendRoomListResp,Error>)->())
-    
-    func ResetFriendNotification(completion: @escaping (Result<ResetFriendNotificationResp,Error>)->())
-    func ResetCommentNotification(completion: @escaping (Result<ResetCommentNotificationResp,Error>)->())
-    func ResetLikesNotification(completion: @escaping (Result<ResetLikesNotificationResp,Error>)->())
-
-    
-    //TODO: USER GENRES SETTING
-    func UpdateUserGenre(req : UpdateUserGenreReq, completion : @escaping (Result<UpdateUserGenreResp,Error>) -> ())
-    func GetUserGenres(req : GetUserGenreReq,completion : @escaping (Result<GetUserGenreResp,Error>) -> ())
-    
-    //TODO: LIKED MOVIE
-    func PostLikedMovie(req:NewUserLikeMoviedReq,completion : @escaping (Result<CreateUserLikedMovieResp,Error>) -> ())
-    func DeleteLikedMovie(req : DeleteUserLikedMovie,completion : @escaping (Result<DeleteUserLikedMovieResp,Error>) -> ())
-    func GetAllUserLikedMoive(userID : Int, completion : @escaping (Result<AllUserLikedMovieResp,Error>) -> ())
-    
-    func IsLikedMovie(req : IsLikedMovieReq , completion: @escaping (Result<IsLikedMovieResp,Error>) -> ())
-
-    //TODO: CUSTOM LIST
-    func CreateCustomList(req : CreateNewCustomListReq ,completion : @escaping (Result<CreateNewCustomListResp,Error>) -> ())
-    func UpdateCustomList(req : UpdateCustomListReq, completion : @escaping (Result<UpdateCustomListResp,Error>) -> ())
-    func DeleteCustomList(req : DeleteCustomListReq, completion : @escaping (Result<DeleteCustomListResp,Error>) -> ())
-    func GetAllCustomLists(userID : Int, page : Int,limit : Int,completion : @escaping (Result<AllUserListResp,Error>) -> ())
-    func GetUserList(listID : Int , completion : @escaping (Result<UserListResp,Error> ) -> ())
-    func InsertMovieToList(movieID : Int, listID : Int, completion : @escaping (Result<InsertMovieToListResp,Error>)->())
-    func RemoveMovieFromList(req : RemoveMovieFromListReq , completion: @escaping (Result<RemoveMovieFromListResp,Error>)->()) //???
-    func GetOneMovieFromUserList(req : GetOneMovieFromUserListReq, completion : @escaping (Result<GetOneMovieFromUserListResp,Error>) -> ())
-    
-    //TODO: POST
-    func CreatePost(req : CreatePostReq , completion : @escaping (Result<CreatePostResp,Error>) -> ())
-    
-    func GetAllUserPost( page : Int ,limit : Int ,completion : @escaping (Result <AllUserPostResp,Error>) -> ())
-    //MARK: Async Version
-    
-    func GetFollowUserPost( page : Int ,limit : Int ,completion : @escaping (Result <FollowingUserPostResp,Error>) -> ())
-    func GetUserPostByUserID(userID : Int ,completion : @escaping (Result <UserPostResp,Error>) -> ())
-    func CountUserPosts(req : CountUserPostReq, completion : @escaping (Result<CountUserPostResp,Error>) -> ())
-    
-    //TODO: POST LIKED
-    func CreatePostLikes(req : CreatePostLikesReq,completion : @escaping (Result<CreatePostLikesResp,Error>) -> ())
-    func RemovePostLikes(req : RemovePostLikesReq,completion : @escaping (Result<RemovePostLikesResp,Error>) -> ())
-    func IsPostLiked(req : IsPostLikedReq,completion : @escaping (Result<IsPostLikedResp,Error>) -> ())
-    func CountPostLikes(req : CountPostLikesReq,completion : @escaping (Result<CountPostLikesResp,Error>) -> ())
-    
-    //TODO: POST COMMENT
-    func CreatePostComment(postId : Int,req : CreateCommentReq, completion : @escaping (Result<CreateCommentResp,Error>) -> ())
-    func UpdatePostComment(commentId : Int, req : UpdateCommentReq, completion : @escaping (Result<UpdateCommentResp,Error>) -> ())
-    func DeletePostComment(commentId : Int, completion : @escaping (Result<DeletePostCommentResp,Error>) -> ())
-    func GetPostComments(postId : Int, page : Int ,limit : Int ,completion : @escaping (Result<GetPostCommentsResp,Error>) -> ())
-    func AsyncGetPostComments(postId : Int, page : Int ,limit : Int) async -> Result<GetPostCommentsResp,Error>
-    
-    //TODO: REPLY COMMENT
-    func CreateReplyComment(req : CreateReplyCommentReq, completion : @escaping (Result<CreateReplyCommentResp,Error>) -> ())
-    func GetReplyComment(req : GetReplyCommentReq,  page : Int,limit : Int ,completion : @escaping (Result<GetReplyCommentResp,Error>) -> ())
-    func AsyncGetReplyComment(req : GetReplyCommentReq,  page : Int,limit : Int) async -> Result<GetReplyCommentResp,Error>
+//protocol AsyncServerAPIServerServiceInterface {
+//    //TODO: HELPER
+////    func serverConnection(completion : @escaping (Result<ServerStatus,Error>)->())
+//    func AsyncServerConnection() async -> Result<ServerStatus,Error>
+//
+//    //TODO: USER
+////    func UserLogin(req : UserLoginReq,completion: @escaping (Result<UserLoginResp,Error>)->())
+//    func AsyncUserLogin(req : UserLoginReq) async -> Result<UserLoginResp,Error>
+//    func AsyncUserSignUp(req : UserSignUpReq) async -> Result<UserSignUpResp,Error>
+//    func AsyncGetUserProfile() async -> Result<Profile,Error>
+//    func AsyncGetUserProfileById(userID : Int) async -> Result<Profile,Error>
+//    func AsyncUpdateUserProfile(req : UserProfileUpdateReq) async -> Result<UserProfileUpdateResp,Error>
+//    func AsyncUploadImage(imgData : Data,uploadType: UploadImageType) async -> Result<UploadImageResp,Error>
+//
+//
+//    func CountFriend(req : CountFriendReq,completion: @escaping (Result<CountFriendResp,Error>)->())
+//    func GetFriendList(req : GetFriendListReq,completion: @escaping (Result<GetFriendListResp,Error>)->())
+//    func GetFriendRoomList(completion: @escaping (Result<GetFriendRoomListResp,Error>)->())
+//
+//    func ResetFriendNotification(completion: @escaping (Result<ResetFriendNotificationResp,Error>)->())
+//    func ResetCommentNotification(completion: @escaping (Result<ResetCommentNotificationResp,Error>)->())
+//    func ResetLikesNotification(completion: @escaping (Result<ResetLikesNotificationResp,Error>)->())
+//
+//
+//    //TODO: USER GENRES SETTING
+//    func UpdateUserGenre(req : UpdateUserGenreReq, completion : @escaping (Result<UpdateUserGenreResp,Error>) -> ())
+//    func GetUserGenres(req : GetUserGenreReq,completion : @escaping (Result<GetUserGenreResp,Error>) -> ())
+//
+//    //TODO: LIKED MOVIE
+//    func PostLikedMovie(req:NewUserLikeMoviedReq,completion : @escaping (Result<CreateUserLikedMovieResp,Error>) -> ())
+//    func DeleteLikedMovie(req : DeleteUserLikedMovie,completion : @escaping (Result<DeleteUserLikedMovieResp,Error>) -> ())
+//    func GetAllUserLikedMoive(userID : Int, completion : @escaping (Result<AllUserLikedMovieResp,Error>) -> ())
+//
+//    func IsLikedMovie(req : IsLikedMovieReq , completion: @escaping (Result<IsLikedMovieResp,Error>) -> ())
+//
+//    //TODO: CUSTOM LIST
+//    func CreateCustomList(req : CreateNewCustomListReq ,completion : @escaping (Result<CreateNewCustomListResp,Error>) -> ())
+//    func UpdateCustomList(req : UpdateCustomListReq, completion : @escaping (Result<UpdateCustomListResp,Error>) -> ())
+//    func DeleteCustomList(req : DeleteCustomListReq, completion : @escaping (Result<DeleteCustomListResp,Error>) -> ())
+//    func GetAllCustomLists(userID : Int, page : Int,limit : Int,completion : @escaping (Result<AllUserListResp,Error>) -> ())
+//    func GetUserList(listID : Int , completion : @escaping (Result<UserListResp,Error> ) -> ())
+//    func InsertMovieToList(movieID : Int, listID : Int, completion : @escaping (Result<InsertMovieToListResp,Error>)->())
+//    func RemoveMovieFromList(req : RemoveMovieFromListReq , completion: @escaping (Result<RemoveMovieFromListResp,Error>)->()) //???
+//    func GetOneMovieFromUserList(req : GetOneMovieFromUserListReq, completion : @escaping (Result<GetOneMovieFromUserListResp,Error>) -> ())
+//
+//    //TODO: POST
+//    func CreatePost(req : CreatePostReq , completion : @escaping (Result<CreatePostResp,Error>) -> ())
+//
+//    func GetAllUserPost( page : Int ,limit : Int ,completion : @escaping (Result <AllUserPostResp,Error>) -> ())
+//    //MARK: Async Version
+//
+//    func GetFollowUserPost( page : Int ,limit : Int ,completion : @escaping (Result <FollowingUserPostResp,Error>) -> ())
+//    func GetUserPostByUserID(userID : Int ,completion : @escaping (Result <UserPostResp,Error>) -> ())
+//    func CountUserPosts(req : CountUserPostReq, completion : @escaping (Result<CountUserPostResp,Error>) -> ())
+//
+//    //TODO: POST LIKED
+//    func CreatePostLikes(req : CreatePostLikesReq,completion : @escaping (Result<CreatePostLikesResp,Error>) -> ())
+//    func RemovePostLikes(req : RemovePostLikesReq,completion : @escaping (Result<RemovePostLikesResp,Error>) -> ())
+//    func IsPostLiked(req : IsPostLikedReq,completion : @escaping (Result<IsPostLikedResp,Error>) -> ())
+//    func CountPostLikes(req : CountPostLikesReq,completion : @escaping (Result<CountPostLikesResp,Error>) -> ())
+//
+//    //TODO: POST COMMENT
+//    func CreatePostComment(postId : Int,req : CreateCommentReq, completion : @escaping (Result<CreateCommentResp,Error>) -> ())
+//    func UpdatePostComment(commentId : Int, req : UpdateCommentReq, completion : @escaping (Result<UpdateCommentResp,Error>) -> ())
 //    func DeletePostComment(commentId : Int, completion : @escaping (Result<DeletePostCommentResp,Error>) -> ())
-//    func GetPostComments(postId : Int, completion : @escaping (Result<GetPostCommentsResp,Error>) -> ())
-    
-    //TODO: COMMENT LIKES
-    func CreateCommentLikes(req : CreateCommentLikesReq,completion : @escaping (Result<CreateCommentLikesResp,Error>) -> ())
-    func RemoveCommentLikes(req : RemoveCommentLikesReq,completion : @escaping (Result<RemoveCommentLikesResp,Error>) -> ())
-    func IsCommentLiked(req : IsCommentLikedReq,completion : @escaping (Result<IsCommentLikedResp,Error>) -> ())
-    func CountCommentLikes(req : CountCommentLikesReq,completion : @escaping (Result<CountCommentLikesResp,Error>) -> ())
-    
-    //TODO: Friend -Updated
-    func AddFriend(req : AddFriendReq, completion: @escaping (Result<AddFriendResp,Error>) -> ())
-    func RemoveFriend(req : RemoveFriendReq, completion: @escaping (Result<RemoveFriendResp,Error>) -> ())
-    func AccepctFriendRequest(req : FriendRequestAccecptReq, completion: @escaping (Result<FriendRequestAcceptResp,Error>) -> ())
-    func DeclineFriendRequest(req : FriendRequestDeclineReq, completion: @escaping (Result<FriendRequestDeclineResp,Error>) -> ())
-    func CancelFriendRequest(req : FriendRequestCancelReq, completion: @escaping (Result<FriendRequestCancelResp,Error>) -> ())
-    func GetFriendRequest(page : Int,limit : Int,completion: @escaping (Result<GetFriendRequestListResp,Error>) -> ())
-    
-    //MARK: Need a api check is friend
-    func IsFriend(req : IsFriendReq,completion: @escaping (Result<IsFriendResp,Error>) -> ())
-
-    //TODO: MOVIE
-    func GetMovieCardInfoByGenre(genre: GenreType, completion :@escaping (Result<MoviePageListByGenreResp, Error>) -> ())
-    
-    func GetMovieLikedCount(req : CountMovieLikesReq, completion: @escaping (Result<CountMovieLikesResp,Error>) -> ())
-    func GetMovieCollectedCount(req : CountMovieCollectedReq,completion: @escaping (Result<CountMovieCollectedResp,Error>) -> ())
-    
-    
-    //TODO: Group/Room
-    func CreateRoom(req : CreateRoomReq,completion: @escaping (Result<CreateRoomResp,Error>) -> ())
-    func DeleteRoom(req : DeleteRoomReq,completion: @escaping (Result<DeleteRoomResp,Error>) -> ())
-    func JoinRoom(req : JoinRoomReq,completion: @escaping (Result<JoinRoomResp,Error>) -> ())
-    func LeaveRoom(req : LeaveRoomReq,completion: @escaping (Result<LeaveRoomResp,Error>) -> ())
-    func GetRoomMember(req : GetRoomMembersReq,completion: @escaping (Result<GetRoomMembersResp,Error>) -> ())
-    func GetUserRooms(completion: @escaping (Result<GetUserRoomsResp,Error>) -> ())
-    func GetRoomInfo(req : GetRoomInfoReq,completion: @escaping (Result<GetRoomInfoResp,Error>) -> ())
-    func SetIsRead(req : SetIsReadReq,completion: @escaping (Result<SetIsReadResp,Error>) -> ())
-    
-    
-    //TODO: Message
-    func GetRoomMessage(req : GetRoomMessageReq, page : Int ,limit : Int ,completion: @escaping (Result<GetRoomMessageResp,Error>) -> ())
-    func AsyncGetRoomMessage(req : GetRoomMessageReq, page : Int ,limit : Int) async -> Result<GetRoomMessageResp,Error>
-    //TODO: Notification
-    func GetLikesNotification( page : Int ,limit : Int ,completion: @escaping (Result<GetLikesNotificationsResq,Error>) -> ())
-    func GetCommentNotification( page : Int ,limit : Int ,completion: @escaping (Result<GetCommentNotificationsResq,Error>) -> ())
-    
-    //Searching and playground
-//    TODO - Person data format
-    func fetchActors(page : Int ,completion : @escaping (Result<PersonInfoResponse,Error>) ->  ())
-    func fetchDirectors(page : Int ,completion : @escaping (Result<PersonInfoResponse,Error>) -> ())
-    
-//    TODO - Genre with description image of a referencing movie
-    func fetchGenreById(genreID id :Int, dataSize size : Int , completion : @escaping (Result<GenreInfoResponse,Error>) -> ())
-    func fetchAllGenres(completion : @escaping (Result<GenreInfoResponse,Error>) -> ())
-    
-    //TODO -Preview API
-    func getPreviewMovie(datas : [SearchRef],completion : @escaping (Result<[MoviePreviewInfo],Error>) -> ())
-
-    func getPreviewMovieList(completion : @escaping (Result<[MoviePreviewInfo],Error>) -> ())
-
-    //TODO -Search API
-    func getRecommandtionSearch(query key: String,completion : @escaping (Result<Movie,Error>)-> ())
-    func getHotSeachingList(completion : @escaping (Result<[SearchHotItem],Error>)->())
-
-    
-//    TODO -TrailerAPI
-    func getMovieTrailerList(page : Int,completing : @escaping (Result<[TrailerInfo],Error>)->())
-    
-}
+//    func GetPostComments(postId : Int, page : Int ,limit : Int ,completion : @escaping (Result<GetPostCommentsResp,Error>) -> ())
+//    func AsyncGetPostComments(postId : Int, page : Int ,limit : Int) async -> Result<GetPostCommentsResp,Error>
+//
+//    //TODO: REPLY COMMENT
+//    func CreateReplyComment(req : CreateReplyCommentReq, completion : @escaping (Result<CreateReplyCommentResp,Error>) -> ())
+//    func GetReplyComment(req : GetReplyCommentReq,  page : Int,limit : Int ,completion : @escaping (Result<GetReplyCommentResp,Error>) -> ())
+//    func AsyncGetReplyComment(req : GetReplyCommentReq,  page : Int,limit : Int) async -> Result<GetReplyCommentResp,Error>
+////    func DeletePostComment(commentId : Int, completion : @escaping (Result<DeletePostCommentResp,Error>) -> ())
+////    func GetPostComments(postId : Int, completion : @escaping (Result<GetPostCommentsResp,Error>) -> ())
+//
+//    //TODO: COMMENT LIKES
+//    func CreateCommentLikes(req : CreateCommentLikesReq,completion : @escaping (Result<CreateCommentLikesResp,Error>) -> ())
+//    func RemoveCommentLikes(req : RemoveCommentLikesReq,completion : @escaping (Result<RemoveCommentLikesResp,Error>) -> ())
+//    func IsCommentLiked(req : IsCommentLikedReq,completion : @escaping (Result<IsCommentLikedResp,Error>) -> ())
+//    func CountCommentLikes(req : CountCommentLikesReq,completion : @escaping (Result<CountCommentLikesResp,Error>) -> ())
+//
+//    //TODO: Friend -Updated
+//    func AddFriend(req : AddFriendReq, completion: @escaping (Result<AddFriendResp,Error>) -> ())
+//    func RemoveFriend(req : RemoveFriendReq, completion: @escaping (Result<RemoveFriendResp,Error>) -> ())
+//    func AccepctFriendRequest(req : FriendRequestAccecptReq, completion: @escaping (Result<FriendRequestAcceptResp,Error>) -> ())
+//    func DeclineFriendRequest(req : FriendRequestDeclineReq, completion: @escaping (Result<FriendRequestDeclineResp,Error>) -> ())
+//    func CancelFriendRequest(req : FriendRequestCancelReq, completion: @escaping (Result<FriendRequestCancelResp,Error>) -> ())
+//    func GetFriendRequest(page : Int,limit : Int,completion: @escaping (Result<GetFriendRequestListResp,Error>) -> ())
+//
+//    //MARK: Need a api check is friend
+//    func IsFriend(req : IsFriendReq,completion: @escaping (Result<IsFriendResp,Error>) -> ())
+//
+//    //TODO: MOVIE
+//    func GetMovieCardInfoByGenre(genre: GenreType, completion :@escaping (Result<MoviePageListByGenreResp, Error>) -> ())
+//
+//    func GetMovieLikedCount(req : CountMovieLikesReq, completion: @escaping (Result<CountMovieLikesResp,Error>) -> ())
+//    func GetMovieCollectedCount(req : CountMovieCollectedReq,completion: @escaping (Result<CountMovieCollectedResp,Error>) -> ())
+//
+//
+//    //TODO: Group/Room
+//    func CreateRoom(req : CreateRoomReq,completion: @escaping (Result<CreateRoomResp,Error>) -> ())
+//    func DeleteRoom(req : DeleteRoomReq,completion: @escaping (Result<DeleteRoomResp,Error>) -> ())
+//    func JoinRoom(req : JoinRoomReq,completion: @escaping (Result<JoinRoomResp,Error>) -> ())
+//    func LeaveRoom(req : LeaveRoomReq,completion: @escaping (Result<LeaveRoomResp,Error>) -> ())
+//    func GetRoomMember(req : GetRoomMembersReq,completion: @escaping (Result<GetRoomMembersResp,Error>) -> ())
+//    func GetUserRooms(completion: @escaping (Result<GetUserRoomsResp,Error>) -> ())
+//    func GetRoomInfo(req : GetRoomInfoReq,completion: @escaping (Result<GetRoomInfoResp,Error>) -> ())
+//    func SetIsRead(req : SetIsReadReq,completion: @escaping (Result<SetIsReadResp,Error>) -> ())
+//
+//
+//    //TODO: Message
+//    func GetRoomMessage(req : GetRoomMessageReq, page : Int ,limit : Int ,completion: @escaping (Result<GetRoomMessageResp,Error>) -> ())
+//    func AsyncGetRoomMessage(req : GetRoomMessageReq, page : Int ,limit : Int) async -> Result<GetRoomMessageResp,Error>
+//    //TODO: Notification
+//    func GetLikesNotification( page : Int ,limit : Int ,completion: @escaping (Result<GetLikesNotificationsResq,Error>) -> ())
+//    func GetCommentNotification( page : Int ,limit : Int ,completion: @escaping (Result<GetCommentNotificationsResq,Error>) -> ())
+//
+//    //Searching and playground
+////    TODO - Person data format
+//    func fetchActors(page : Int ,completion : @escaping (Result<PersonInfoResponse,Error>) ->  ())
+//    func fetchDirectors(page : Int ,completion : @escaping (Result<PersonInfoResponse,Error>) -> ())
+//
+////    TODO - Genre with description image of a referencing movie
+//    func fetchGenreById(genreID id :Int, dataSize size : Int , completion : @escaping (Result<GenreInfoResponse,Error>) -> ())
+//    func fetchAllGenres(completion : @escaping (Result<GenreInfoResponse,Error>) -> ())
+//
+//    //TODO -Preview API
+//    func getPreviewMovie(datas : [SearchRef],completion : @escaping (Result<[MoviePreviewInfo],Error>) -> ())
+//
+//    func getPreviewMovieList(completion : @escaping (Result<[MoviePreviewInfo],Error>) -> ())
+//
+//    //TODO -Search API
+//    func getRecommandtionSearch(query key: String,completion : @escaping (Result<Movie,Error>)-> ())
+//    func getHotSeachingList(completion : @escaping (Result<[SearchHotItem],Error>)->())
+//
+//
+////    TODO -TrailerAPI
+//    func getMovieTrailerList(page : Int,completing : @escaping (Result<[TrailerInfo],Error>)->())
+//
+//}
 enum MovieListEndpoint: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
@@ -395,10 +395,12 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     case GetUserList
     case AddMovieToList
     case RemoveMovieFromList
+    case RemoveListMovies
     case GetOneMovieFromUserList
     case GetCollectedMovieCount
     
-    //MARK: Create post API
+    //MARK:  post API
+    case CheckPost
     case CreatePost //Done
     case UpdatePost //Done
     case DeletPost //Done
@@ -502,13 +504,15 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
         case .GetUserList: return "/list/" //list_id
         case .GetOneMovieFromUserList: return "/list/movie/" //movie_id
         case .GetCollectedMovieCount: return "/list/movies/count/"
+        case .RemoveListMovies : return "/list/movies/" ///list/movies/:list_id
         
         case .AddMovieToList: return "/list/" // listID/movie/:movieID
         case .RemoveMovieFromList: return "/list/" // /list/:list_id/movie/:movie_id
             
+        case .CheckPost : return "/post/check/"
         case .CreatePost: return "/posts"
         case .UpdatePost: return "/posts"
-        case .DeletPost: return "/posts"
+        case .DeletPost: return "/post"
         case .GetAllPosts: return "/posts/all"
         case .GetFollowingPosts: return "/posts/follow"
         case .GetUserPosts: return "/posts/" // postID

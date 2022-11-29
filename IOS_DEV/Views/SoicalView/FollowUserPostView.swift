@@ -24,7 +24,6 @@ struct FollowUserPostView: View {
     @State private var shownUserID : Int = 0
     var body: some View {
         ScrollView(.vertical, showsIndicators: false){
-            
             if postVM.followingData.isEmpty {
                 VStack{
                     Text("朋友圈暫無任何文章")
@@ -131,6 +130,8 @@ struct FollowPostCell : View {
     @State private var isShowAll = false
     @State private var isTapToLike = false
     
+    @State private var isDelete = false
+    
     var body: some View{
         VStack(spacing:10){
             UserInfoCell()
@@ -138,43 +139,79 @@ struct FollowPostCell : View {
         }
         .padding(.vertical,5)
         .frame(width: UIScreen.main.bounds.width)
+        .alert(isPresented: $isDelete){
+            withAnimation(){
+                Alert(title: Text("刪除當前文章"), message: Text("確定刪掉?"),
+                      primaryButton: .default(Text("取消")){},
+                      secondaryButton: .default(Text("刪除")){
+                        Task.init{
+                            await self.DeletePost(postID:self.post.id)
+                        }
+                })
+            }
+        }
 
     }
+    
+    
     
     @ViewBuilder
     func UserInfoCell() -> some View{
         HStack(alignment:.center){
-            //TODO: Fix this one !! out of range !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! coz the id problem
-            WebImage(url:self.post.user_info.UserPhotoURL)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 35, height: 35)
-                    .clipShape(Circle())
-            
-            
-            VStack(alignment:.leading){
-                HStack(alignment:.center, spacing:10){
-                    Text(self.post.user_info.name)
-                        .font(.system(size: 16, weight: .semibold))
-                    
-                    Text(self.post.post_at.dateDescriptiveString())
+            Group{
+                WebImage(url:self.post.user_info.UserPhotoURL)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 35, height: 35)
+                        .clipShape(Circle())
+                
+                
+                VStack(alignment:.leading){
+                    HStack(alignment:.center, spacing:10){
+                        Text(self.post.user_info.name)
+                            .font(.system(size: 16, weight: .semibold))
+                        
+                        Text(self.post.post_at.dateDescriptiveString())
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+                    Text("@\(self.post.user_info.name)")
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
-                Text("@\(self.post.user_info.name)")
-                    .font(.caption)
-                    .foregroundColor(.gray)
             }
+            .onTapGesture{
+                if self.post.user_info.id != userVM.userID {
+                    self.shownUserID = self.post.user_info.id
+                    withAnimation{
+                        self.isShowUserProfile = true
+                    }
+                }
+            }
+           
             Spacer()
-            //TODO: Coming Soone???
-            
+
             Menu(content: {
-                Button(action: {
-                    // delete the selected post if user is owner
-                }) {
-                    HStack {
-                        Text("刪除")
-                        Image(systemName: "trash")
+                if self.post.user_info.id == userVM.userID {
+                    Button(action: {
+                        // delete the selected post if user is owner
+                    }) {
+                        HStack {
+                            Text("編輯")
+                            Image(systemName: "square.and.pencil")
+                        }
+                    }
+                    
+                    Button(action: {
+                        // delete the selected post if user is owner
+                        withAnimation{
+                            isDelete = true
+                        }
+                    }) {
+                        HStack {
+                            Text("刪除")
+                            Image(systemName: "trash")
+                        }
                     }
                 }
                 
@@ -199,15 +236,24 @@ struct FollowPostCell : View {
             }
         }
         .padding(.horizontal,10)
-        .onTapGesture{
-            if self.post.user_info.id != userVM.userID {
-                self.shownUserID = self.post.user_info.id
-                withAnimation{
-                    self.isShowUserProfile = true
-                }
+
+    }
+    
+    @MainActor
+    private func DeletePost(postID : Int) async{
+        let resp = await APIService.shared.AsyncDeletePost(req: DeletePostReq(post_id: postID))
+        switch resp {
+        case .success(_):
+            withAnimation(){
+                self.postVM.isShowPostDetail = false
             }
+            
+            self.postVM.followingData.removeAll{$0.id == postID}
+        case .failure(let err):
+            print(err.localizedDescription)
         }
     }
+    
     
     @ViewBuilder
     func UserPostInfo() -> some View {

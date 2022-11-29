@@ -11,7 +11,7 @@ import CoreAudio
 import Kingfisher
 import Combine
 import Refresher
-
+private let feedBack = UIImpactFeedbackGenerator()
 struct PersonProfileView : View{
     @Binding var isShowMenu : Bool
     @StateObject var HubState : BenHubState = BenHubState.shared
@@ -658,7 +658,8 @@ struct profileCardCell : View {
 
 struct PersonPostCardGridView : View{
     //    let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
-    @EnvironmentObject var userVM : UserViewModel
+    @StateObject var state = ScrollState()
+    @EnvironmentObject var userVM  : UserViewModel
     @EnvironmentObject var postVM : PostVM
     var body: some View{
         if userVM.profile?.UserCollection != nil{
@@ -672,8 +673,8 @@ struct PersonPostCardGridView : View{
                 }
                 .frame(height:UIScreen.main.bounds.height / 2)
             }else{
-                FlowLayoutView(list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollAble: $userVM.isAllowToScroll){ info in
-                
+                FlowLayoutWithLoadMoreView(isInit:.constant(true),list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollable: $userVM.isAllowToScroll, content: { info in
+                    
                     profileCardCell(Id : userVM.GetPostIndex(postId: info.id)){
                         DispatchQueue.main.async {
                             self.postVM.selectedPostInfo = info
@@ -681,10 +682,34 @@ struct PersonPostCardGridView : View{
                             withAnimation{
                                 self.postVM.isShowPostDetail.toggle()
                             }
-                        
+                            
                         }
                     }
-                }
+                    
+                } , loadMoreContent: {
+                    if self.userVM.postCurPage < self.userVM.postTotalPage{
+                        ActivityIndicatorView()
+                            .padding(.vertical)
+                            .task {
+                                print("???")
+                                //is fetching???
+                                await self.userVM.AsyncGetMorePost(userID: self.userVM.userID!)
+                            }
+                    }
+                })
+//                FlowLayoutView(list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollAble: $userVM.isAllowToScroll){ info in
+//
+//                    profileCardCell(Id : userVM.GetPostIndex(postId: info.id)){
+//                        DispatchQueue.main.async {
+//                            self.postVM.selectedPostInfo = info
+//                            self.postVM.selectedPostFrom = .Profile
+//                            withAnimation{
+//                                self.postVM.isShowPostDetail.toggle()
+//                            }
+//
+//                        }
+//                    }
+//                }
 
 //
 
@@ -736,20 +761,33 @@ struct LikedPostCardGridView : View {
                             .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2.5, alignment: .top)
                         //                        Spacer()
                     }else {
-                        LazyVGrid(columns: gridItem){
-                            ForEach(userVM.profile!.UserLikedMovies!,id:\.id){info in
-                                LikedCardCell(movieInfo: info)
-                                    .onTapGesture {
-                                        withAnimation{
-                                            self.movieId = info.id
+                        LazyVStack{
+                            LazyVGrid(columns: gridItem){
+                                ForEach(userVM.profile!.UserLikedMovies!,id:\.id){info in
+                                    LikedCardCell(movieInfo: info)
+                                        .onTapGesture {
                                             withAnimation{
-                                                self.isShowMovieDetail = true
+                                                self.movieId = info.id
+                                                withAnimation{
+                                                    self.isShowMovieDetail = true
+                                                }
                                             }
                                         }
-                                    }
+                                }
+                                
                             }
                             
+                            if self.userVM.likedCurPage < self.userVM.likedTotalPage{
+                                ActivityIndicatorView()
+                                    .padding(.vertical)
+                                    .task {
+                                        //is fetching???
+//                                        await self.userVM.AsyncGetMorePost(userID: self.userVM.userID!)
+                                        await self.userVM.AsyncGetMoreUserLikedMoive(userID: self.userVM.userID!)
+                                    }
+                            }
                         }
+                 
                     }
                 }.introspectScrollView{ ScrollView in
                     ScrollView.isScrollEnabled = userVM.isAllowToScroll
@@ -970,7 +1008,17 @@ struct CustomListView : View{
                             .foregroundColor(.gray)
                         
                     } else {
-                        ListInfo()
+                        LazyVStack {
+                            ListInfo()
+                            if self.userVM.listCurPage < self.userVM.listTotalPage{
+                                ActivityIndicatorView()
+                                    .padding(.vertical)
+                                    .task {
+                                        await self.userVM.AsyncGetMoreUserLikedMoive(userID: self.userVM.userID!)
+                                    }
+                            }
+                        }
+                        
                     }
                 }.introspectScrollView{ ScrollView in
                     ScrollView.isScrollEnabled = userVM.isAllowToScroll
@@ -1313,6 +1361,7 @@ struct RefershState {
 struct personProfile: View {
     @Binding var isShowMenu : Bool
 //    @Binding var isShowLikedMovie : Bool
+    @StateObject var state = ScrollState()
     @EnvironmentObject private var userVM : UserViewModel
     @EnvironmentObject private var postVM : PostVM
     @State private var isEditProfile : Bool = false
@@ -1417,13 +1466,25 @@ struct personProfile: View {
                 GeometryReader { proxy in
                     ScrollView(showsIndicators: false){
                         LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]){
-                            
                             ZStack{
                                 GeometryReader{ reader -> AnyView in
                                     let frame = reader.frame(in: .global)
-//                                    print(userVM.isAllowToScroll)
+                                    let minY = reader.frame(in: .global).minY
+                                    if state.initOffsetY == 0 {
+                                        state.initOffsetY = minY
+                                    }
+                                    
                                     DispatchQueue.main.async {
-//                                        print( headerOffset -  height + 78)
+                                        //MARK: PULL TO RELOAD
+                                        state.currOffset = minY
+                                        
+                                        if state.currOffset - state.initOffsetY > state.progressViewHeight && state.state == .normal {
+                                            feedBack.impactOccurred(intensity: 0.8)
+                                            withAnimation{
+                                                state.state = .PullDown
+                                            }
+                                        }
+                                        
                                         
                                         if self.height != frame.height && frame.height != 0{
                                             self.height = frame.height - 78
@@ -1466,9 +1527,7 @@ struct personProfile: View {
                                             )
 
                                             .zIndex(0)
-                                        
-                                        
-                                        
+
                                         profile()
                                             .frame(maxWidth:.infinity)
                                             .frame(height:  getHeaderHigth() ,alignment: .bottom)
@@ -1514,9 +1573,18 @@ struct personProfile: View {
                         .modifier(PersonPageOffsetModifier(offset: $offset,isShowIcon:$isShowIcon))
                         .frame(alignment:.top)
                     }
-//                    .disabled(self.isAbleToScroll)
                     .coordinateSpace(name: "SCROLL") //cotroll relate coordinateSpace
                     .zIndex(0)
+                    .onChange(of: state.state){ newVal in
+                        if newVal == .refershHeader {
+                            //                            onRefershHeader {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                self.state.state = .normal
+                            }
+//                            }
+                        }
+
+                    }
 
                 }
 
@@ -1564,8 +1632,11 @@ struct personProfile: View {
             .onChange(of: self.tabIndex){index in
                 if index == 1 {
                     if userVM.profile!.UserLikedMovies == nil{
-                        print("init liked movie")
-                        userVM.getUserLikedMovie()
+//                        print("init liked movie")
+//                        userVM.getUserLikedMovie()
+                        Task.init {
+                            await self.userVM.AsyncGetUserLikedMoive(userID:self.userVM.userID!)
+                        }
                     }
                 }else if index == 2{
                     if userVM.profile!.UserCustomList == nil{
@@ -1608,11 +1679,26 @@ struct personProfile: View {
     @ViewBuilder
     func profile() -> some View{
         VStack(alignment:.leading){
-            Spacer()
+//            Spacer()
             VStack(alignment:.center){
+                VStack(spacing:0){
+                    Spacer(minLength: 0)
+                    if state.state == .refershHeader{
+                        ActivityIndicatorView()
+                            .frame(height: state.progressViewHeight)
+                    } else {
+                        Image(systemName: "arrow.down")
+                            .frame(height: state.progressViewHeight)
+                            .rotationEffect(.degrees(self.state.state == .normal ? 0 : 180))
+                            .opacity(self.state.progressViewCurrentHeight == 0 ? 0 : 1)
+                    }
+                }
+                .frame(height:state.progressViewCurrentHeight)
+                .frame(maxWidth:.infinity)
+                .clipped()
+                
+                
                 HStack(spacing:20){
-
-                    
                     WebImage(url: userVM.profile!.UserPhotoURL)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
@@ -1695,69 +1781,10 @@ struct personProfile: View {
                 .padding(.bottom)
 //
 
-            
-//            HStack(spacing:8){
-//
-//
-//                VStack{
-//                    Text(self.posts.description)
-//                        .bold()
-//                    Text("文章")
-//                }
-//
-//                VStack{
-//                    Text(self.friends.description)
-//                        .bold()
-//                    Text("朋友")
-//                }
-//
-//
-////                Spacer()
-//
-////                Button(action:{
-////                    //TODO : Edite data
-////                    withAnimation(){
-////                        self.isEditProfile.toggle()
-////                    }
-////                }){
-////                    NavigationLink(destination:
-////                                    EditProfile(isEditProfile: $isEditProfile)
-////                                    .environmentObject(userVM)
-////                                   , isActive: $isEditProfile){
-////                        Text("編輯資料")
-////                            .navigationBarBackButtonHidden(true)
-////                            .padding(8)
-////                            .background(BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
-////                            .overlay(RoundedRectangle(cornerRadius: 25).stroke())
-////                    }
-////                }
-////                .buttonStyle(StaticButtonStyle())
-////                .foregroundColor(.white)
-////
-////                Button(action:{
-////                    //TODO : Edite data
-////                }){
-////                    NavigationLink(destination: UserSetting(isSetting: $isSetting)
-////                        .environmentObject(userVM)
-////                                   , isActive: $isSetting){
-////                        Image(systemName: "gearshape")
-////                            .padding(.horizontal,5)
-////                            .padding(8)
-////                            .background(BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
-////                            .overlay(RoundedRectangle(cornerRadius: 25).stroke())
-////                    }
-////                }
-////                .foregroundColor(.white)
-//
-//            }
-//            .font(.footnote)
-//            .padding(.vertical)
         
         }
         .padding(.horizontal)
         .onAppear{
-//            getFollowing()
-//            getFollower()
             getPostCount()
             getFriendCount()
             Task.init{

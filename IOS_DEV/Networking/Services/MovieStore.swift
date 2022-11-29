@@ -11,8 +11,8 @@ import SwiftUI
 import BottomSheet
 
 
-let SERVER_HOST = "http://ec2-13-251-129-145.ap-southeast-1.compute.amazonaws.com:8000"
-let SERVER_WS = "ws://ec2-13-251-129-145.ap-southeast-1.compute.amazonaws.com:8000/ws"
+let SERVER_HOST = "http://ec2-18-143-162-221.ap-southeast-1.compute.amazonaws.com:8000"
+let SERVER_WS = "ws://ec2-18-143-162-221.ap-southeast-1.compute.amazonaws.com:8000/ws"
 
 class MovieStore: MovieService {
     static let shared = MovieStore()
@@ -707,7 +707,7 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
     }
     
     func GetAllUserLikedMoive(userID : Int, completion : @escaping (Result<AllUserLikedMovieResp,Error>) -> ()) {
-        guard let url = URL(string: "\(API_SERVER_HOST)\(APIEndPoint.GetAllLikedMovie.apiUri)\(userID)") else{
+        guard let url = URL(string: "\(API_SERVER_HOST)\(APIEndPoint.GetAllLikedMovie.apiUri)\(userID)?page=\(1)&limit=\(10)") else{
             completion(.failure(APIError.apiError))
             return
         }
@@ -717,13 +717,14 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         FetchAndDecode(request: request, completion: completion)
     }
     
-    func AsyncGetAllUserLikedMoive(userID : Int) async -> Result<AllUserLikedMovieResp,Error> {
-        guard let url = URL(string: "\(API_SERVER_HOST)\(APIEndPoint.GetAllLikedMovie.apiUri)\(userID)") else{
+    func AsyncGetAllUserLikedMoive(userID : Int,page : Int = 1,limit : Int = 10) async -> Result<AllUserLikedMovieResp,Error> {
+        guard let url = URL(string: "\(API_SERVER_HOST)\(APIEndPoint.GetAllLikedMovie.apiUri)\(userID)?page=\(page)&limit=\(limit)" ) else{
             return .failure(APIError.apiError)
         }
         
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+//        print(request.url?.absoluteString)
         return await AsyncFetchAndDecode(request: request)
     }
     
@@ -787,6 +788,27 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         PostAndDecode(req: request, completion: completion)
     }
     
+    func AsyncUpdateCustomList(req : UpdateCustomListReq) async ->Result<UpdateCustomListResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.UpdateCustomList.apiUri) else{
+            return .failure(APIError.apiError)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do{
+            let bodyData = try Encoder.encode(req)
+            request.httpBody = bodyData
+        }catch{
+            return .failure(APIError.badEncoding)
+
+        }
+        
+        return await AsyncPostAndDecode(request: request)
+    }
+    
     func DeleteCustomList(req : DeleteCustomListReq, completion : @escaping (Result<DeleteCustomListResp,Error>) -> ()){
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.DeleteCustomList.apiUri) else{
             completion(.failure(APIError.apiError))
@@ -809,6 +831,26 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         PostAndDecode(req: request, completion: completion)
     }
     
+    func AsyncDeleteCustomList(req : DeleteCustomListReq) async -> Result<DeleteCustomListResp,Error>{
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.DeleteCustomList.apiUri) else{
+            return .failure(APIError.apiError)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do{
+            let bodyData = try Encoder.encode(req)
+            request.httpBody = bodyData
+        }catch{
+            return .failure(APIError.badEncoding)
+        }
+        
+        return await AsyncPostAndDecode(request: request)
+    }
+    
     func GetAllCustomLists(userID : Int, page : Int = 1,limit : Int = 10,completion: @escaping (Result<AllUserListResp, Error>) -> ()){
         guard let url = URL(string: "\(API_SERVER_HOST)\(APIEndPoint.GetAllUserLists.apiUri)\(userID)") else{
             completion(.failure(APIError.apiError))
@@ -823,7 +865,7 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
     }
     
     func AsyncGetAllCustomLists(userID : Int, page : Int = 1,limit : Int = 10) async -> Result<AllUserListResp,Error> {
-        guard let url = URL(string: "\(API_SERVER_HOST)\(APIEndPoint.GetAllUserLists.apiUri)\(userID)") else{
+        guard let url = URL(string: "\(API_SERVER_HOST)\(APIEndPoint.GetAllUserLists.apiUri)\(userID)?page=\(page)&limit=\(limit)") else{
             return .failure(APIError.apiError)
         }
         
@@ -870,6 +912,28 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         PostAndDecode(req: request, completion: completion)
+    }
+    
+  
+    func AsyncRemoveListMovies(listID : Int, movieIds : RemoveListMovieReq) async -> Result<RemoveListMovieResp,Error>{
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.RemoveListMovies.apiUri + listID.description) else {
+            return .failure(APIError.badUrl)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        do{
+            let bodyData = try Encoder.encode(movieIds)
+            request.httpBody = bodyData
+            print(bodyData)
+        }catch{
+            return .failure(APIError.badEncoding)
+//            return
+        }
+        
+        return await AsyncPostAndDecode(request: request)
     }
     
     func GetOneMovieFromUserList(req: GetOneMovieFromUserListReq, completion: @escaping (Result<GetOneMovieFromUserListResp, Error>) -> ()) {
@@ -988,14 +1052,15 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         FetchAndDecode(request: request, completion: completion)
     }
     
-    func AsyncGetUserPostByUserID(userID : Int) async -> Result <UserPostResp,Error> {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetUserPosts.apiUri + userID.description) else{
+    func AsyncGetUserPostByUserID(userID : Int,page : Int = 1, limit : Int = 10) async -> Result <UserPostResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetUserPosts.apiUri + userID.description + "?page=\(page)&limit=\(limit)") else{
             return .failure(APIError.apiError)
         }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+//        print(request.url?.absoluteString)
         return await AsyncFetchAndDecode(request: request)
     }
     
@@ -1012,7 +1077,36 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         FetchAndDecode(request: request, completion: completion)
     }
     
-    //MARK: POST LIKED
+    func AsyncDeletePost(req : DeletePostReq) async -> Result<DeletePostResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.DeletPost.apiUri) else{
+            return .failure(APIError.apiError)
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do {
+            let data = try self.Encoder.encode(req)
+            request.httpBody = data
+        } catch {
+            return .failure(APIError.badEncoding)
+        }
+//        print(request.url?.absoluteString)
+        return await AsyncPostAndDecode(request: request)
+    }
+    
+    func AsyncCheckPost(postID : Int) async -> Result<CheckPostResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CheckPost.apiUri + postID.description) else{
+            return .failure(APIError.apiError)
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        return await AsyncFetchAndDecode(request: request)
+    }
+    
+    //MARK: POST LIKED----
     func CreatePostLikes(req : CreatePostLikesReq,completion : @escaping (Result<CreatePostLikesResp,Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreatePostLikes.apiUri) else{
             completion(.failure(APIError.apiError))
@@ -1143,7 +1237,7 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         PostAndDecode(req: request, completion: completion)
     }
     
-    func GetPostComments(postId : Int,  page : Int = 1,limit : Int = 20,completion : @escaping (Result<GetPostCommentsResp,Error>) -> ()) {
+    func GetPostComments(postId : Int,  page : Int = 1,limit : Int = 10,completion : @escaping (Result<GetPostCommentsResp,Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetPostComment.apiUri + postId.description + "?page=\(page)") else {
             completion(.failure(APIError.badUrl))
             return
@@ -1157,8 +1251,8 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         FetchAndDecode(request: request, completion: completion)
     }
     
-    func AsyncGetPostComments(postId : Int, page : Int = 1 ,limit : Int = 20) async -> Result<GetPostCommentsResp,Error> {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetPostComment.apiUri + postId.description + "?page=\(page)") else {
+    func AsyncGetPostComments(postId : Int,  page : Int = 1,limit : Int = 10) async -> Result<GetPostCommentsResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetPostComment.apiUri + postId.description + "?page=\(page)&limit=\(limit)") else {
             return .failure(APIError.badUrl)
         }
         
@@ -1167,7 +1261,7 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        return await AsyncFetchAndDecode(request: request)
+       return await AsyncFetchAndDecode(request: request)
     }
     
     //MARK: --REPLY COMMENT
@@ -1848,10 +1942,14 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         do {
             let (data ,response) = try await Client.data(for: request)
             guard let statusCode = response as? HTTPURLResponse,200..<300 ~= statusCode.statusCode else{
+                let errResp = try self.Decoder.decode(ErrorResp.self, from: data)
+                print(errResp)
+                return .failure(errResp)
                 return  .failure(APIError.invalidResponse)
             }
             
             if let decideData = try? self.Decoder.decode(ResponseType.self, from: data){
+                print("???")
                return .success(decideData)
             }else{
                 //MARK: this code need to status code block !!!
@@ -1860,6 +1958,7 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
                 return .failure(errResp)
             }
         } catch {
+        
             return .failure(error)
         }
         
@@ -1943,6 +2042,28 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
 
          }.resume()
 
+    }
+    
+    private func AsyncPostAndDecode<ResponseType : Decodable>(request : URLRequest) async -> Result<ResponseType,Error> {
+        
+        do {
+            let (data ,response) = try await Client.data(for: request)
+            guard let statusCode = response as? HTTPURLResponse,200..<300 ~= statusCode.statusCode else{
+//                print(statusCode.statusCode)
+                return  .failure(APIError.invalidResponse)
+            }
+            
+            if let decideData = try? self.Decoder.decode(ResponseType.self, from: data){
+               return .success(decideData)
+            }else{
+                //MARK: this code need to status code block !!!
+                let errResp = try self.Decoder.decode(ErrorResp.self, from: data)
+                print(errResp)
+                return .failure(errResp)
+            }
+        }catch {
+            return .failure(error)
+        }
     }
     
     private func PostAndDecodeWithProgress<ResponseType : Decodable>(req : URLRequest,completion : @escaping (Result<ResponseType,Error>)->()) {

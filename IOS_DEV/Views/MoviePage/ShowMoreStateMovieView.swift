@@ -18,44 +18,13 @@ struct ShowMoreStateMovieView: View {
     @State private var isShowMovieDetail : Bool = false
     @State private var selectedMovieID : Int = -1
     
-
+    @Environment(\.dismiss) private var dissmiss
+    
     var grids : [GridItem] = Array(repeating: GridItem(spacing:25), count: 2)
     var body: some View {
-        GeometryReader { proxy  in
+//        GeometryReader { proxy  in
             VStack(spacing:0){
                 NavBar()
-                
-//                ScrollView(.vertical,showsIndicators: false){
-//                    LazyVStack(spacing:0){
-//
-////                        LazyVGrid(columns: grids,spacing:20) {
-////                            ForEach(0..<self.state.movies!.count,id:\.id){ i in
-////                                Button(action:{
-////                                    withAnimation{
-////                                        self.isShowMovieDetail.toggle()
-////                                        self.selectedMovieID = self.state.movies![i].id
-////                                    }
-////                                }){
-////                                    MovieCard(movie: self.state.movies![])
-////                                }
-////
-////                            }
-////                        }.padding(.horizontal,15).padding(.top,5)
-////
-////
-////
-////                        if self.state.page < self.state.total && self.state.total != 0{
-////                            ActivityIndicatorView()
-////                                .padding(.vertical)
-////                                .task {
-////                                    print("loading more movie")
-////                                    await self.state.loadMoreMovies(endpoint: self.endPoint)
-////                                }
-////                        }
-//                    }
-//
-//
-//                }
                 FlowLayoutWithLoadMoreView(list: state.movies!, columns: 2,HSpacing: 10,VSpacing: 20){ info in
                     Button(action: {
                         self.isShowMovieDetail.toggle()
@@ -64,32 +33,34 @@ struct ShowMoreStateMovieView: View {
                         MovieCardView(movieData: info)
                     }
                 } loadMoreContent: {
-                    if self.state.loadMore{
+                    if self.state.page < self.state.total{
                         ActivityIndicatorView()
                             .padding(.vertical)
                             .task {
-                                self.state.loadMore = false //repersent loading
+                                print("???")
                                 await self.state.loadMoreMovies(endpoint: self.endPoint)
                             }
                     }
                 }
-                .background(
-                    NavigationLink(destination: MovieDetailView(movieId: self.selectedMovieID, isShowDetail: self.$isShowMovieDetail)
-                                    .environmentObject(postVM)
-                                    .environmentObject(userVM)
-                                   ,isActive: self.$isShowMovieDetail){
-                        EmptyView()
-                    }
-                
-                )
+                .background(Color("DarkMode2").frame(maxWidth:.infinity))
             }
             .background(Color("DarkMode2").edgesIgnoringSafeArea(.all))
+            .background(
+                NavigationLink(destination: MovieDetailView(movieId: self.selectedMovieID, isShowDetail: self.$isShowMovieDetail)
+                                .environmentObject(postVM)
+                                .environmentObject(userVM)
+                               ,isActive: self.$isShowMovieDetail){
+                    EmptyView()
+                }
+            
+            )
+            .navigationBarTitle("")
+            .navigationBarHidden(true)
+            .navigationTitle("")
+            .navigationBarBackButtonHidden(true)
+ 
+//        }
 
-        }
-        .navigationBarTitle("")
-        .navigationBarHidden(true)
-        .navigationTitle("")
-        .navigationBarBackButtonHidden(true)
     }
     
     @ViewBuilder
@@ -98,7 +69,7 @@ struct ShowMoreStateMovieView: View {
             HStack(){
                 Button(action:{
                     withAnimation(){
-                        self.isShowAll.toggle()
+                        dissmiss()
                     }
                 }){
                    Image(systemName: "chevron.left")

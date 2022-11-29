@@ -24,16 +24,13 @@ struct CardFlowLayout: View {
                             }
                         }
                     }
+                .transition(.move(edge: .bottom))
 
 
         },loadMoreContent: {
             if self.postVM.discoverMetaData?.page ?? 0  < self.postVM.discoverMetaData?.total_pages ?? 0{
                 ActivityIndicatorView()
                     .padding(.vertical,5)
-                    .onAppear(){
-                        //do some request here
-                        print("loading...")
-                    }
                     .task{
                         await self.postVM.LoadMoreDiscoverData()
                     }

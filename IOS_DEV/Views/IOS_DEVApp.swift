@@ -31,32 +31,52 @@ struct IOS_DEVApp: App {
     }
 }
 
-//struct TestScrolling : View {
-//    let colors : [Color] = [.red,.gray,.yellow]
-//    var body: some View {
-//        VStack(spacing:0){
-//            ExtenedScrollView(isAbleToRefersh : false,isAbleToLoadMore: false,onRefershHeader: { done in
-//                DispatchQueue.main.asyncAfter(deadline:.now() + 1.5){
-//                    print("request is done 1")
-//                    done()
-//                }
-//            }, onRefershFooter: { done in
-//                DispatchQueue.main.asyncAfter(deadline:.now() + 1.5){
-//                    print("request is done 2")
-//                    done()
-//                }
-//            }){
-//                ForEach(0..<20) {i in
-//                    colors[ i % colors.count]
-//                        .frame(height:100)
-//                }
-//            }
-//        }
-//
-//    }
-//}
-//
-//
+struct TestSCrollNav : View {
+    var body : some View {
+        NavigationView {
+            NavigationLink(destination: TestScrolling()
+                .navigationTitle("")
+                .navigationBarHidden(true)
+                .navigationBarBackButtonHidden(true)
+                .navigationBarTitleDisplayMode(.inline)
+            
+            ){
+                Text("Testing")
+            }
+        }
+    }
+}
+
+struct TestScrolling : View {
+    let colors : [Color] = [.red,.gray,.yellow]
+    var body: some View {
+        GeometryReader{proxy in
+            VStack(spacing:0){
+                ExtenedScrollView(isRefershHeader: .constant(true), isRefershFooter: .constant(true),onRefershHeader: { done in
+                    DispatchQueue.main.asyncAfter(deadline:.now() + 1.5){
+                        print("request is done 1")
+                        done()
+                    }
+                }, onRefershFooter: { done in
+                    DispatchQueue.main.asyncAfter(deadline:.now() + 1.5){
+                        print("request is done 2")
+                        done()
+                    }
+                }){
+                    ForEach(0..<20) {i in
+                        colors[ i % colors.count]
+                            .frame(height:100)
+                    }
+                }
+            }
+            .frame(width: proxy.frame(in: .global).width, height: proxy.frame(in: .global).height)
+        }
+        
+
+    }
+}
+
+
 
 
 

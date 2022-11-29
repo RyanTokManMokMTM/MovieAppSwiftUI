@@ -239,10 +239,7 @@ struct RefreshableScrollView<Content:View> : UIViewRepresentable{
         func scrollViewDidScroll(_ scrollView: UIScrollView) {
             let offsetY = scrollView.contentOffset.y
             if offsetY > scrollView.contentSize.height - 300 - scrollView.frame.height {
-                    if self.parent.beAbleToUpdate && !self.parent.isLoading{
-                      print("loading....")
-                    }
-                
+                        
             }
         }
         

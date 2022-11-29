@@ -454,7 +454,8 @@ struct NewDetailView: View {
                 ZStack{
                     HStack{
                         Button(action:{
-                            dissmiss()
+//                            dissmiss()
+                            self.isShow = false
                         }){
                             Image(systemName: "chevron.left")
                                 .foregroundColor(.white)
@@ -641,16 +642,16 @@ struct NewDetailView: View {
             }
             .offset(x : CGFloat(self.index) * -UIScreen.main.bounds.width)
             .onChange(of: self.index){ index in
-//                if index == 1 {
-//                    print("??")
-//                    if movieResourceState.resource == nil{
-//                        movieResourceState.fetchMovieResource(query: movie.title)
-//                    }
-//                }else if index == 2{
-//                    if self.recommendState.movies == nil{
-//                        self.recommendState.RecommendMovies(id: movie.id)
-//                    }
-//                }
+                if index == 1 {
+                    print("??")
+                    if movieResourceState.resource == nil{
+                        movieResourceState.fetchMovieResource(query: movie.title)
+                    }
+                }else if index == 2{
+                    if self.recommendState.movies == nil{
+                        self.recommendState.RecommendMovies(id: movie.id)
+                    }
+                }
                 
             }
             
@@ -928,7 +929,7 @@ struct NewDetailView: View {
                                                 .transition(.fade(duration: 0.5)) // Fade Transition with duration
                                                 .aspectRatio(contentMode: .fit)
                                                 .frame(width: 80)
-                                                .cornerRadius(10)
+                                                .cornerRadius(8)
 
                                             Text(self.movie.credits!.cast[i].name)
                                                 .foregroundColor(.white)
@@ -974,7 +975,7 @@ struct NewDetailView: View {
                                                 .transition(.fade(duration: 0.5)) // Fade Transition with duration
                                                 .aspectRatio(contentMode: .fit)
                                                 .frame(width: 80)
-                                                .cornerRadius(10)
+                                                .cornerRadius(8)
 
                                             Text(self.movie.credits!.crew[i].name)
                                                 .foregroundColor(.white)
@@ -1012,7 +1013,7 @@ struct NewDetailView: View {
                                     .indicator(.activity) // Activity Indicator
                                     .transition(.fade(duration: 0.5)) // Fade Transition with duration
                                     .aspectRatio(contentMode: .fit)
-                                    .cornerRadius(5)
+                                    .cornerRadius(8)
                                     .frame(width: UIScreen.main.bounds.width / 1.2)
                             }
                             
@@ -1035,7 +1036,7 @@ struct NewDetailView: View {
                                 ForEach(0..<(self.movie.videos!.results.count < 10 ? self.movie.videos!.results.count : 10),id:\.self) { i in
                                     YoutubeView(video_id: self.movie.videos!.results[i].key)
                                         .frame(width:UIScreen.main.bounds.width - 20,height:UIScreen.main.bounds.height * 0.3)
-                                        .cornerRadius(10)
+                                        .cornerRadius(8)
                                 }
                             }
                         }

@@ -235,7 +235,6 @@ struct MovieStateView : View{
         }
         .onAppear{
             if self.State.movies == nil{
-                print(info)
                 self.State.loadMovies(endpoint: info.list_end_point)
             }
         }

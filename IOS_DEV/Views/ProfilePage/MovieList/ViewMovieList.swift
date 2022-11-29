@@ -52,9 +52,19 @@ struct ViewMovieList: View {
                         }){
                             if self.isManageMode{
                                 
-                                Text("完成")
-                                    .foregroundColor(.red)
-                                    .font(.system(size: 15,weight:.semibold))
+                                Button(action:{
+//                                    self.removeListMovies(movieIds: self.removeMovie, listID: self.userVM.profile?.UserCustomList?[listIndex].id  ?? 0)
+                                    Task.init{
+                                        await self.removeMovies(movieIds:self.removeMovie,listID:self.userVM.profile?.UserCustomList?[listIndex].id ?? 0)
+                                        withAnimation{
+                                            self.isManageMode = false
+                                        }
+                                    }
+                                }){
+                                    Text("完成")
+                                        .foregroundColor(.red)
+                                        .font(.system(size: 15,weight:.semibold))
+                                }
                                 
                             }else {
                                 Image(systemName: "chevron.left")
@@ -173,6 +183,27 @@ struct ViewMovieList: View {
         )
     }
     
+    private func removeMovies(movieIds : [Int],listID : Int) async {
+        if movieIds.isEmpty {
+            return
+        }
+        let req = RemoveListMovieReq(movie_ids: movieIds)
+        let resp = await APIService.shared.AsyncRemoveListMovies(listID: listID, movieIds: req)
+        
+        switch resp {
+        case .success(_):
+            if self.userVM.profile!.UserCustomList != nil{
+                for movieID in movieIds {
+                    self.userVM.profile!.UserCustomList?[listIndex].movie_list?.removeAll{$0.id == movieID}
+                }
+            }
+        case .failure(let err):
+            print(err.localizedDescription)
+            
+        }
+    }
+    
+
     
     @ViewBuilder
     func userInfo() -> some View {
@@ -276,7 +307,6 @@ struct MovieListCard : View {
             if isManageMode{
                 withAnimation{
                     self.isRemove.toggle()
-                    //insert into candindate list
                 }
                 updateList(movieID: info.id)
             }else {
@@ -302,6 +332,7 @@ struct MovieListCard : View {
             print("added id\(movieID)")
         }
     }
+    
     
     
 }

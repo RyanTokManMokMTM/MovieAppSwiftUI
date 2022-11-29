@@ -33,6 +33,15 @@ class UserViewModel : ObservableObject{
     @Published var profile : Profile?
     @Published var userID : Int?
     
+    @Published var postCurPage : Int = 1
+    @Published var postTotalPage : Int = 1
+    
+    @Published var likedCurPage : Int = 1
+    @Published var likedTotalPage : Int = 1
+    
+    @Published var listCurPage : Int = 1
+    @Published var listTotalPage : Int = 1
+    
     @Published var IsPostLoading : Bool = false
     @Published var IsLikedMovieLoading : Bool = false
     @Published var IsListLoading : Bool = false
@@ -96,7 +105,7 @@ class UserViewModel : ObservableObject{
         let resp = await APIService.shared.AsyncGetUserProfileById(userID: userID)
         switch resp {
         case .success(let data):
-            
+
             self.profile = data
         case .failure(let err):
             print(err.localizedDescription)
@@ -106,15 +115,19 @@ class UserViewModel : ObservableObject{
     
     @MainActor
     func AsyncGetPost(userID : Int) async {
-        let resp = await APIService.shared.AsyncGetUserPostByUserID(userID: userID)
+        let resp = await APIService.shared.AsyncGetUserPostByUserID(userID: userID,page: 1)
         switch resp {
         case .success(let data):
 //            userVM.profil
+//            self.postTotalPage = dat
+            self.postCurPage = data.meta_data.page
+            self.postTotalPage = data.meta_data.total_pages
+            print(data.meta_data)
             self.profile!.UserCollection = []
             guard let posts = data.post_info else {
                 return
             }
-           
+
             for var info in posts{
                 info.comments = []
                 self.profile!.UserCollection!.append(info)
@@ -125,6 +138,36 @@ class UserViewModel : ObservableObject{
         }
     }
     
+    @MainActor
+    func AsyncGetMorePost(userID : Int) async {
+        if self.postCurPage >= self.postTotalPage {
+            return
+        }
+        self.postCurPage += 1
+        let resp = await APIService.shared.AsyncGetUserPostByUserID(userID: userID,page: self.postCurPage)
+        switch resp {
+        case .success(let data):
+            self.postCurPage = data.meta_data.page
+            self.postTotalPage = data.meta_data.total_pages
+            guard let posts = data.post_info else {
+                return
+            }
+            
+            if self.profile!.UserCollection != nil {
+                for var info in posts{
+                    info.comments = []
+                    self.profile!.UserCollection!.append(info)
+                }
+                
+            } else {
+                self.profile!.UserCollection = []
+            }
+
+        case .failure(let err):
+            print(err.localizedDescription)
+            BenHubState.shared.AlertMessage(sysImg: "xmark", message: err.localizedDescription)
+        }
+    }
     
     func getUserProfileByID(){
         if self.userID == nil{
@@ -205,12 +248,13 @@ class UserViewModel : ObservableObject{
             self.IsLikedMovieLoading = false
             switch result{
             case .success(let data):
-                print(data)
                 if data.liked_movies == nil{
                     self.profile!.UserLikedMovies = []
                 }else{
                     self.profile!.UserLikedMovies = data.liked_movies!
+                    
                 }
+
                 self.ListError = nil
             case .failure(let err):
                 print(err.localizedDescription)
@@ -221,14 +265,44 @@ class UserViewModel : ObservableObject{
     
     @MainActor
     func AsyncGetUserLikedMoive(userID : Int) async {
-        let resp = await APIService.shared.AsyncGetAllUserLikedMoive(userID: userID)
+        let resp = await APIService.shared.AsyncGetAllUserLikedMoive(userID: userID,page : 1)
         switch resp {
         case .success(let data):
+            self.likedCurPage = data.meta_data.page
+            self.likedTotalPage = data.meta_data.total_pages
+            print(data.meta_data)
             if data.liked_movies == nil{
                 self.profile!.UserLikedMovies = []
             }else{
                 self.profile!.UserLikedMovies = data.liked_movies!
             }
+        case .failure(let err):
+            print(err.localizedDescription)
+            BenHubState.shared.AlertMessage(sysImg: "xmark", message: err.localizedDescription)
+        }
+    }
+    
+    @MainActor
+    func AsyncGetMoreUserLikedMoive(userID : Int) async {
+        if self.likedCurPage >= self.likedTotalPage {
+            return
+        }
+        self.listCurPage += 1
+        let resp = await APIService.shared.AsyncGetAllUserLikedMoive(userID: userID,page : self.listCurPage)
+        switch resp {
+        case .success(let data):
+            self.likedCurPage = data.meta_data.page
+            self.likedTotalPage = data.meta_data.total_pages
+            guard let likedMovie = data.liked_movies else {
+                return
+            }
+            
+            if self.profile!.UserLikedMovies != nil {
+                self.profile!.UserLikedMovies!.append(contentsOf: likedMovie)
+            }else {
+                self.profile!.UserLikedMovies = likedMovie
+            }
+
         case .failure(let err):
             print(err.localizedDescription)
             BenHubState.shared.AlertMessage(sysImg: "xmark", message: err.localizedDescription)
@@ -264,9 +338,11 @@ class UserViewModel : ObservableObject{
     
     @MainActor
     func AsyncGetUserList(userID : Int) async{
-        let resp = await APIService.shared.AsyncGetAllCustomLists(userID: userID)
+        let resp = await APIService.shared.AsyncGetAllCustomLists(userID: userID,page : 1)
         switch resp {
         case .success(let data):
+            self.listCurPage = data.meta_data.page
+            self.listTotalPage = data.meta_data.total_pages
             if data.lists == nil{
                 self.profile!.UserCustomList = []
             }else{
@@ -277,6 +353,34 @@ class UserViewModel : ObservableObject{
             BenHubState.shared.AlertMessage(sysImg: "xmark", message: err.localizedDescription)
         }
     }
+    
+    @MainActor
+    func AsyncGetMoreUserList(userID : Int) async{
+        if self.listCurPage >= self.listTotalPage {
+            return
+        }
+        
+        self.listCurPage += 1
+        let resp = await APIService.shared.AsyncGetAllCustomLists(userID: userID,page : self.listCurPage)
+        switch resp {
+        case .success(let data):
+            self.listCurPage = data.meta_data.page
+            self.listTotalPage = data.meta_data.total_pages
+            guard let list = data.lists else {
+                return
+            }
+            
+            if self.profile!.UserCustomList != nil {
+                self.profile!.UserCustomList!.append(contentsOf: list)
+            }else {
+                self.profile!.UserCustomList = list
+            }
+        case .failure(let err):
+            print(err.localizedDescription)
+            BenHubState.shared.AlertMessage(sysImg: "xmark", message: err.localizedDescription)
+        }
+    }
+    
     
     func UpdateUserProfile(name : String) {
         let req = UserProfileUpdateReq(name: name)
