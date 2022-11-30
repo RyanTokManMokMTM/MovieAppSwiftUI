@@ -685,13 +685,15 @@ struct  MovieCardView : View {
                 .indicator(.activity)
                 .transition(.fade(duration: 0.5))
                 .aspectRatio(contentMode: .fit)
-                .clipShape(CustomeConer(width: 5, height: 5, coners: .allCorners))
+                .clipShape(CustomeConer(width: 5, height: 5, coners: [.topLeft,.topRight]))
             
             Group {
                 VStack(alignment:.leading, spacing:2){
                     Text(movieData.title)
                         .font(.system(size:18,weight:.bold))
                         .foregroundColor(.white)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
                     
                     Text(movieData.releaseDate ?? "Coming Soon")
                         .font(.system(size:12,weight:.semibold))

@@ -73,6 +73,7 @@ class ScrollState : ObservableObject {
             .removeDuplicates()
             .sink { height in
                 DispatchQueue.main.async {
+                    print(height)
                     if self.state == .PullDown {
                         self.progressViewCurrentHeight = height
                     }else {

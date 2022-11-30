@@ -18,6 +18,7 @@ struct ShowMoreStateMovieView: View {
     @State private var isShowMovieDetail : Bool = false
     @State private var selectedMovieID : Int = -1
     
+    
     @Environment(\.dismiss) private var dissmiss
     
     var grids : [GridItem] = Array(repeating: GridItem(spacing:25), count: 2)
@@ -25,21 +26,22 @@ struct ShowMoreStateMovieView: View {
 //        GeometryReader { proxy  in
             VStack(spacing:0){
                 NavBar()
-                FlowLayoutWithLoadMoreView(list: state.movies!, columns: 2,HSpacing: 10,VSpacing: 20){ info in
+                FlowLayoutWithLoadMoreView(isLoading:self.$state.isLoading,list: state.movies!, columns: 2,HSpacing: 10,VSpacing: 20){ info in
                     Button(action: {
                         self.isShowMovieDetail.toggle()
                         self.selectedMovieID = info.id
                     }){
                         MovieCardView(movieData: info)
-                    }
-                } loadMoreContent: {
-                    if self.state.page < self.state.total{
-                        ActivityIndicatorView()
-                            .padding(.vertical)
-                            .task {
-                                print("???")
-                                await self.state.loadMoreMovies(endpoint: self.endPoint)
+                            .onAppear(){
+//                                self.state.isLast(movieID: info)
+                                if self.state.isLast(movieID: info.id){
+//                                    self.state.isLoading = true
+                                    Task.init{
+                                        await self.state.loadMoreMovies(endpoint:endPoint)
+                                    }
+                                }
                             }
+                            .background(Color("appleDark").edgesIgnoringSafeArea(.all).clipShape(CustomeConer(width: 5, height: 5, coners: .allCorners)))
                     }
                 }
                 .background(Color("DarkMode2").frame(maxWidth:.infinity))

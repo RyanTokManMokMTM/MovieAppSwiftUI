@@ -11,8 +11,8 @@ import SwiftUI
 import BottomSheet
 
 
-let SERVER_HOST = "http://ec2-18-143-162-221.ap-southeast-1.compute.amazonaws.com:8000"
-let SERVER_WS = "ws://ec2-18-143-162-221.ap-southeast-1.compute.amazonaws.com:8000/ws"
+let SERVER_HOST = "http://ec2-13-214-159-93.ap-southeast-1.compute.amazonaws.com:8000"
+let SERVER_WS = "ws://ec2-13-214-159-93.ap-southeast-1.compute.amazonaws.com:8000/ws"
 
 class MovieStore: MovieService {
     static let shared = MovieStore()
@@ -1725,7 +1725,7 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        
+//        print(request.url?.absoluteURL)
         FetchAndDecode(request: request, completion: completion)
     }
     

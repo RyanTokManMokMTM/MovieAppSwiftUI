@@ -86,13 +86,20 @@ struct LikesNotificationView: View {
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color("DarkMode2"))
                 }else {
+//                    LazyVStack(spacing:0){
                         ForEach(self.notificationVM.likesNotification){ info in
                             LikesCell(info: info)
                                 .listRowBackground(Color("DarkMode2"))
                                 .padding(.vertical,15)
+                                .task {
+                                    if self.notificationVM.isLastLikesNotification(id: info.id){
+                                        await self.notificationVM.LoadMoreLikesNotification()
+                                    }
+                                }
+                                .listRowBackground(Color("DarkMode2"))
                         }
                         
-                        if self.notificationVM.notificationMataData?.page ?? 0 < self.notificationVM.notificationMataData?.total_pages ?? 0 {
+                        if self.notificationVM.isLoadingLikes {
                             HStack{
                                 Spacer()
                                 ActivityIndicatorView()
@@ -100,14 +107,9 @@ struct LikesNotificationView: View {
                             }
                             .listRowBackground(Color("DarkMode2"))
                             .listRowSeparator(.hidden)
-                            .onAppear(){
-                                print("loading...")
-                            }
-                            .task {
-                                await self.notificationVM.LoadMoreLikesNotification()
-                            }
                         }
-                    
+//                    }
+                   
                     
                 }
             }

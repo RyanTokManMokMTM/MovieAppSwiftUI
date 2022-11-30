@@ -14,6 +14,10 @@ class NotificationVM : ObservableObject{
     @Published var likesNotification : [LikesNotification] = []
     @Published var commentNotification : [CommentNotification] = []
     
+    @Published var isLoadingFriendRequest : Bool = false
+    @Published var isLoadingLikes : Bool = false
+    @Published var isLoadingComment : Bool = false
+    
     init(){}
     
     func GetFriendRequests(){
@@ -47,6 +51,7 @@ class NotificationVM : ObservableObject{
             return
         }
         
+        self.isLoadingFriendRequest = true
         let resp = await APIService.shared.AsyncGetFriendRequest(page:self.notificationMataData!.page + 1)
         switch resp {
         case .success(let data):
@@ -56,6 +61,8 @@ class NotificationVM : ObservableObject{
             print(err.localizedDescription)
             BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
         }
+        
+        self.isLoadingFriendRequest = false
     }
     
     func GetLikesNotification(){
@@ -91,6 +98,7 @@ class NotificationVM : ObservableObject{
             return
         }
         
+        self.isLoadingLikes = true
         let resp = await APIService.shared.AsyncGetLikesNotification(page:self.notificationMataData!.page + 1)
         switch resp {
         case .success(let data):
@@ -100,6 +108,8 @@ class NotificationVM : ObservableObject{
             print(err.localizedDescription)
             BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
         }
+        
+        self.isLoadingLikes = false
     }
     
     func GetCommentNotification(){
@@ -135,6 +145,7 @@ class NotificationVM : ObservableObject{
             return
         }
         
+        self.isLoadingComment = true
         let resp = await APIService.shared.AsyncGetCommentNotification(page:self.notificationMataData!.page + 1)
         switch resp {
         case .success(let data):
@@ -144,7 +155,20 @@ class NotificationVM : ObservableObject{
             print(err.localizedDescription)
             BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
         }
+        
+        self.isLoadingComment = false
     }
     
+    func isLastFriendNotification(id : Int) -> Bool{
+        return self.friendRequest.last?.request_id == id
+    }
+    
+    func isLastCommentNotification(id : Int) -> Bool{
+        return self.commentNotification.last?.id == id
+    }
+    
+    func isLastLikesNotification(id : Int) -> Bool {
+        return self.likesNotification.last?.id == id
+    }
     
 }

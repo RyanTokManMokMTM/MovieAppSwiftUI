@@ -148,10 +148,15 @@ class MessageViewModel : ObservableObject{
     
         return result
     }
+    
+    func isLastMessage(messageID : Int,charRoomID : Int) -> Bool {
+        return self.rooms[charRoomID].messages.first?.msg_identity == messageID
+    }
 }
 
 struct ChattingView : View{
 //    @State private var messageMetaData : MetaData? = nil
+    @State private var isLoading = false
     @EnvironmentObject private var userVM : UserViewModel
     @EnvironmentObject private var msgVM : MessageViewModel
     let chatId : Int
@@ -168,8 +173,8 @@ struct ChattingView : View{
     var body: some View{
         VStack{
             GeometryReader{proxy in
-                ScrollView{
-                    ScrollViewReader{reader in
+                ScrollViewReader{reader in
+                    ScrollView{
                         getMessageView(width: proxy.size.width)
                             .padding(.horizontal)
                             .onChange(of: self.msgVM.rooms[chatId].messages.count){_ in
@@ -185,8 +190,8 @@ struct ChattingView : View{
                                 }
                             }
                             .onAppear(){
-//
                                 if let messageID = self.msgVM.rooms[chatId].messages.last?.RoomUUID{
+                                    print(messageID)
                                     scrollTo(messageID: messageID, anchor: .bottom,shouldAnima: false, scrollViewReader: reader)
                                 }
                             }
@@ -194,8 +199,7 @@ struct ChattingView : View{
                     
                 }
             }
-            
-            //            .background(Color("appleDark"))
+
             
             ToolBar()
         }
@@ -255,6 +259,7 @@ struct ChattingView : View{
         if  self.msgVM.rooms[self.chatId].meta_data.total_pages ==  self.msgVM.rooms[self.chatId].meta_data.page {
             return
         }
+        self.isLoading = true
         //TODO: we need to get the last id which id is the first message in messageInfo
         let lastID =  self.msgVM.rooms[chatId].messages.first?.msg_identity ?? 0
         print(lastID)
@@ -268,6 +273,8 @@ struct ChattingView : View{
             print(err.localizedDescription)
             //Show err???
         }
+        
+        self.isLoading = false
     }
     
     
@@ -313,70 +320,27 @@ struct ChattingView : View{
     @ViewBuilder
     func getMessageView(width : CGFloat) -> some View{
         
-        LazyVGrid(columns: colum,spacing:0){
-            if self.msgVM.rooms[self.chatId].meta_data.page < self.msgVM.rooms[self.chatId].meta_data.total_pages {
+        LazyVStack{
+            if self.isLoading {
                 ActivityIndicatorView()
-                    .onAppear(){
-                        print("???")
-                    }
-//                    .offset(y: -UIScreen.main.bounds.height / 10)
-                    .task{
-                        await self.loadMoreMessage()
-                    }
+                    .padding(.top,15)
             }
-            let sectionMsg = MessageViewModel.shared.messageGrouping(for: self.msgVM.rooms[chatId].messages)
-            ForEach(sectionMsg.indices,id:\.self){ sectionIndex in
-                let groupingMessage = sectionMsg[sectionIndex]
-                
-                if !groupingMessage.isEmpty {
-                    Section(header:MessageHeader(firstMessage: groupingMessage.first!)){
-                        ForEach(groupingMessage,id:\.RoomUUID){msg in
-                            let isRecevied = msg.sender_id != self.userVM.userID!
-                            
-                            HStack{
-                                ZStack{
-                                    HStack{
-                                        if isRecevied{
-                                            AsyncImage(url: self.msgVM.rooms[self.chatId].users[0].UserPhotoURL){ image in
-                                                image
-                                                    .resizable()
-                                                    .scaledToFill()
-                                            } placeholder: {
-                                                ActivityIndicatorView()
-                                            }
-                                            .frame(width: 35, height: 35, alignment: .center)
-                                            .clipShape(Circle())
-                                            .clipped()
-                                        }
-                                        
-                                        if isRecevied{
-                                            HStack(alignment:.bottom){
-                                                Text(msg.message)
-                                                    .font(.system(size:15))
-                                                    .padding(.horizontal)
-                                                    .padding(.vertical,12)
-                                                    .background(isRecevied ? Color("appleDark").opacity(0.85) : Color.blue.opacity(0.9))
-                                                    .cornerRadius(13)
-                                                Text(msg.SendTime.sendTimeString())
-                                                    .foregroundColor(.gray)
-                                                    .font(.system(size: 12,weight: .regular))
-                                                    .padding(.horizontal,3)
-                                            }
+            LazyVGrid(columns: colum,spacing:0){
+                let sectionMsg = MessageViewModel.shared.messageGrouping(for: self.msgVM.rooms[chatId].messages)
+                ForEach(sectionMsg.indices,id:\.self){ sectionIndex in
+                    let groupingMessage = sectionMsg[sectionIndex]
+                    
+                    if !groupingMessage.isEmpty {
+                        Section(header:MessageHeader(firstMessage: groupingMessage.first!)){
+                            ForEach(groupingMessage,id:\.RoomUUID){msg in
+                                let isRecevied = msg.sender_id != self.userVM.userID!
+                                
+                                HStack{
+                                    ZStack{
+                                        HStack{
+                                            if isRecevied{
                                                 
-                                        }else {
-                                            HStack(alignment:.bottom){
-                                                Text(msg.SendTime.sendTimeString())
-                                                    .foregroundColor(.gray)
-                                                    .font(.system(size: 12,weight: .regular))
-                                                    .padding(.horizontal,3)
-                                                Text(msg.message)
-                                                    .font(.system(size:15))
-                                                    .padding(.horizontal)
-                                                    .padding(.vertical,12)
-                                                    .background(isRecevied ? Color("appleDark").opacity(0.85) : Color.blue.opacity(0.9))
-                                                    .cornerRadius(13)
-                                                
-                                                AsyncImage(url: self.userVM.profile!.UserPhotoURL){ image in
+                                                AsyncImage(url: self.msgVM.rooms[self.chatId].users[0].UserPhotoURL){ image in
                                                     image
                                                         .resizable()
                                                         .scaledToFill()
@@ -388,30 +352,77 @@ struct ChattingView : View{
                                                 .clipped()
                                             }
                                             
-                                            
-                                        }
-
-                                        
+                                            if isRecevied{
+                                                HStack(alignment:.bottom){
+                                                    Text(msg.message)
+                                                        .font(.system(size:15))
+                                                        .padding(.horizontal)
+                                                        .padding(.vertical,12)
+                                                        .background(isRecevied ? Color("appleDark").opacity(0.85) : Color.blue.opacity(0.9))
+                                                        .cornerRadius(13)
+                                                    Text(msg.SendTime.sendTimeString())
+                                                        .foregroundColor(.gray)
+                                                        .font(.system(size: 12,weight: .regular))
+                                                        .padding(.horizontal,3)
+                                                }
+                                                    
+                                            }else {
+                                                HStack(alignment:.bottom){
+                                                    Text(msg.SendTime.sendTimeString())
+                                                        .foregroundColor(.gray)
+                                                        .font(.system(size: 12,weight: .regular))
+                                                        .padding(.horizontal,3)
+                                                    Text(msg.message)
+                                                        .font(.system(size:15))
+                                                        .padding(.horizontal)
+                                                        .padding(.vertical,12)
+                                                        .background(isRecevied ? Color("appleDark").opacity(0.85) : Color.blue.opacity(0.9))
+                                                        .cornerRadius(13)
+                                                    
+                                                    AsyncImage(url: self.userVM.profile!.UserPhotoURL){ image in
+                                                        image
+                                                            .resizable()
+                                                            .scaledToFill()
+                                                    } placeholder: {
+                                                        ActivityIndicatorView()
+                                                    }
+                                                    .frame(width: 35, height: 35, alignment: .center)
+                                                    .clipShape(Circle())
+                                                    .clipped()
+                                                }
                                                 
-                                        
+                                                
+                                            }
 
+                                            
+                                                    
+                                            
+
+                                        }
+                                    }
+                                    .frame(width: width * 0.7, alignment: isRecevied ? .leading : .trailing)
+                                    .padding(.vertical,8)
+
+                                }
+                                .frame(maxWidth:.infinity,alignment: isRecevied ? .leading : .trailing)
+                                .id(msg.RoomUUID)
+                                .task{
+                                    if self.msgVM.isLastMessage(messageID: msg.msg_identity, charRoomID: self.chatId) {
+                                        await self.loadMoreMessage()
                                     }
                                 }
-                                .frame(width: width * 0.7, alignment: isRecevied ? .leading : .trailing)
-                                .padding(.vertical,8)
-
                             }
-                            .frame(maxWidth:.infinity,alignment: isRecevied ? .leading : .trailing)
-                            .id(msg.RoomUUID)
                         }
                     }
                 }
+                
+                
+
+
             }
-            
-            
-
-
         }
+        
+        
     }
     
     func sendMessage() {

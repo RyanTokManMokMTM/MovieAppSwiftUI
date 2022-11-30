@@ -62,7 +62,7 @@ class PostVM : ObservableObject {
             DispatchQueue.main.async { [self] in
                 self.isLoading = false
                 switch result{
-                case .success(let data):
+                case .success(_):
                     Task.init{
                         await self.refershFollowingData()
                     }
@@ -76,7 +76,7 @@ class PostVM : ObservableObject {
     }
     
     func refershFollowingData() async {
-        print("updateing....")
+//        print("updateing....")
         let resp = await APIService.shared.AsyncGetFollowUserPost(limit:10)
         self.isPostUploading = false
         APIService.shared.uploadProgress = 0
@@ -91,7 +91,7 @@ class PostVM : ObservableObject {
     }
     
     func refershDiscoverData() async {
-        print("updateing....")
+//        print("updateing....")
         let resp = await APIService.shared.AsyncGetAllUserPost(limit:10)
         switch resp {
         case .success(let data):
@@ -108,28 +108,28 @@ class PostVM : ObservableObject {
         if self.discoverMetaData == nil || self.discoverMetaData!.total_pages == self.discoverMetaData!.page{
             return
         }
-//        self.isFetchMoreData = true
-        print("loading more....")
+        self.isAllLoadMore = true
+        
         let resp = await APIService.shared.AsyncGetAllUserPost(page: self.discoverMetaData!.page + 1,limit: 10)
         switch resp {
         case .success(let data):
-            withAnimation(.spring()){
                 self.postData.append(contentsOf: data.post_info)
-            }
+
             self.discoverMetaData = data.meta_data
         case .failure(let err):
             print("loading more post(discovery) err : \(err.localizedDescription)")
             BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
         }
         
-//        self.isFetchMoreData = false
+        self.isAllLoadMore = false
     }
     
     func LoadMoreFollowingData() async {
         if self.followingMetaData == nil || self.followingMetaData!.total_pages == self.followingMetaData!.page{
             return
         }
-        print("loading more....")
+//        print("loading more....")
+        self.isFollowingLoadMore = true
         let resp = await APIService.shared.AsyncGetFollowUserPost(page: self.followingMetaData!.page + 1,limit: 10)
         switch resp {
         case .success(let data):
@@ -144,6 +144,7 @@ class PostVM : ObservableObject {
             BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
         }
         
+        self.isFollowingLoadMore = false
     }
     
     func GetAllUserPost(onSucceed : @escaping ()->() , onFailed : @escaping  (_ errMsg : String)->()) {
@@ -210,6 +211,8 @@ class PostVM : ObservableObject {
         }
     }
     
+    
+    //TODO: Need to 2 function?
     func getPostIndexFromFollowList(postId : Int) -> Int {
         let id  = self.followingData.firstIndex{
             $0.id == postId
@@ -225,6 +228,14 @@ class PostVM : ObservableObject {
         } ?? -1
     }
     
+    
+    func isAllPostLast(postID : Int) -> Bool {
+        return self.postData.last?.id == postID
+    }
+    
+    func isFolloingLast(postID : Int) -> Bool {
+        return self.followingData.last?.id == postID
+    }
 
 
 }

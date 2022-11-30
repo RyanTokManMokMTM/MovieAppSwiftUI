@@ -29,28 +29,32 @@ struct FollowingNotification: View {
                         .listRowBackground(Color("DarkMode2"))
 
                     }else {
-                        ForEach(self.notificationVM.friendRequest,id: \.request_id){ info in
-                            FollowingCell(info: info)
+//                        LazyVStack(spacing:0){
+                            ForEach(self.notificationVM.friendRequest,id: \.request_id){ info in
+                                FollowingCell(info: info)
+                                    .listRowBackground(Color("DarkMode2"))
+                                    .padding(.vertical,15)
+                                    .task {
+                                        if self.notificationVM.isLoadingFriendRequest {
+                                            await self.notificationVM.LoadMoreFriendRequests()
+                                        }
+                                    }
+                                    .listRowBackground(Color("DarkMode2"))
+                            }
+                            
+                            
+                            if self.notificationVM.isLoadingFriendRequest {
+                                HStack{
+                                    Spacer()
+                                    ActivityIndicatorView()
+                                    Spacer()
+                                }
                                 .listRowBackground(Color("DarkMode2"))
-                                .padding(.vertical,15)
-                        }
-                        
-                        if self.notificationVM.notificationMataData?.page ?? 0 < self.notificationVM.notificationMataData?.total_pages ?? 0 {
-                            HStack{
-                                Spacer()
-                                ActivityIndicatorView()
-                                Spacer()
+                                .listRowSeparator(.hidden)
                             }
-                            .listRowBackground(Color("DarkMode2"))
-                            .listRowSeparator(.hidden)
-                            .onAppear(){
-                                print("loading...")
-                            }
-                            .task {
-                                await self.notificationVM.LoadMoreFriendRequests()
-                            }
-                        }
-                        
+//                        }
+      
+
                     }
                 }
                 .listStyle(.plain)

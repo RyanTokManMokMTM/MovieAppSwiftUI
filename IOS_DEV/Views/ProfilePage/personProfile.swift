@@ -673,7 +673,7 @@ struct PersonPostCardGridView : View{
                 }
                 .frame(height:UIScreen.main.bounds.height / 2)
             }else{
-                FlowLayoutWithLoadMoreView(isInit:.constant(true),list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollable: $userVM.isAllowToScroll, content: { info in
+                FlowLayoutWithLoadMoreView(isLoading:$userVM.IsPostLoading,isInit:.constant(true),list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollable: $userVM.isAllowToScroll, content: { info in
                     
                     profileCardCell(Id : userVM.GetPostIndex(postId: info.id)){
                         DispatchQueue.main.async {
@@ -685,35 +685,14 @@ struct PersonPostCardGridView : View{
                             
                         }
                     }
-                    
-                } , loadMoreContent: {
-                    if self.userVM.postCurPage < self.userVM.postTotalPage{
-                        ActivityIndicatorView()
-                            .padding(.vertical)
-                            .task {
-                                print("???")
-                                //is fetching???
-                                await self.userVM.AsyncGetMorePost(userID: self.userVM.userID!)
-                            }
+                    .task {
+                        if self.userVM.isLastPost(postID: info.id){
+                            await self.userVM.AsyncGetMorePost(userID: self.userVM.userID!)
+                        }
                     }
+                    
+                    
                 })
-//                FlowLayoutView(list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollAble: $userVM.isAllowToScroll){ info in
-//
-//                    profileCardCell(Id : userVM.GetPostIndex(postId: info.id)){
-//                        DispatchQueue.main.async {
-//                            self.postVM.selectedPostInfo = info
-//                            self.postVM.selectedPostFrom = .Profile
-//                            withAnimation{
-//                                self.postVM.isShowPostDetail.toggle()
-//                            }
-//
-//                        }
-//                    }
-//                }
-
-//
-
-                
             }
             
         }
@@ -745,12 +724,7 @@ struct LikedPostCardGridView : View {
     let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
     var body: some View{
         VStack{
-            if userVM.IsLikedMovieLoading || userVM.LikedError != nil{
-                LoadingView(isLoading: userVM.IsLikedMovieLoading, error: userVM.ListError as NSError?){
-                    self.userVM.getUserLikedMovie()
-                }
-            } else if userVM.profile!.UserLikedMovies != nil{
-
+            if userVM.profile!.UserLikedMovies != nil{
                 ScrollView(.vertical,showsIndicators: false){
                     if userVM.profile!.UserLikedMovies!.isEmpty{
                         //                        Spacer()
@@ -773,23 +747,25 @@ struct LikedPostCardGridView : View {
                                                 }
                                             }
                                         }
+                                        .task {
+                                            if self.userVM.isLastLikedMovie(movieID: info.id)  {
+                                                await self.userVM.AsyncGetMoreUserLikedMoive(userID: self.userVM.userID!)
+                                            }
+                                        }
                                 }
                                 
                             }
                             
-                            if self.userVM.likedCurPage < self.userVM.likedTotalPage{
+                            if self.userVM.IsLikedMovieLoading {
                                 ActivityIndicatorView()
-                                    .padding(.vertical)
-                                    .task {
-                                        //is fetching???
-//                                        await self.userVM.AsyncGetMorePost(userID: self.userVM.userID!)
-                                        await self.userVM.AsyncGetMoreUserLikedMoive(userID: self.userVM.userID!)
-                                    }
+                                    .padding(.bottom,15)
                             }
+                            
                         }
                  
                     }
-                }.introspectScrollView{ ScrollView in
+                }
+                .introspectScrollView{ ScrollView in
                     ScrollView.isScrollEnabled = userVM.isAllowToScroll
                 }
                 
@@ -831,7 +807,7 @@ struct LikedCardCell : View {
                 
                 VStack(alignment:.leading){
                     HStack(spacing:5){
-                        ForEach(0..<movieInfo.genres.count,id :\.self ){i in
+                        ForEach(0..<(movieInfo.genres.count > 3 ? 3 : movieInfo.genres.count),id :\.self ){i in
                             Text(movieInfo.genres[i].name)
                                 .foregroundColor(Color.white)
                                 .font(.footnote)
@@ -996,11 +972,7 @@ struct CustomListView : View{
 
             }
 
-            if userVM.IsListLoading || userVM.ListError != nil{
-                LoadingView(isLoading: userVM.IsListLoading, error: userVM.ListError as NSError?){
-                    userVM.getUserLikedMovie()
-                }
-            }else if self.userVM.profile!.UserCustomList != nil{
+            if self.userVM.profile!.UserCustomList != nil{
                 ScrollView{
                     if self.userVM.profile!.UserCustomList!.isEmpty {
                         Text("無收藏專輯")
@@ -1010,12 +982,9 @@ struct CustomListView : View{
                     } else {
                         LazyVStack {
                             ListInfo()
-                            if self.userVM.listCurPage < self.userVM.listTotalPage{
+                            if self.userVM.IsListLoading{
                                 ActivityIndicatorView()
-                                    .padding(.vertical)
-                                    .task {
-                                        await self.userVM.AsyncGetMoreUserLikedMoive(userID: self.userVM.userID!)
-                                    }
+                                    .padding(.bottom,15)
                             }
                         }
                         
@@ -1077,6 +1046,11 @@ struct CustomListView : View{
                 withAnimation{
                     self.isViewMovieList.toggle()
                     self.listIndex = i
+                }
+            }
+            .task {
+                if self.userVM.isLastList(listID: self.userVM.profile!.UserCustomList![i].id) {
+                    await self.userVM.AsyncGetMoreUserList(userID: self.userVM.userID!)
                 }
             }
             
@@ -1381,9 +1355,7 @@ struct personProfile: View {
     @State private var isViewMovieList : Bool = false
     @State private var headerHeight : CGFloat = 0.0
     @State private var navHeigh : CGFloat = 0.0
-//    @State private var follower : Int = 0
-//    @State private var following : Int = 0
-    
+
     @State private var headerOffset : CGFloat = 0
     @State private var headerMinY : CGFloat = 0
     @State private var height : CGFloat = 0
@@ -1577,11 +1549,10 @@ struct personProfile: View {
                     .zIndex(0)
                     .onChange(of: state.state){ newVal in
                         if newVal == .refershHeader {
-                            //                            onRefershHeader {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            Task.init{
+                                await refersh()
                                 self.state.state = .normal
                             }
-//                            }
                         }
 
                     }
@@ -1604,6 +1575,22 @@ struct personProfile: View {
         }
 
        
+    }
+    
+    private func refersh() async{
+        switch self.tabIndex {
+        case 0 :
+            print("refershing post")
+            await self.userVM.AsyncGetPost(userID: self.userVM.userID!)
+        case 1:
+            print("refershing liked")
+            await self.userVM.AsyncGetUserLikedMoive(userID: self.userVM.userID!)
+        case 2:
+            print("refershing list")
+            await self.userVM.AsyncGetUserList(userID: self.userVM.userID!)
+        default:
+            print("empty...")
+        }
     }
     
     @ViewBuilder

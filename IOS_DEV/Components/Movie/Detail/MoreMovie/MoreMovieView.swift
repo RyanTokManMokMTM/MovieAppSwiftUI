@@ -19,31 +19,22 @@ struct GetMoreMovie: View{
     var body: some View {
         VStack {
             if recommendState.movies != nil {
-                
-                FlowLayoutView(list: recommendState.movies!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollAble: $isAbleToScroll){ info in
+                FlowLayoutWithLoadMoreView(isLoading: $recommendState.isLoading,list: recommendState.movies!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollable: $isAbleToScroll){ info in
                     Button(action: {
                         self.showDetailId = info.id
                         self.isShowMovieDetail = true
                     }){
                         MovieCardView(movieData: info)
+                            .task {
+                                if self.recommendState.isLastMovie(movieID: info.id){
+                                    await self.recommendState.LoadMoreRecommendMovies(id: self.movieID)
+                                }
+                                
+                            }
+                            .background(Color("appleDark").edgesIgnoringSafeArea(.all).clipShape(CustomeConer(width: 5, height: 5, coners: .allCorners)))
                     }
+                    
                 }
-//                } loadMoreContent: {
-//                    if self.recommendState.page  < self.recommendState.total{
-//                        ActivityIndicatorView()
-//                            .padding(.vertical,5)
-//                            .onAppear(){
-//                                //do some request here
-//                                print("loading...")
-//                            }
-//                            .task{
-//                                await self.recommendState.LoadMoreRecommendMovies(id: self.movieID)
-//                            }
-//                    }
-//
-//                }
-                
-                
             }
         }
         .background(

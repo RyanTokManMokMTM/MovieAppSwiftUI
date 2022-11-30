@@ -29,7 +29,7 @@ class RecommendState: ObservableObject {
             switch result {
             case .success(let response):
                 self.movies = response.results
-//                self.total = response.total_pages
+                self.total = response.totalPages
             case .failure(let error):
                 self.error = error as NSError
             }
@@ -40,7 +40,8 @@ class RecommendState: ObservableObject {
         if self.page >= self.total {
             return
         }
-            
+        
+        self.isLoading = true
         self.page = page + 1
         let resp = await  self.movieService.AsyncMovieReccomend(id: id, page: self.page)
         switch resp {
@@ -52,9 +53,13 @@ class RecommendState: ObservableObject {
             self.error = error as NSError
             print(error.localizedDescription)
         }
+        self.isLoading = false
+        
     }
     
-    
+    func isLastMovie(movieID : Int) -> Bool {
+        return self.movies?.last?.id == movieID
+    }
     
     
 }

@@ -53,6 +53,7 @@ class MovieListState: ObservableObject {
         if self.page > self.total || self.total == 0 {
             return
         }
+        self.isLoading = true
         self.page += 1
         let resp = await self.movieService.AsyncfetchMovies(from: endpoint, page: self.page)
         switch resp {
@@ -65,17 +66,20 @@ class MovieListState: ObservableObject {
                 self.movies = data.results
             }
             
-            self.total = 0 // waiting to render...
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 self.total = data.totalPages
             }
         case .failure(let err):
             print(err.localizedDescription)
         }
+    
+        self.isLoading = false
     }
     
     
-    
+    func isLast(movieID : Int) -> Bool{
+        self.movies?.last?.id == movieID
+    }
     
     
 }

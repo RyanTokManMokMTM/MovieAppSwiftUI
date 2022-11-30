@@ -97,17 +97,16 @@ struct FlowLayoutView< T : Identifiable,Content : View> : View where T : Hashabl
 
 
 
-struct FlowLayoutWithPullView< T : Identifiable,Content : View,Content2 : View> : View where T : Hashable {
+struct FlowLayoutRefershAbleView< T : Identifiable,Content : View> : View where T : Hashable {
     
     var list : [T]
     var colums : Int
     
     var content : (T) -> Content
-    var loadMoreContent : () -> Content2
     var HSpacing : CGFloat
     var VSpacing : CGFloat
     var onRefersh : () async ->()
-    
+    @Binding var isLoading : Bool
     private func customList() -> [[T]] {
         var curIndx = 0
         var gridList : [[T]] = Array(repeating: [], count: self.colums)
@@ -122,14 +121,14 @@ struct FlowLayoutWithPullView< T : Identifiable,Content : View,Content2 : View> 
         }
         return gridList
     }
-    init(list : [T],columns : Int,HSpacing : CGFloat = 10,VSpacing : CGFloat = 10,onRefersh : @escaping () async ->(),@ViewBuilder content :@escaping (T) -> Content, @ViewBuilder loadMoreContent :@escaping () -> Content2){
+    init(isLoading : Binding<Bool> = .constant(false),list : [T],columns : Int,HSpacing : CGFloat = 10,VSpacing : CGFloat = 10,onRefersh : @escaping () async ->(),@ViewBuilder content :@escaping (T) -> Content){
         self.content = content
-        self.loadMoreContent = loadMoreContent
         self.list = list
         self.colums = columns
         self.HSpacing = HSpacing
         self.VSpacing = VSpacing
         self.onRefersh = onRefersh
+        self._isLoading = isLoading
     }
     
     var body: some View {
@@ -156,12 +155,18 @@ struct FlowLayoutWithPullView< T : Identifiable,Content : View,Content2 : View> 
                     }
                     .padding(.vertical,5)
                     .padding(.horizontal,3)
-    //                .background(Color("DarkMode2").frame(maxWidth:.infinity))
                     
-                    loadMoreContent()
+                    if self.isLoading {
+                       ActivityIndicatorView()
+                            .padding(.bottom,15)
+                    }
                 }
             }
         }
+//        .introspectScrollView{ scroll in
+//            let controller = UIRefreshControl()
+//            scroll.refreshControl = controller
+//        }
         .refresher(style: .system) { done in
             Task.init{
                 await onRefersh()
@@ -177,20 +182,19 @@ struct FlowLayoutWithPullView< T : Identifiable,Content : View,Content2 : View> 
 
 
 
-struct FlowLayoutWithLoadMoreView< T : Identifiable,Content : View,Content2 : View> : View where T : Hashable {
+struct FlowLayoutWithLoadMoreView< T : Identifiable,Content : View> : View where T : Hashable {
     
     var list : [T]
     var colums : Int
     
     var content : (T) -> Content
-    var loadMoreContent : () -> Content2
     var HSpacing : CGFloat
     var VSpacing : CGFloat
     
     @Binding var IsInit : Bool
     @State private var setUp = false
     @Binding var isScrollable : Bool
-    
+    @Binding var isLoading : Bool
     private func customList() -> [[T]] {
         var curIndx = 0
         var gridList : [[T]] = Array(repeating: [], count: self.colums)
@@ -205,15 +209,15 @@ struct FlowLayoutWithLoadMoreView< T : Identifiable,Content : View,Content2 : Vi
         }
         return gridList
     }
-    init(isInit : Binding<Bool> = .constant(false),list : [T],columns : Int,HSpacing : CGFloat = 10,VSpacing : CGFloat = 10,isScrollable : Binding<Bool> = .constant(true),@ViewBuilder content :@escaping (T) -> Content, @ViewBuilder loadMoreContent :@escaping () -> Content2){
+    init(isLoading : Binding<Bool> = .constant(false),isInit : Binding<Bool> = .constant(false),list : [T],columns : Int,HSpacing : CGFloat = 10,VSpacing : CGFloat = 10,isScrollable : Binding<Bool> = .constant(true),@ViewBuilder content :@escaping (T) -> Content){
         self.content = content
-        self.loadMoreContent = loadMoreContent
         self.list = list
         self.colums = columns
         self.HSpacing = HSpacing
         self.VSpacing = VSpacing
         self._isScrollable = isScrollable
         self._IsInit = isInit
+        self._isLoading = isLoading
     }
     
     var body: some View {
@@ -241,9 +245,11 @@ struct FlowLayoutWithLoadMoreView< T : Identifiable,Content : View,Content2 : Vi
                         }
                         .padding(.vertical,5)
                         .padding(.horizontal,3)
-        //                .background(Color("DarkMode2").frame(maxWidth:.infinity))
                         
-                        loadMoreContent()
+                        if self.isLoading {
+                            ActivityIndicatorView()
+                                .padding(.bottom,15)
+                        }
                     }
                 }
             }

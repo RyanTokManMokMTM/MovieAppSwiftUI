@@ -31,6 +31,35 @@ struct IOS_DEVApp: App {
     }
 }
 
+struct ScrollViewTesting : View {
+    let colors : [Color] = [.red,.gray,.white,.yellow,.green,.brown]
+    @State private var isLoadMore = false
+    @State private var count = 50
+    var body : some View {
+        RefreshableScrollView(isLoadMore: $isLoadMore,content: {
+            ForEach(0..<count){ i in
+                colors[ i % colors.count]
+                    .frame(width:UIScreen.main.bounds.width, height: 100)
+            }
+            
+            if isLoadMore {
+                ActivityIndicatorView()
+                    .onAppear() {
+                        DispatchQueue.main.async {
+                            count += 10
+                            withAnimation{
+                                self.isLoadMore = false
+                            }
+                        }
+                    }
+            }
+        }){ control in
+//            control
+            control.endRefreshing()
+        }
+    }
+}
+
 struct TestSCrollNav : View {
     var body : some View {
         NavigationView {

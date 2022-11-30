@@ -36,20 +36,22 @@ struct FollowUserPostView: View {
                     ForEach(self.$postVM.followingData){ info in
                         FollowPostCell(isShowMovieDetail: $isShowMovieDetail, movieId: $movieId,post : info, isShowMorePostDetail:self.$isShowMorePostDetail, postId: self.$postId,isShowUserProfile: $isShowUserProfile,shownUserID:$shownUserID)
                             .padding(.bottom,20)
-                    }
-                    
-                    if self.postVM.followingMetaData?.page ?? 0  < self.postVM.followingMetaData?.total_pages ?? 0{
-                        ActivityIndicatorView()
-                            .padding(.vertical,5)
                             .task{
-                                await self.postVM.LoadMoreFollowingData()
+                                if postVM.isFolloingLast(postID: info.id){
+                                    await self.postVM.LoadMoreFollowingData()
+                                }
                             }
                     }
-                }
-//                .padding(.bottom,UIApplication.shared.windows.first?.safeAreaInsets.bottom )
+                    
+                    
+                    if postVM.isFollowingLoadMore {
+                        ActivityIndicatorView().padding(.bottom,15)
+                    }
 
+                }
             }
         }
+        
         .refresher(style: .system){
             await self.postVM.refershFollowingData()
         }

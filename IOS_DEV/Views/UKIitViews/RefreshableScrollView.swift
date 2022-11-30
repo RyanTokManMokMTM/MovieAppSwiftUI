@@ -144,29 +144,17 @@ struct DragRefreshableScrollView<Content:View> : UIViewRepresentable{
 }
 
 struct RefreshableScrollView<Content:View> : UIViewRepresentable{
-
-//    @Binding var datas : [T]
-    @Binding var isLoading : Bool
     var content : Content
     var onRefresh : (UIRefreshControl)->()
-    var beAbleToUpdate : Bool
+    @Binding var isLoadMore : Bool
     var refreshController = UIRefreshControl()
     init(
-//        datas : Binding<[T]>,
-        isLoading : Binding<Bool>,
-        beAbleToUpdate : Bool,
-//        isOffsetting:Bool = false,
-//        offsetVal:CGFloat = 0,
+        isLoadMore : Binding<Bool>,
         @ViewBuilder content: @escaping ()->Content,
         onRefresh: @escaping (UIRefreshControl)->()){
+            self._isLoadMore = isLoadMore
             self.content = content()
             self.onRefresh = onRefresh
-            self._isLoading = isLoading
-//            self._datas = datas
-//            self.dataType = dataType
-            self.beAbleToUpdate = beAbleToUpdate
-//            self.isOffsetting = isOffsetting
-//            self.offsetVal = offsetVal
     }
     
     func makeCoordinator() -> Coordinator {
@@ -179,15 +167,15 @@ struct RefreshableScrollView<Content:View> : UIViewRepresentable{
         setUp(view: view)
         view.backgroundColor = UIColor(named: "DarkMode2")
         
-        if beAbleToUpdate{
-            self.refreshController.attributedTitle = NSAttributedString(string: "Loading...")
-            self.refreshController.tintColor = .white
-            self.refreshController.addTarget(context.coordinator, action: #selector(context.coordinator.onRefresh), for: .valueChanged)
-            
-            self.refreshController.bounds = CGRect(x: self.refreshController.bounds.origin.x, y: 0, width: self.refreshController.bounds.width, height: self.refreshController.bounds.height)
-            view.refreshControl = self.refreshController //need to add  after setting up
-        }
-//        setUpController(view: view)
+        //        if beAbleToUpdate{
+        self.refreshController.attributedTitle = NSAttributedString(string: "Loading...")
+        self.refreshController.tintColor = .white
+        self.refreshController.addTarget(context.coordinator, action: #selector(context.coordinator.onRefresh), for: .valueChanged)
+        
+        self.refreshController.bounds = CGRect(x: self.refreshController.bounds.origin.x, y: 0, width: self.refreshController.bounds.width, height: self.refreshController.bounds.height)
+        view.refreshControl = self.refreshController //need to add  after setting up
+        //        }
+        //        setUpController(view: view)
         view.delegate = context.coordinator
         return view
     }
@@ -195,13 +183,8 @@ struct RefreshableScrollView<Content:View> : UIViewRepresentable{
     func updateUIView(_ uiView: UIScrollView, context: Context) {
         //TO UPDATE CURRENT VIEW
         setUp(view: uiView)
-//        setUpController(view: uiView)
         uiView.delegate = context.coordinator
     }
-    
-//    private func setUpController(view : UIScrollView){
-//
-//    }
     
     private func setUp(view : UIScrollView){
         let host = UIHostingController(rootView: self.content.frame(maxHeight: .infinity, alignment: .top))
@@ -223,7 +206,7 @@ struct RefreshableScrollView<Content:View> : UIViewRepresentable{
         view.addSubview(host.view)
         view.showsVerticalScrollIndicator = false
         view.addConstraints(constrains)
-
+        
     }
     
     class Coordinator : NSObject,UIScrollViewDelegate{
@@ -238,8 +221,10 @@ struct RefreshableScrollView<Content:View> : UIViewRepresentable{
 
         func scrollViewDidScroll(_ scrollView: UIScrollView) {
             let offsetY = scrollView.contentOffset.y
-            if offsetY > scrollView.contentSize.height - 300 - scrollView.frame.height {
-                        
+            if offsetY > scrollView.contentSize.height - 150 - scrollView.frame.height && !self.parent.isLoadMore{
+                DispatchQueue.main.async {
+                    self.parent.isLoadMore = true
+                }
             }
         }
         

@@ -59,28 +59,29 @@ struct CommentNotificationView: View {
                         .listRowSeparator(.hidden)
                         .listRowBackground(Color("DarkMode2"))
                     }else {
-    //                    LazyVStack(spacing:0){
+//                        LazyVStack(spacing:0){
                             ForEach(self.notificationVM.commentNotification){ info in
                                 CommentCell(info: info)
                                     .listRowBackground(Color("DarkMode2"))
                                     .padding(.vertical,15)
+                                    .task {
+                                        if self.notificationVM.isLastCommentNotification(id: info.id){
+                                            await self.notificationVM.LoadMoreCommentNotification()
+                                        }
+                                    }
                             }
+                            
+                            if self.notificationVM.isLoadingComment {
+                                HStack{
+                                    Spacer()
+                                    ActivityIndicatorView()
+                                    Spacer()
+                                }
+                                .listRowBackground(Color("DarkMode2"))
+                                .listRowSeparator(.hidden)
+                            }
+//                        }
                         
-                        if self.notificationVM.notificationMataData?.page ?? 0 < self.notificationVM.notificationMataData?.total_pages ?? 0 {
-                            HStack{
-                                Spacer()
-                                ActivityIndicatorView()
-                                Spacer()
-                            }
-                            .listRowBackground(Color("DarkMode2"))
-                            .listRowSeparator(.hidden)
-                            .onAppear(){
-                                print("loading...")
-                            }
-                            .task {
-                                await self.notificationVM.LoadMoreCommentNotification()
-                            }
-                        }
                     }
                 }
                 .listStyle(.plain)

@@ -14,7 +14,7 @@ struct CardFlowLayout: View {
     @StateObject var HubState : BenHubState = BenHubState.shared
 
     var body: some View {
-        FlowLayoutWithPullView(list: self.postVM.postData, columns: 2,HSpacing: 5,VSpacing: 10,onRefersh: self.postVM.refershDiscoverData,content: { info in
+        FlowLayoutRefershAbleView(isLoading:$postVM.isAllLoadMore,list: self.postVM.postData, columns: 2,HSpacing: 10,VSpacing: 10,onRefersh: self.postVM.refershDiscoverData,content: { info in
                 CardPostView(postInfo: self.$postVM.postData[self.postVM.getPostIndexFromDiscoveryList(postId: info.id)]){
                         DispatchQueue.main.async {
                             self.postVM.selectedPostInfo = info
@@ -24,17 +24,14 @@ struct CardFlowLayout: View {
                             }
                         }
                     }
-                .transition(.move(edge: .bottom))
-
-
-        },loadMoreContent: {
-            if self.postVM.discoverMetaData?.page ?? 0  < self.postVM.discoverMetaData?.total_pages ?? 0{
-                ActivityIndicatorView()
-                    .padding(.vertical,5)
-                    .task{
+                .task{
+                    if postVM.isAllPostLast(postID: info.id){
                         await self.postVM.LoadMoreDiscoverData()
                     }
-            }
+                }
+//                .transition(.move(edge: .bottom))
+
+
         })
         .frame(maxWidth:.infinity)
         .background(Color("DarkMode2").frame(maxWidth:.infinity))
