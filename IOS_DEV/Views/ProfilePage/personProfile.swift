@@ -664,14 +664,14 @@ struct PersonPostCardGridView : View{
     var body: some View{
         if userVM.profile?.UserCollection != nil{
             if userVM.profile!.UserCollection!.isEmpty{
-                VStack{
+                HStack{
                     Spacer()
                     Text("無文章")
                         .font(.system(size:15))
                         .foregroundColor(.gray)
                     Spacer()
                 }
-                .frame(height:UIScreen.main.bounds.height / 2)
+                
             }else{
                 FlowLayoutWithLoadMoreView(isLoading:$userVM.IsPostLoading,isInit:.constant(true),list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollable: $userVM.isAllowToScroll, content: { info in
                     
@@ -728,11 +728,13 @@ struct LikedPostCardGridView : View {
                 ScrollView(.vertical,showsIndicators: false){
                     if userVM.profile!.UserLikedMovies!.isEmpty{
                         //                        Spacer()
-                        Text("無喜歡電影")
-                            .font(.system(size:15))
-                            .foregroundColor(.gray)
-                            .padding(.top,10)
-                            .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2.5, alignment: .top)
+                        HStack{
+                            Spacer()
+                            Text("無喜歡電影")
+                                .font(.system(size:15))
+                                .foregroundColor(.gray)
+                            Spacer()
+                        }
                         //                        Spacer()
                     }else {
                         LazyVStack{
@@ -975,9 +977,13 @@ struct CustomListView : View{
             if self.userVM.profile!.UserCustomList != nil{
                 ScrollView{
                     if self.userVM.profile!.UserCustomList!.isEmpty {
-                        Text("無收藏專輯")
-                            .font(.system(size:15))
-                            .foregroundColor(.gray)
+                        HStack{
+                            Spacer()
+                            Text("無收藏專輯")
+                                .font(.system(size:15))
+                                .foregroundColor(.gray)
+                            Spacer()
+                        }
                         
                     } else {
                         LazyVStack {

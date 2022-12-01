@@ -11,8 +11,8 @@ import SwiftUI
 import BottomSheet
 
 
-let SERVER_HOST = "http://ec2-13-214-159-93.ap-southeast-1.compute.amazonaws.com:8000"
-let SERVER_WS = "ws://ec2-13-214-159-93.ap-southeast-1.compute.amazonaws.com:8000/ws"
+let SERVER_HOST = "http://ec2-18-138-230-148.ap-southeast-1.compute.amazonaws.com:8000"
+let SERVER_WS = "ws://ec2-18-138-230-148.ap-southeast-1.compute.amazonaws.com:8000/ws"
 
 class MovieStore: MovieService {
     static let shared = MovieStore()
@@ -1468,6 +1468,27 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         
         PostAndDecode(req: request, completion: completion)
     }
+    
+    func AsyncRemoveFriend(req : RemoveFriendReq) async -> Result<RemoveFriendResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.RemoveFriend.apiUri) else {
+           return .failure(APIError.badUrl)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        do{
+            let  bodyData = try Encoder.encode(req)
+            request.httpBody =  bodyData
+        } catch {
+            return .failure(APIError.badEncoding)
+
+        }
+        
+        return await AsyncPostAndDecode(request: request)
+    }
+    
     func AccepctFriendRequest(req : FriendRequestAccecptReq, completion: @escaping (Result<FriendRequestAcceptResp,Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.AcceptFriendRequest.apiUri) else {
             completion(.failure(APIError.badUrl))
@@ -1725,7 +1746,6 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-//        print(request.url?.absoluteURL)
         FetchAndDecode(request: request, completion: completion)
     }
     
@@ -2050,6 +2070,8 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
             let (data ,response) = try await Client.data(for: request)
             guard let statusCode = response as? HTTPURLResponse,200..<300 ~= statusCode.statusCode else{
 //                print(statusCode.statusCode)
+                let errResp = try self.Decoder.decode(ErrorResp.self, from: data)
+                print(errResp)
                 return  .failure(APIError.invalidResponse)
             }
             

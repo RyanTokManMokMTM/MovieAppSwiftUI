@@ -13,7 +13,7 @@ struct CreateNewFriendReq : Encodable{
     let friend_id : Int
 }
 struct RemoveFriendReq : Encodable {
-    let friend_id : Int
+    let user_id : Int
 }
 struct GetOneFriendReq{
     let friend_id : Int

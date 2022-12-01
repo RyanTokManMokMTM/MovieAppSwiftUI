@@ -10,7 +10,7 @@ import SDWebImageSwiftUI
 
 
 struct OtherUserProfile: View {
-    
+    @StateObject var HubState : BenHubState = BenHubState.shared
     @StateObject var userVM = UserViewModel()
     @StateObject var postVM = PostVM()
 //    @State private var isUserFollowing = false
@@ -28,6 +28,7 @@ struct OtherUserProfile: View {
                 .edgesIgnoringSafeArea(.all)
                 .environmentObject(postVM)
                 .environmentObject(userVM)
+                .environmentObject(HubState)
                 
         }
         .onAppear{
@@ -46,6 +47,19 @@ struct OtherUserProfile: View {
                 Task.init {
                     await getCollectedMovieCount()
                 }
+            }
+        }
+        .wait(isLoading: $HubState.isWait){
+            BenHubLoadingView(message: HubState.message)
+        }
+        .alert(isAlert: $HubState.isPresented){
+            switch HubState.type{
+            case .normal,.system_message:
+                BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
+            case .notification:
+                BenHubAlertWithUserInfo(user: HubState.senderInfo!, message: HubState.message)
+            case .message:
+                BenHubAlertWithMessage(user: HubState.senderInfo!, message: HubState.message)
             }
         }
 
@@ -156,6 +170,7 @@ struct OtherUserProfile: View {
 struct UserProfileView: View {
 //    @Binding var isShowMenu : Bool
 //    @Binding var isShowLikedMovie : Bool
+    @EnvironmentObject var HubState : BenHubState
     @EnvironmentObject private var userVM : UserViewModel
     @EnvironmentObject private var postVM : PostVM
     @State private var isEditProfile : Bool = false
@@ -189,6 +204,7 @@ struct UserProfileView: View {
     @Binding var collected : Int
     
     @Binding var isFriendInfo : IsFriendResp?
+    @State private var isShowActionSheet : Bool = false
     var owner : Int
     let user_id : Int
     @Environment(\.dismiss) var dismiss
@@ -375,6 +391,18 @@ struct UserProfileView: View {
                     
                 }
             )
+            .actionSheet(isPresented: self.$isShowActionSheet){
+                ActionSheet(title: Text(self.userVM.profile?.name ?? "UNKNOW"), buttons: [
+                    .default(Text("移除好友"),action:{
+                        Task.init{
+                           await self.removeFriend()
+                        }
+                       
+                    }),
+                    .cancel(Text("取消"))
+                ])
+            }
+
             
             
         }
@@ -547,27 +575,31 @@ struct UserProfileView: View {
                 
                 if isFriendInfo != nil {
                     if isFriendInfo!.is_friend{
-                        HStack(spacing:8){
-                            Text("朋友")
-                                .foregroundColor(.white)
-                                .font(.system(size: 12))
-                                .fontWeight(.semibold)
-                                .frame(maxWidth:.infinity)
-                                .padding(12)
-                                .padding(.horizontal,5)
-                                .background(BlurView().clipShape(CustomeConer(width: 8, height: 8, coners: .allCorners)))
-//                                .overlay(RoundedRectangle(cornerRadius: 8).stroke().fill(Color.gray))
-                            
-                            Text("訊息")
-                                .foregroundColor(.white)
-                                .font(.system(size: 12))
-                                .fontWeight(.semibold)
-                                .frame(maxWidth:.infinity)
-                                .padding(12)
-                                .padding(.horizontal,5)
-                                .background(BlurView().clipShape(CustomeConer(width: 8, height: 8, coners: .allCorners)))
-//                                .overlay(RoundedRectangle(cornerRadius: 8).stroke().fill(Color.gray))
+                        Button(action:{
+                            withAnimation{
+                                self.isShowActionSheet = true
+                            }
+                        }) {
+                            HStack(spacing:8){
+                                Spacer()
+                                Image(systemName: "chevron.down")
+                                    .imageScale(.medium)
+                                    .foregroundColor(.white)
+                                    .padding(12)
+                                    .padding(.horizontal,5)
+                            }
+                            .frame(maxWidth:.infinity)
+                            .background(BlurView().clipShape(CustomeConer(width: 8, height: 8, coners: .allCorners)))
+                            .overlay(
+                                Text("朋友")
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 12))
+                                    .fontWeight(.semibold)
+                            )
                         }
+                        
+
+
                     }
                     else if isFriendInfo!.is_sent_request {
                         if isFriendInfo!.request!.sender_id == userVM.userID!{
@@ -718,6 +750,25 @@ struct UserProfileView: View {
             case .failure(let err):
                 print(err.localizedDescription)
             }
+        }
+    }
+    
+    @MainActor
+    private func removeFriend() async {
+        if isFriendInfo?.is_friend == false {
+            return
+        }
+        
+        let resp = await APIService.shared.AsyncRemoveFriend(req: RemoveFriendReq(user_id:self.user_id))
+        switch resp{
+        case .success(_):
+            self.isFriendInfo!.is_friend = false
+            self.isFriendInfo!.is_sent_request = false
+            self.HubState.AlertMessage(sysImg: "checkmark", message: "成功移除")
+            self.friends -= 1
+        case .failure(let err):
+            print(err.localizedDescription)
+            self.HubState.AlertMessage(sysImg: "xmark", message: err.localizedDescription)
         }
     }
     private func getHeaderHigth() -> CGFloat{
@@ -1235,25 +1286,29 @@ struct OtherPersonPostCardGridView : View{
                 VStack{
                     Spacer()
                     Text("無文章")
-                        .font(.system(size:15))
+                        .font(.system(size:15,weight: .bold))
                         .foregroundColor(.gray)
                     Spacer()
                 }
                 .frame(height:UIScreen.main.bounds.height / 2)
             }else{
-                FlowLayoutView(list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollAble: $userVM.isAllowToScroll){ info in
-                
-                    profileCardCell(Id : userVM.GetPostIndex(postId: info.id)){
-                        DispatchQueue.main.async {
-                            self.postVM.selectedPostInfo = info
-                            self.postVM.selectedPostFrom = .Profile
-                            withAnimation{
-                                self.postVM.isShowPostDetail.toggle()
+                FlowLayoutWithLoadMoreView(isLoading: $userVM.IsPostLoading, list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollable: $userVM.isAllowToScroll){ info in
+                        profileCardCell(Id : userVM.GetPostIndex(postId: info.id)){
+                            DispatchQueue.main.async {
+                                self.postVM.selectedPostInfo = info
+                                self.postVM.selectedPostFrom = .Profile
+                                withAnimation{
+                                    self.postVM.isShowPostDetail.toggle()
+                                }
                             }
-                        
                         }
-                    }
+                        .task {
+                            if self.userVM.isLastPost(postID: info.id){
+                                await self.userVM.AsyncGetMorePost(userID: self.userVM.userID!)
+                            }
+                        }
                 }
+
 //                
 
                 
@@ -1313,31 +1368,43 @@ struct OtherLikedPostCardGridView : View {
     let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
     var body: some View{
         VStack{
-            if userVM.IsLikedMovieLoading || userVM.LikedError != nil{
-                LoadingView(isLoading: userVM.IsLikedMovieLoading, error: userVM.ListError as NSError?){
-                    self.userVM.getUserLikedMovie()
-                }
-            } else if userVM.profile?.UserLikedMovies != nil{
+            if userVM.profile?.UserLikedMovies != nil{
                 ScrollView(.vertical,showsIndicators: false){
                     if userVM.profile!.UserLikedMovies!.isEmpty{
-                        Text("無喜歡電影")
-                            .font(.system(size:15))
-                            .foregroundColor(.gray)
-                            .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2.5, alignment: .top)
-
+                        HStack {
+                            Spacer()
+                            Text("無喜歡電影")
+                                .font(.system(size:15,weight: .bold))
+                                .foregroundColor(.gray)
+                            
+                            Spacer()
+                        }
                     }else{
-                        LazyVGrid(columns: gridItem){
-                            ForEach(userVM.profile!.UserLikedMovies!,id:\.id){info in
-                                
-                                LikedCardCell(movieInfo: info)
-                                    .onTapGesture {
-                                        self.movieId = info.id
-                                        withAnimation{
-                                            self.isShowMovieDetail = true
+                        LazyVStack(spacing:0){
+                            LazyVGrid(columns: gridItem){
+                                ForEach(userVM.profile!.UserLikedMovies!,id:\.id){info in
+                                    
+                                    LikedCardCell(movieInfo: info)
+                                        .onTapGesture {
+                                            self.movieId = info.id
+                                            withAnimation{
+                                                self.isShowMovieDetail = true
+                                            }
                                         }
-                                    }
+                                        .task {
+                                            if self.userVM.isLastLikedMovie(movieID: info.id){
+                                                await self.userVM.AsyncGetMoreUserLikedMoive(userID: self.userVM.userID!)
+                                            }
+                                        }
+                                }
+                                
                             }
                             
+                            if self.userVM.IsLikedMovieLoading {
+                                ActivityIndicatorView()
+                                    .padding(.bottom,15)
+                            }
+
                         }
                     }
                 }.introspectScrollView{ scroll in
@@ -1370,12 +1437,22 @@ struct OtherUserCustomListView : View{
             if self.userVM.profile?.UserCustomList != nil{
                 ScrollView {
                     if self.userVM.profile!.UserCustomList!.isEmpty {
-                        Text("無收藏專輯")
-                            .font(.system(size:15))
-                            .foregroundColor(.gray)
+                        HStack {
+                            Spacer()
+                            Text("無收藏專輯")
+                                .font(.system(size:15,weight: .bold))
+                                .foregroundColor(.gray)
+                            
+                            Spacer()
+                        }
                         
                     } else {
                         ListInfo()
+                        
+                        if self.userVM.IsListLoading {
+                            ActivityIndicatorView()
+                                .padding(.bottom,15)
+                        }
                     }
                 }
                 .introspectScrollView{ scroll in
@@ -1384,7 +1461,7 @@ struct OtherUserCustomListView : View{
                 
             }
         }
-        .padding(8)
+//        .padding(8)
     }
     
     @ViewBuilder
@@ -1436,6 +1513,11 @@ struct OtherUserCustomListView : View{
                 .frame(maxWidth:.infinity,alignment:.leading)
                 .background(Color("MoviePostColor"))
                 .cornerRadius(10)
+                .task {
+                    if self.userVM.isLastList(listID: self.userVM.profile!.UserCustomList![i].id){
+                        await self.self.userVM.AsyncGetMoreUserLikedMoive(userID: self.userVM.userID!)
+                    }
+                }
             }
         }
 

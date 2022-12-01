@@ -93,13 +93,16 @@ struct FollowingNotification: View {
     @ViewBuilder
     private func FollowingCell(info : FriendRequest) -> some View{
         HStack(){
-            WebImage(url: info.sender.UserPhotoURL)
-                .resizable()
-                .indicator(.activity)
-                .transition(.fade(duration: 0.5))
-                .aspectRatio(contentMode: .fit)
-                .frame(minWidth: 50,maxWidth: 50)
-                .clipShape(Circle())
+            AsyncImage(url:  info.sender.UserPhotoURL){ image in
+                image
+                    .resizable()
+                    .scaledToFill()
+            } placeholder: {
+                ActivityIndicatorView()
+            }
+            .frame(width: 45,height:45)
+            .clipShape(Circle())
+            .clipped()
 
             
             VStack(alignment:.leading,spacing: 8){

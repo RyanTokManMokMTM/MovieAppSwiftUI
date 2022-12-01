@@ -262,7 +262,7 @@ extension Date{
             return formatter.weekdaySymbols[weekDay] + formatter.string(from: self)
         }
         
-        formatter.dateFormat = "yy/M/d h:m a"
+        formatter.dateFormat = "yy/M/d HH:mm a"
         return formatter.string(from: self)
         
     }

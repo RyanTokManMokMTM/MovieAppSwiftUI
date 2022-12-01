@@ -124,6 +124,7 @@ protocol ServerAPIServerServiceInterface {
     //TODO: Friend -Updated
     func AddFriend(req : AddFriendReq, completion: @escaping (Result<AddFriendResp,Error>) -> ())
     func RemoveFriend(req : RemoveFriendReq, completion: @escaping (Result<RemoveFriendResp,Error>) -> ())
+    func AsyncRemoveFriend(req : RemoveFriendReq) async -> Result<RemoveFriendResp,Error>
     func AccepctFriendRequest(req : FriendRequestAccecptReq, completion: @escaping (Result<FriendRequestAcceptResp,Error>) -> ())
     func DeclineFriendRequest(req : FriendRequestDeclineReq, completion: @escaping (Result<FriendRequestDeclineResp,Error>) -> ())
     func CancelFriendRequest(req : FriendRequestCancelReq, completion: @escaping (Result<FriendRequestCancelResp,Error>) -> ())

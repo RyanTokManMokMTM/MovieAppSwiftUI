@@ -187,6 +187,7 @@
 		7A756B05292F2D91007334F5 /* ExtenedScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A756B04292F2D91007334F5 /* ExtenedScrollView.swift */; };
 		7A756B07292F6FBE007334F5 /* SideMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A756B06292F6FBE007334F5 /* SideMenu.swift */; };
 		7A756B09292F6FDE007334F5 /* postShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A756B08292F6FDE007334F5 /* postShareView.swift */; };
+		7A782696293865330009217F /* CachedAsyncImage in Frameworks */ = {isa = PBXBuildFile; productRef = 7A782695293865330009217F /* CachedAsyncImage */; };
 		7A795521289FEF4500600AA2 /* UISheetPresentationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A795520289FEF4500600AA2 /* UISheetPresentationView.swift */; };
 		7A7A7F56289A2DCB00E1EB38 /* YoutubeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7A7F55289A2DC900E1EB38 /* YoutubeView.swift */; };
 		7A7A7F5A289A57B800E1EB38 /* ShowMoreStateMovieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7A7F59289A57B800E1EB38 /* ShowMoreStateMovieView.swift */; };
@@ -468,6 +469,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7AC898C42930811F009E6591 /* Algorithms in Frameworks */,
+				7A782696293865330009217F /* CachedAsyncImage in Frameworks */,
 				7A26B1D1288FE0240041492E /* SDWebImageSwiftUI in Frameworks */,
 				0EFBEEB402995C63C993EF15 /* Pods_IOS_DEV.framework in Frameworks */,
 				7AA67676291796B1002D9BFC /* Refresher in Frameworks */,
@@ -1270,6 +1272,7 @@
 				7A26B1D0288FE0240041492E /* SDWebImageSwiftUI */,
 				7AA67675291796B1002D9BFC /* Refresher */,
 				7AC898C32930811F009E6591 /* Algorithms */,
+				7A782695293865330009217F /* CachedAsyncImage */,
 			);
 			productName = IOS_DEV;
 			productReference = 7A0EE92E261041690056BC8C /* IOS_DEV.app */;
@@ -1302,6 +1305,7 @@
 				7A26B1CF288FE0240041492E /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
 				7AA67674291796B1002D9BFC /* XCRemoteSwiftPackageReference "SwiftUI-Refresher" */,
 				7AC898C22930811F009E6591 /* XCRemoteSwiftPackageReference "swift-algorithms" */,
+				7A782694293865330009217F /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */,
 			);
 			productRefGroup = 7A0EE92F261041690056BC8C /* Products */;
 			projectDirPath = "";
@@ -1812,6 +1816,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		7A782694293865330009217F /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/lorenzofiamingo/swiftui-cached-async-image.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
 		7AA67674291796B1002D9BFC /* XCRemoteSwiftPackageReference "SwiftUI-Refresher" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gh123man/SwiftUI-Refresher.git";
@@ -1835,6 +1847,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7A26B1CF288FE0240041492E /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */;
 			productName = SDWebImageSwiftUI;
+		};
+		7A782695293865330009217F /* CachedAsyncImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A782694293865330009217F /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */;
+			productName = CachedAsyncImage;
 		};
 		7AA67675291796B1002D9BFC /* Refresher */ = {
 			isa = XCSwiftPackageProductDependency;

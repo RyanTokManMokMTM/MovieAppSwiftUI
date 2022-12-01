@@ -8,6 +8,7 @@
 import SwiftUI
 import SDWebImageSwiftUI
 import Combine
+import CachedAsyncImage
 
 class MessageViewModel : ObservableObject{
 //    @Published var ChatList = ChatInfo.simpleChat
@@ -174,7 +175,7 @@ struct ChattingView : View{
         VStack{
             GeometryReader{proxy in
                 ScrollViewReader{reader in
-                    ScrollView{
+                    ScrollView(.vertical,showsIndicators: true){
                         getMessageView(width: proxy.size.width)
                             .padding(.horizontal)
                             .onChange(of: self.msgVM.rooms[chatId].messages.count){_ in
@@ -196,7 +197,7 @@ struct ChattingView : View{
                                 }
                             }
                     }
-                    
+                    //load more room???
                 }
             }
 
@@ -237,6 +238,7 @@ struct ChattingView : View{
 //
     }
     
+    @MainActor
     private func GetRoomMessage() async {
         //TODO: we need to get the last id which id is the first message in messageInfo
 //        let last_id = self.roomMessages.
@@ -254,6 +256,7 @@ struct ChattingView : View{
 //        }
     }
     
+    @MainActor
     private func loadMoreMessage() async {
         
         if  self.msgVM.rooms[self.chatId].meta_data.total_pages ==  self.msgVM.rooms[self.chatId].meta_data.page {
@@ -262,13 +265,13 @@ struct ChattingView : View{
         self.isLoading = true
         //TODO: we need to get the last id which id is the first message in messageInfo
         let lastID =  self.msgVM.rooms[chatId].messages.first?.msg_identity ?? 0
-        print(lastID)
+//        print(lastID)
         let resp = await APIService.shared.AsyncGetRoomMessage(req: GetRoomMessageReq(room_id: self.roomId, last_id: lastID),page:  self.msgVM.rooms[self.chatId].meta_data.page + 1)
         switch resp {
         case .success(let data):
             self.msgVM.rooms[chatId].messages.insert(contentsOf: data.messages.reversed(), at: 0)
             self.msgVM.rooms[self.chatId].meta_data.page +=  1
-            print(data.messages)
+//            print(data.messages)
         case .failure(let err):
             print(err.localizedDescription)
             //Show err???
@@ -320,7 +323,7 @@ struct ChattingView : View{
     @ViewBuilder
     func getMessageView(width : CGFloat) -> some View{
         
-        LazyVStack{
+        VStack{
             if self.isLoading {
                 ActivityIndicatorView()
                     .padding(.top,15)
@@ -339,7 +342,7 @@ struct ChattingView : View{
                                     ZStack{
                                         HStack{
                                             if isRecevied{
-                                                
+                                              
                                                 AsyncImage(url: self.msgVM.rooms[self.chatId].users[0].UserPhotoURL){ image in
                                                     image
                                                         .resizable()
@@ -400,13 +403,14 @@ struct ChattingView : View{
 
                                         }
                                     }
-                                    .frame(width: width * 0.7, alignment: isRecevied ? .leading : .trailing)
+                                    .frame(width: width * 0.8, alignment: isRecevied ? .leading : .trailing)
                                     .padding(.vertical,8)
 
                                 }
                                 .frame(maxWidth:.infinity,alignment: isRecevied ? .leading : .trailing)
                                 .id(msg.RoomUUID)
                                 .task{
+//                                    self.isLoading = true
                                     if self.msgVM.isLastMessage(messageID: msg.msg_identity, charRoomID: self.chatId) {
                                         await self.loadMoreMessage()
                                     }
