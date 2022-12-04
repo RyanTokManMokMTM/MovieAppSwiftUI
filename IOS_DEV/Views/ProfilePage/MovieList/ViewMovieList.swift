@@ -20,6 +20,9 @@ struct ViewMovieList: View {
     @State private var isManageMode : Bool = false
     @State private var isEditList : Bool = false
     @State private var removeMovie : [Int] = []
+    
+    @State private var listMovies : [ListMovieInfo]?
+    @State private var isLoading = false
 
     init(index : Int,isViewList : Binding<Bool>){
         self.colums = 2
@@ -115,7 +118,7 @@ struct ViewMovieList: View {
                 Divider()
                 
                 ScrollView(.vertical,showsIndicators: false){
-                    VStack(alignment:.leading,spacing:20){
+                    LazyVStack(alignment:.leading,spacing:20){
                         
                         VStack(alignment:.leading,spacing:8){
                             Text(self.userVM.profile!.UserCustomList![listIndex].title)
@@ -134,29 +137,72 @@ struct ViewMovieList: View {
                     .frame(maxWidth:.infinity)
                     .background(Color("DarkMode2"))
                     
-                    
-                    if self.userVM.profile!.UserCustomList![listIndex].movie_list == nil || (self.userVM.profile!.UserCustomList![listIndex].movie_list != nil && self.userVM.profile!.UserCustomList![listIndex].movie_list!.count == 0 ) {
-                        VStack{
-                            Text("您沒有收藏任何電影喔～")
-                                .foregroundColor(.gray)
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        .padding(.vertical)
-                    }else {
-                        HStack(alignment:.top,spacing:HSpacing){
-                            ForEach(customList(),id:\.self){datas in
-                                LazyVStack(spacing:VSpacing){
-                                    ForEach(datas) { info in
-                                        
-                                        MovieListCard(info: info, isManageMode: $isManageMode,movieID: $movieID,isShowMovieDetail:$isShowMovieDetail, removeList: $removeMovie)
+                    if self.listMovies != nil {
+                        if self.listMovies!.isEmpty {
+                            VStack{
+                                Text("您沒有收藏任何電影喔～")
+                                    .foregroundColor(.gray)
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                            .padding(.vertical)
+                        }else {
+                            
+                            HStack(alignment:.top,spacing:HSpacing){
+                                ForEach(customList(),id:\.self){datas in
+                                    LazyVStack(spacing:VSpacing){
+                                        ForEach(datas) { info in
+                                            MovieListCard(info: info.movie_info, isManageMode: $isManageMode,movieID: $movieID,isShowMovieDetail:$isShowMovieDetail, removeList: $removeMovie)
+                                                .task {
+                                                    let listID = self.userVM.profile!.UserCustomList![listIndex].id
+                                                    guard let createTime = self.listMovies!.last?.created_time else {
+                                                        return
+                                                    }
+                                                    if self.isLastMovie(movieID: info.id) {
+                                                        await self.getMovies(listID: listID,createTime :createTime)
+                                                    }
+                                                }
+                                        }
                                     }
                                 }
+                                
                             }
+                            .padding(.vertical,5)
+                            .padding(.horizontal,3)
                             
+                            if self.isLoading {
+                                ActivityIndicatorView()
+                                    .padding(.vertical,15)
+                            }
                         }
-                        .padding(.vertical,5)
-                        .padding(.horizontal,3)
                     }
+                   
+                    
+//                    if self.userVM.profile!.UserCustomList![listIndex].movie_list == nil || (self.userVM.profile!.UserCustomList![listIndex].movie_list != nil && self.userVM.profile!.UserCustomList![listIndex].movie_list!.count == 0 ) {
+//                        VStack{
+//                            Text("您沒有收藏任何電影喔～")
+//                                .foregroundColor(.gray)
+//                                .font(.system(size: 16, weight: .semibold))
+//                        }
+//                        .padding(.vertical)
+//                    }else {
+//                        HStack(alignment:.top,spacing:HSpacing){
+//                            ForEach(customList(),id:\.self){datas in
+//                                LazyVStack(spacing:VSpacing){
+//                                    ForEach(datas) { info in
+//                                        MovieListCard(info: info.movie_info, isManageMode: $isManageMode,movieID: $movieID,isShowMovieDetail:$isShowMovieDetail, removeList: $removeMovie)
+//                                            .task {
+//                                                if self.userVM.isLastListMovie(movieID: info.id, listID: self.listIndex) {
+//                                                    //TODO: Get more list movie!!!!
+//                                                }
+//                                            }
+//                                    }
+//                                }
+//                            }
+//
+//                        }
+//                        .padding(.vertical,5)
+//                        .padding(.horizontal,3)
+//                    }
                     
                 }
                 .frame(maxWidth:.infinity)
@@ -181,6 +227,32 @@ struct ViewMovieList: View {
                 EmptyView()
             }
         )
+        .task {
+            let listID = self.userVM.profile!.UserCustomList![listIndex].id
+            await self.getMovies(listID: listID)
+        }
+    }
+    
+    private func isLastMovie(movieID : Int) -> Bool{
+        self.listMovies?.last?.movie_info.id == movieID
+    }
+    
+    
+    private func getMovies(listID : Int,createTime : Int = 0) async {
+        self.isLoading = true
+        let resp = await APIService.shared.AsyncGetListMovie(listID: listID,CreateTime: createTime)
+        switch resp {
+        case .success(let data):
+//            print(data.list_movies)
+            if self.listMovies == nil {
+                self.listMovies = []
+            }
+            
+            self.listMovies!.append(contentsOf: data.list_movies)
+        case .failure(let err):
+            print(err.localizedDescription)
+        }
+        self.isLoading = false
     }
     
     private func removeMovies(movieIds : [Int],listID : Int) async {
@@ -194,8 +266,15 @@ struct ViewMovieList: View {
         case .success(_):
             if self.userVM.profile!.UserCustomList != nil{
                 for movieID in movieIds {
-                    self.userVM.profile!.UserCustomList?[listIndex].movie_list?.removeAll{$0.id == movieID}
+                    self.listMovies!.removeAll{$0.movie_info.id == movieID}
+                    
+                    self.userVM.profile!.UserCustomList![listIndex].movie_list! =  self.listMovies![0...(self.listMovies!.count > 4 ? 4 : self.listMovies!.count)].compactMap{ info in
+                        return info.movie_info
+                    }
+                    
+                    self.userVM.profile!.UserCustomList![listIndex].total_movies -= movieIds.count
                 }
+                
             }
         case .failure(let err):
             print(err.localizedDescription)
@@ -219,7 +298,7 @@ struct ViewMovieList: View {
             
             Spacer()
             
-            Text("收藏電影: \(self.userVM.profile!.UserCustomList![listIndex].movie_list == nil ? 0 : self.userVM.profile!.UserCustomList![listIndex].movie_list!.count)")
+            Text("收藏電影: \(self.userVM.profile!.UserCustomList![listIndex].total_movies)")
                 .font(.system(size:14,weight: .semibold))
                
         }
@@ -247,14 +326,14 @@ struct ViewMovieList: View {
         .clipShape(CustomeConer(width: 5, height: 5, coners: [.allCorners]))
     }
     
-    private func customList() -> [[MovieInfo]] {
+    private func customList() -> [[ListMovieInfo]] {
 //        if self.userVM.profile!.UserCustomList![listIndex].movie_list == nil {
 //            return [[]]
 //        }
 //        
         var curIndx = 0
-        var gridList : [[MovieInfo]] = Array(repeating: [], count: self.colums)
-        self.userVM.profile!.UserCustomList![listIndex].movie_list!.forEach{ data  in
+        var gridList : [[ListMovieInfo]] = Array(repeating: [], count: self.colums)
+        self.listMovies!.forEach{ data  in
             //each row have colums data
             gridList[curIndx].append(data)
             if curIndx == colums - 1 {

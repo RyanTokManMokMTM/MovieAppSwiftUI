@@ -14,6 +14,8 @@ enum postDataFrom{
 }
 
 struct PostDetailView: View {
+    @State var isShowMenu = false
+    @State var selectedCommentInfo : CommentInfo? = nil
     
     var postForm : postDataFrom
     var isFromProfile : Bool
@@ -49,6 +51,8 @@ struct PostDetailView: View {
     @State var isChecking : Bool = false
     
     @State var isDelete : Bool = false
+    
+    @State var isLoading : Bool = false
     var body: some View {
         ZStack(alignment: .top){
             
@@ -85,8 +89,6 @@ struct PostDetailView: View {
                            ,isActive: $isShowUserProfile){
                 EmptyView()
             }
-        
-        
         )
         .onAppear{
             //Here we need to know post is delete or not...
@@ -99,6 +101,28 @@ struct PostDetailView: View {
                 }
             }
 //            GetPostComments()
+        }
+        .actionSheet(isPresented: $isShowMenu){
+            var action : [ActionSheet.Button] = []
+            action.append(.default(Text("回覆")){
+                self.placeHolder = "回覆@\(self.replyTo!.name)"
+                self.isFocues = true
+            })
+            
+            action.append(.default(Text("複製")){
+                UIPasteboard.general.setValue(self.selectedCommentInfo!.comment, forPasteboardType: "public.plain-text")
+            })
+            
+            if self.selectedCommentInfo!.user_info.id  == self.userVM.userID!{
+                action.append(.destructive(Text("刪除")){
+                    
+                })
+            }
+            
+            action.append(.cancel())
+            
+            return ActionSheet(title: Text((selectedCommentInfo?.user_info.name
+                                           ?? "UNKNOW") + ":" + (selectedCommentInfo?.comment ?? "UNKNOW")),buttons: action)
         }
 
         
@@ -424,19 +448,17 @@ struct PostDetailView: View {
             }else {
                 ForEach(self.$commentInfos,id:\.id){ comment in
 //                    commentCell(comment: info)
-                    commentCell(postInfo: $postInfo, comment: comment, isLoadingReply: $isLoadingReply, replyCommentId: $replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo, scrollTo: $scrollTo)
+                    commentCell(isShowMenu:$isShowMenu,selectedCommentInfo: $selectedCommentInfo,postInfo: $postInfo, comment: comment, isLoadingReply: isLoadingReply, replyCommentId: $replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo, scrollTo: $scrollTo)
+                        .task{
+                            if self.isLastComment(id: comment.id){
+                                await self.LoadMoreCommentInfo(postID: self.postInfo.id)
+                            }
+                        }
                 }
-                
-                
-                if self.metaData?.page ?? 0 < self.metaData?.total_pages ?? 0{
-                    HStack{
-                        Spacer()
-                        ActivityIndicatorView()
-                        Spacer()
-                    }.task {
-                        await self.LoadMoreCommentInfo(postID: self.postInfo.id)
-                    }
-                }else {
+                if (self.metaData?.page ?? 0) < (self.metaData?.total_pages ?? 0) && self.isLoading {
+                    ActivityIndicatorView()
+                        .padding(.vertical,15)
+                } else {
                     HStack{
                         Spacer()
                         Text("沒有評論了唷~ ")
@@ -446,9 +468,14 @@ struct PostDetailView: View {
                         Spacer()
                     }
                 }
-           
+
+                
             }
         }
+    }
+    
+    private func isLastComment(id : Int) -> Bool{
+        self.commentInfos.last?.id == id
     }
         
     @MainActor
@@ -479,7 +506,10 @@ struct PostDetailView: View {
                                              comment: self.message, update_at: data.create_at, reply_comments: 0, is_liked: false, comment_likes_count: 0, parent_comment_id: 0,reply_id: 0,reply_to: SimpleUserInfo(id: 0, name: "", avatar: ""), meta_data: MetaData(total_pages: 0, total_results: 0, page: 0))
                 
                 self.commentInfos.insert(newComment, at: 0)
-                postInfo.post_comment_count += 1
+                DispatchQueue.main.async {
+                    postInfo.post_comment_count += 1
+                }
+             
                 self.message.removeAll()
                 self.rootCommentId = -1
             case .failure(let err):
@@ -493,7 +523,7 @@ struct PostDetailView: View {
         let index = commentInfos.firstIndex{$0.id == self.replyCommentId}
         guard let index = index else { return }
      
-        let req = CreateReplyCommentReq(post_id: self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postInfo.id)].id, comment_id: self.replyCommentId, info: ReplyCommentBody(parent_id: self.rootCommentId, comment: self.message))
+        let req = CreateReplyCommentReq(post_id: self.postVM.postData[self.postVM.getPostIndexFromDiscoveryList(postId: postInfo.id)].id, comment_id: self.replyCommentId, info: ReplyCommentBody(parent_id: self.rootCommentId, comment: self.message))
         APIService.shared.CreateReplyComment(req: req){ result in
             switch result {
             case .success(let data):
@@ -501,17 +531,21 @@ struct PostDetailView: View {
                                                 CommentUser(id: self.userVM.profile!.id, name: self.userVM.profile!.name, avatar: self.userVM.profile!.avatar ?? ""),
                                              comment: self.message, update_at: data.create_at, reply_comments: 0, is_liked: false, comment_likes_count: 0, parent_comment_id: self.rootCommentId,reply_id: self.replyCommentId, reply_to: SimpleUserInfo(id: self.replyTo!.id, name: self.replyTo!.name, avatar: self.replyTo!.avatar), meta_data: MetaData(total_pages: 0, total_results: 0, page: 0))
                 
-                if self.commentInfos[index].replys == nil {
-                    self.commentInfos[index].replys = []
+                DispatchQueue.main.async {
+                    if self.commentInfos[index].replys == nil {
+                        self.commentInfos[index].replys = []
+                    }
+                    self.commentInfos[index].replys!.append(newComment)
+                    self.postVM.selectedPostInfo.post_comment_count += 1
+                    self.commentInfos[index].reply_comments += 1
+                    self.replyCommentId = -1
+                    self.message.removeAll()
+                    self.isReply = false
+                    self.placeHolder.removeAll()
+                    self.rootCommentId = -1
+                    self.replyTo = nil
                 }
-                self.commentInfos[index].replys!.append(newComment)
-                self.postVM.selectedPostInfo.post_comment_count += 1
-                self.replyCommentId = -1
-                self.message.removeAll()
-                self.isReply = false
-                self.placeHolder.removeAll()
-                self.rootCommentId = -1
-                self.replyTo = nil
+
                 
             case .failure(let err):
                 print(err.localizedDescription)

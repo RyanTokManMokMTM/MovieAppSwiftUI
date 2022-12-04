@@ -54,7 +54,7 @@ struct MovieCardGesture :View{
                             }else{
                                 //just show
                                 TheCard(movie: movie)
-                                    .frame(width:245)
+                                    .frame(width:UIScreen.main.bounds.width / 4)
                                     .scaleEffect( 1 - CGFloat(self.movies.reversed().firstIndex(where: {$0.id == movie.id})!) * 0.03 + self.calculateScale())
                                     .padding(.top,1 - CGFloat(self.movies.reversed().firstIndex(where: {$0.id == movie.id})!) * 16)
                                     .animation(.spring())
@@ -444,7 +444,7 @@ struct CardGesture: View {
 
 
        return TheCard(movie: movie)
-        .frame(width:245)
+            .frame(width:UIScreen.main.bounds.width / 4)
         .offset(self.calculateOffset())
         .scaleEffect(self.gestureState.isActive ? 1.03 : 1)
         .rotationEffect(self.calculateAngle())

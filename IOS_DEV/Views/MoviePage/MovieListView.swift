@@ -88,8 +88,8 @@ struct HomeNavTabView : View {
         }.overlay(
             HStack(spacing:20){
 //                Spacer()
-                Text("SociFun")
-                    .LeckerliOneRegularFont(size:22)
+                Text("SocMov")
+                    .LeckerliOneRegularFont(size:25)
                 Spacer()
 //                HomeTabButton(index: $index,tab: .TV) //TODO: NOT AVAILABLE YET
 //                HomeTabButton(index: $index,tab: .Moive)
@@ -263,6 +263,8 @@ struct MovieGenreStateView : View{
 }
 
 struct MovieGenreCardSelectionView : View{
+    @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var postVM : PostVM
     @StateObject var State : GenreTypeState = GenreTypeState()
     @Binding var isCardSelectedMovie:Bool
     var genreRef : GenreTypeRef
@@ -304,11 +306,23 @@ struct MovieGenreCardSelectionView : View{
                
 
             )
-        .fullScreenCover(isPresented: $isCardSelectedMovie, content: {
-            MovieCardGesture(movies:self.State.genreMovies,currentMovie: State.genreMovies.last, backHomePage: $isCardSelectedMovie,name: genreRef.genre_name)
-                .environmentObject(State)
-             
-        })
+//        .fullScreenCover(isPresented: $isCardSelectedMovie, content: {
+//            MovieCardGesture(movies:self.State.genreMovies,currentMovie: State.genreMovies.last, backHomePage: $isCardSelectedMovie,name: genreRef.genre_name)
+//                .environmentObject(State)
+//
+//        })
+        .background{
+            NavigationLink(destination: MovieCardGesture(movies:self.State.genreMovies,currentMovie: State.genreMovies.last, backHomePage: $isCardSelectedMovie,name: genreRef.genre_name)
+                .navigationTitle("")
+                .navigationBarHidden(true)
+                .navigationBarTitle("")
+                .environmentObject(userVM)
+                .environmentObject(postVM)
+                .navigationViewStyle(.stack)
+                .environmentObject(State), isActive: $isCardSelectedMovie){
+                    EmptyView()
+                }
+        }
         .onAppear{
             self.State.getGenreCard(genreType: genreRef.genre_type)
         }

@@ -141,7 +141,7 @@ struct CreateMovieList: View {
                         self.userModel.profile!.UserCustomList = []
                     }
                     
-                    let listInfo = CustomListInfo(id: data.id, title: data.title,intro:data.intro, movie_list: nil)
+                    let listInfo = CustomListInfo(id: data.id, title: data.title,intro:data.intro, total_movies: 0, movie_list: nil)
                     userModel.profile!.UserCustomList!.append(listInfo)
                     self.err = nil
                     withAnimation(){

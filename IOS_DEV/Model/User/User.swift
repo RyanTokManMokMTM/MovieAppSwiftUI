@@ -535,6 +535,8 @@ class UserViewModel : ObservableObject{
     }
     
     
+    
+    
     func isLastPost(postID : Int) -> Bool {
         return self.profile?.UserCollection?.last?.id == postID
     }
@@ -546,4 +548,9 @@ class UserViewModel : ObservableObject{
     func isLastList(listID : Int) -> Bool {
         return self.profile?.UserCustomList?.last?.id == listID
     }
+    
+    func isLastListMovie(movieID : Int, listID : Int) -> Bool {
+        return self.profile?.UserCustomList?[listID].movie_list?.last?.id == movieID
+    }
+    
 }

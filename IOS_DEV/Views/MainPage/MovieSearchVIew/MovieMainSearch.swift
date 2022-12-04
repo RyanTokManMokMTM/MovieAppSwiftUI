@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
+import Algorithms
 
 class SearchingHistoryManager : ObservableObject {
     @AppStorage("searchHistroy") var history : [String] =  []
@@ -39,10 +40,11 @@ class MovieSearchVM : ObservableObject {
     @Published var searchResult : [Movie] = []//For actucal Result View
     
     @Published var searchResultPage : Int = 1
+    @Published var searchCurPage : Int = 1
     @Published var isLoading : Bool = false
     @Published var fetchingError : NSError?
-    @Published var recommandPlachold : String = "奇異博士2：失控多重宇宙"
-    @Published var isSearching = true //false : only for showing result
+    @Published var recommandPlachold : String = "電影..."
+//    @Published var isSearching = true //false : only for showing result
     init(){}
     
     func getMovieSearchResult(){
@@ -55,6 +57,7 @@ class MovieSearchVM : ObservableObject {
             switch result {
             case .success(let data):
                 self.searchResult = data.results
+                self.searchResultPage = data.totalPages
             case .failure(let err) :
                 print(err.localizedDescription)
                 self.fetchingError = err as NSError
@@ -62,9 +65,32 @@ class MovieSearchVM : ObservableObject {
         }
     }
     
+    @MainActor
+    func getMoreMovieResult() async {
+        if self.searchCurPage >= self.searchResultPage {
+            return
+        }
+        self.isLoading = true
+        self.searchCurPage += 1
+        let resp = await MovieStore.shared.AsyncsearchMovieInfo(query: self.searchingText, page: self.searchCurPage)
+        switch resp {
+        case .success(let data):
+            self.searchResult.append(contentsOf: data.results)
+            let result = self.searchResult.uniqued()
+            self.searchResult = Array(result)
+            self.searchResultPage = data.totalPages
+            print(self.searchResultPage)
+        case .failure(let err):
+            print(err.localizedDescription)
+        }
+        
+        self.isLoading = false
+    }
+
     
-    
-    
+    func isLastMovie(movieID : Int) -> Bool {
+        return self.searchResult.last?.id == movieID
+    }
 }
 
 struct MovieMainSearchView: View {
@@ -116,61 +142,62 @@ struct MovieMainSearchView: View {
                     .padding(.horizontal)
                     .padding(.vertical,5)
                     
-                    HistorList(history: self.historyManager.history)
+                    history(history: self.historyManager.history)
                         .padding(.bottom,5)
+//                    HistorList
                     
                 }
-                Group{
-                    HStack{
-                        Text("推薦搜索")
-                            .fontWeight(.bold)
-                            .font(.footnote)
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    .padding(.vertical,5)
-                    
-                    
-                    if !hotItemTest.isEmpty{
-                        LazyVGrid(columns: gridItems){
-                            ForEach(0..<hotItemTest.count){ i in
-                                //                            SearchHotCard(rank: i+1,rankColor: i <= 3 ? .red : .white, hotData: hotItemTest[i])
-                                Button(action:{
-                                }){
-                                    VStack(alignment:.leading){
-                                        HStack(spacing:15){
-                                            VStack  {
-                                                Spacer()
-                                                Text("\(i + 1)")
-                                                    .bold()
-                                                    .font(.footnote)
-                                                    .foregroundColor( i <= 3 ? .red : .white)
-                                                Spacer()
-                                            }
-                                            VStack(alignment: .leading, spacing: 10){
-                                                Text(hotItemTest[i].title)
-                                                    .bold()
-                                                    .font(.footnote)
-                                                    .foregroundColor(.white)
-                                                    .lineLimit(1)
-                                                Text(hotItemTest[i].description)
-                                                    .foregroundColor(.gray)
-                                                    .font(.caption)
-                                                    .lineLimit(1)
-                                            }
-                                            Spacer()
-                                        }
-                                    }
-                                    .padding(5)
-                                }
-                            }
-                        }
-                    }else{
-                        Text("抱歉,沒有推薦的電影...")
-                            .foregroundColor(.secondary)
-                            .font(.caption)
-                    }
-                }
+//                Group{
+//                    HStack{
+//                        Text("推薦搜索")
+//                            .fontWeight(.bold)
+//                            .font(.footnote)
+//                        Spacer()
+//                    }
+//                    .padding(.horizontal)
+//                    .padding(.vertical,5)
+//
+//
+//                    if !hotItemTest.isEmpty{
+//                        LazyVGrid(columns: gridItems){
+//                            ForEach(0..<hotItemTest.count){ i in
+//                                //                            SearchHotCard(rank: i+1,rankColor: i <= 3 ? .red : .white, hotData: hotItemTest[i])
+//                                Button(action:{
+//                                }){
+//                                    VStack(alignment:.leading){
+//                                        HStack(spacing:15){
+//                                            VStack  {
+//                                                Spacer()
+//                                                Text("\(i + 1)")
+//                                                    .bold()
+//                                                    .font(.footnote)
+//                                                    .foregroundColor( i <= 3 ? .red : .white)
+//                                                Spacer()
+//                                            }
+//                                            VStack(alignment: .leading, spacing: 10){
+//                                                Text(hotItemTest[i].title)
+//                                                    .bold()
+//                                                    .font(.footnote)
+//                                                    .foregroundColor(.white)
+//                                                    .lineLimit(1)
+//                                                Text(hotItemTest[i].description)
+//                                                    .foregroundColor(.gray)
+//                                                    .font(.caption)
+//                                                    .lineLimit(1)
+//                                            }
+//                                            Spacer()
+//                                        }
+//                                    }
+//                                    .padding(5)
+//                                }
+//                            }
+//                        }
+//                    }else{
+//                        Text("抱歉,沒有推薦的電影...")
+//                            .foregroundColor(.secondary)
+//                            .font(.caption)
+//                    }
+//                }
             }
             else if self.searchVM.isLoading{
                 HStack{
@@ -256,6 +283,24 @@ struct MovieMainSearchView: View {
         
     }
     
+    @ViewBuilder
+    private func history(history : [String]) -> some View{
+        ScrollView(.horizontal, showsIndicators: false){
+            HStack{
+                ForEach(history,id:\.self){key in
+                    searchFieldButton(searchingText: key){
+                        //TODO: remove all result which are older searching data
+                        self.searchVM.searchResult.removeAll()
+                        self.searchVM.searchingText = key
+                        self.historyManager.updateHistory(query: key)
+                        self.isFocus = true //set to focusting...
+                    }
+                }
+                
+            }
+            .padding(.horizontal)
+        }
+    }
     
     @ViewBuilder
     private func SeachBar() -> some View{
@@ -322,34 +367,6 @@ struct MovieMainSearchView: View {
         
         
         
-    }
-    
-    @ViewBuilder
-    private func SearchHistoryList() -> some View {
-        ScrollView(.horizontal, showsIndicators: false){
-            HStack{
-                ForEach(self.historyManager.history,id:\.self){key in
-                    searchFieldButton(searchingText: key){
-//                        self.searchMV.searchResult.removeAll() //remove previous datas
-//                        self.StateManager.isSeaching.toggle()
-//                        self.searchMV.searchingText = key
-//                        self.StateManager.isEditing = false
-//                        withAnimation(.easeOut(duration:0.7)){
-//                            self.StateManager.isFocuse = [false,false]
-//                            self.StateManager.getSearchResult = true
-//                        }
-//                        self.searchMV.isNoData = false
-//                        self.StateManager.updateSearchingHistory(query: key)
-//                        self.StateManager.searchingLoading = true
-//                        self.searchMV.getSearchingResult() //get new datas
-//
-
-                    }
-                }
-                
-            }
-            .padding(.horizontal)
-        }
     }
 }
 
@@ -446,72 +463,72 @@ struct MovieMainSearchResultView: View {
                 .padding(.horizontal)
                 .padding(.vertical,5)
                 
-                HistorList(history: self.historyManager.history)
+                history(history: self.historyManager.history)
                     .padding(.bottom,5)
                 
             }
-            Group{
-                HStack{
-                    Text("推薦搜索")
-                        .fontWeight(.bold)
-                        .font(.footnote)
-                    Spacer()
-                }
-                .padding(.horizontal)
-                .padding(.vertical,5)
-                
-            
-                if !hotItemTest.isEmpty{
-                    LazyVGrid(columns: gridItems){
-                        ForEach(0..<hotItemTest.count){ i in
-//                            SearchHotCard(rank: i+1,rankColor: i <= 3 ? .red : .white, hotData: hotItemTest[i])
-                            Button(action:{
-//                                self.searchMV.searchResult.removeAll()
-//                                self.StateManager.isSeaching.toggle()
-//                                self.searchMV.searchingText = hotData.title
-//                                self.StateManager.isEditing = false
-//                                withAnimation(.easeOut(duration:0.7)){
-//                                    self.StateManager.isFocuse = [false,false]
-//                                    self.StateManager.getSearchResult = true
+//            Group{
+//                HStack{
+//                    Text("推薦搜索")
+//                        .fontWeight(.bold)
+//                        .font(.footnote)
+//                    Spacer()
+//                }
+//                .padding(.horizontal)
+//                .padding(.vertical,5)
+//
+//
+//                if !hotItemTest.isEmpty{
+//                    LazyVGrid(columns: gridItems){
+//                        ForEach(0..<hotItemTest.count){ i in
+////                            SearchHotCard(rank: i+1,rankColor: i <= 3 ? .red : .white, hotData: hotItemTest[i])
+//                            Button(action:{
+////                                self.searchMV.searchResult.removeAll()
+////                                self.StateManager.isSeaching.toggle()
+////                                self.searchMV.searchingText = hotData.title
+////                                self.StateManager.isEditing = false
+////                                withAnimation(.easeOut(duration:0.7)){
+////                                    self.StateManager.isFocuse = [false,false]
+////                                    self.StateManager.getSearchResult = true
+////                                }
+////                                self.StateManager.updateSearchingHistory(query: hotData.title)
+////                                self.searchMV.searchingText = hotData.title
+////                                self.searchMV.getSearchingResult()
+//                            }){
+//                                VStack(alignment:.leading){
+//                                    HStack(spacing:15){
+//                                        VStack  {
+//                                            Spacer()
+//                                            Text("\(i + 1)")
+//                                                .bold()
+//                                                .font(.footnote)
+//                                                .foregroundColor( i <= 3 ? .red : .white)
+//                                            Spacer()
+//                                        }
+//                                        VStack(alignment: .leading, spacing: 10){
+//                                            Text(hotItemTest[i].title)
+//                                                .bold()
+//                                                .font(.footnote)
+//                                                .foregroundColor(.white)
+//                                                .lineLimit(1)
+//                                            Text(hotItemTest[i].description)
+//                                                .foregroundColor(.gray)
+//                                                .font(.caption)
+//                                                .lineLimit(1)
+//                                        }
+//                                        Spacer()
+//                                    }
 //                                }
-//                                self.StateManager.updateSearchingHistory(query: hotData.title)
-//                                self.searchMV.searchingText = hotData.title
-//                                self.searchMV.getSearchingResult()
-                            }){
-                                VStack(alignment:.leading){
-                                    HStack(spacing:15){
-                                        VStack  {
-                                            Spacer()
-                                            Text("\(i + 1)")
-                                                .bold()
-                                                .font(.footnote)
-                                                .foregroundColor( i <= 3 ? .red : .white)
-                                            Spacer()
-                                        }
-                                        VStack(alignment: .leading, spacing: 10){
-                                            Text(hotItemTest[i].title)
-                                                .bold()
-                                                .font(.footnote)
-                                                .foregroundColor(.white)
-                                                .lineLimit(1)
-                                            Text(hotItemTest[i].description)
-                                                .foregroundColor(.gray)
-                                                .font(.caption)
-                                                .lineLimit(1)
-                                        }
-                                        Spacer()
-                                    }
-                                }
-                                .padding(5)
-                            }
-                        }
-                    }
-                }else{
-                    Text("抱歉,沒有推薦的電影...")
-                        .foregroundColor(.secondary)
-                        .font(.caption)
-                }
-            }
+//                                .padding(5)
+//                            }
+//                        }
+//                    }
+//                }else{
+//                    Text("抱歉,沒有推薦的電影...")
+//                        .foregroundColor(.secondary)
+//                        .font(.caption)
+//                }
+//            }
         }
         else if self.searchVM.isLoading{
             HStack{
@@ -552,19 +569,38 @@ struct MovieMainSearchResultView: View {
     }
     
     @ViewBuilder
+    private func history(history : [String]) -> some View{
+        ScrollView(.horizontal, showsIndicators: false){
+            HStack{
+                ForEach(history,id:\.self){key in
+                    searchFieldButton(searchingText: key){
+                        //TODO: remove all result which are older searching data
+                        self.searchVM.searchResult.removeAll()
+                        self.searchVM.searchingText = key
+                        self.historyManager.updateHistory(query: key)
+                        self.isFocus = true //set to focusting...
+                    }
+                }
+                
+            }
+            .padding(.horizontal)
+        }
+    }
+    
+    @ViewBuilder
     func ShowSearchResult() -> some View {
-        if searchVM.isLoading {
+        if searchVM.isLoading && self.searchVM.searchResult.isEmpty {
             HStack{
                 Spacer()
                 ActivityIndicatorView()
-                Text("Loading...")
                 Spacer()
             }
             .frame(maxWidth:.infinity,maxHeight:.infinity)
             .background(Color("DarkMode2").frame(maxWidth:.infinity))
             
         }else {
-            FlowLayoutView(list: self.searchVM.searchResult, columns: 2,HSpacing: 10,VSpacing: 15, isScrollAble: .constant(true)){ info in
+            
+            FlowLayoutWithLoadMoreView(isLoading: $searchVM.isLoading,list: self.searchVM.searchResult, columns: 2,HSpacing: 10,VSpacing: 15){info in
                 Button(action:{
                     DispatchQueue.main.async {
                         self.movieId = info.id
@@ -572,6 +608,12 @@ struct MovieMainSearchResultView: View {
                     }
                 }){
                     MovieCardView(movieData: info)
+                        .background(Color("appleDark").edgesIgnoringSafeArea(.all).cornerRadius(8))
+                        .task {
+                            if self.searchVM.isLastMovie(movieID: info.id){
+                                await self.searchVM.getMoreMovieResult()
+                            }
+                        }
                 }
             }
             .frame(maxWidth:.infinity)
@@ -580,6 +622,8 @@ struct MovieMainSearchResultView: View {
     }
     
 
+
+    
     @ViewBuilder
     private func SeachBar() -> some View{
         HStack(spacing:5){
@@ -690,7 +734,7 @@ struct  MovieCardView : View {
             Group {
                 VStack(alignment:.leading, spacing:2){
                     Text(movieData.title)
-                        .font(.system(size:18,weight:.bold))
+                        .font(.system(size:15,weight:.bold))
                         .foregroundColor(.white)
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
@@ -721,3 +765,4 @@ struct  MovieCardView : View {
     }
    
 }
+

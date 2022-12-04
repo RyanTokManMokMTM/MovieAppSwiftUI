@@ -37,8 +37,12 @@ struct RemoveListMovieReq  : Encodable{
 }
 
 
-
 /// RESPONSE
+
+struct GetListMovieResp : Decodable {
+    let list_movies : [ListMovieInfo]
+}
+
 struct GetCollectedMovieResp  : Decodable {
     let total : Int
 }
@@ -76,6 +80,7 @@ struct CustomListInfo : Identifiable,Decodable {
     let id : Int
     var title: String
     var intro : String
+    var total_movies : Int
     var movie_list: [MovieInfo]?// need to change
     
     var introStr : String {
@@ -95,6 +100,15 @@ struct MovieInfo : Decodable,Identifiable,Hashable {
     }
 }
 
+
+struct ListMovieInfo : Decodable,Identifiable,Hashable {
+    
+    var id : Int{
+        return movie_info.id
+    }
+    let movie_info : MovieInfo
+    let created_time : Int
+}
 
 struct UpdateCustomListResp : Decodable {}
 struct DeleteCustomListResp : Decodable {}

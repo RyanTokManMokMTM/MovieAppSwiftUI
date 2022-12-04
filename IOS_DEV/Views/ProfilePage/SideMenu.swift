@@ -60,10 +60,10 @@ struct SideMenu : View {
             }
             .padding(.vertical,5)
             
-            memuButton(imageName: "person.fill.badge.plus", title: "添加好友") {
-                print("to add friend?")
-            }
-            Divider()
+//            memuButton(imageName: "person.fill.badge.plus", title: "添加好友") {
+//                print("to add friend?")
+//            }
+//            Divider()
             
             
             Button(action:{

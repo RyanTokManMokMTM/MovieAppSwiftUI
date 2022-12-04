@@ -1480,7 +1480,7 @@ struct OtherUserCustomListView : View{
                         Text(self.userVM.profile!.UserCustomList![i].title)
                             .font(.system(size:16,weight:.semibold))
                         
-                        Text("收藏電影: \(self.userVM.profile!.UserCustomList![i].movie_list == nil ? 0 :  self.userVM.profile!.UserCustomList![i].movie_list!.count)")
+                        Text("收藏電影: \(self.userVM.profile!.UserCustomList![i].total_movies)")
                             .font(.system(size:12,weight:.semibold))
                             .foregroundColor(Color(UIColor.darkGray))
                         

@@ -25,6 +25,7 @@ protocol MovieService {
     
     func searchRecommandMovie(query: String, completion: @escaping (Result<MovieSearchResponse, MovieError>) -> ())
     func searchMovieInfo(query: String,page:Int, completion: @escaping (Result<MovieResponse, MovieError>) -> ())
+    func AsyncsearchMovieInfo(query: String,page:Int) async -> Result<MovieResponse, MovieError>
     func searchPerson(query: String, completion: @escaping (Result<PersonResponse, MovieError>) -> ())
     func GenreType(genreID: Int, completion: @escaping (Result<MovieResponse, MovieError>) -> ())
     func fetchMovieImages(id: Int, completion: @escaping (Result<MovieImages, MovieError>) -> ())
@@ -80,6 +81,8 @@ protocol ServerAPIServerServiceInterface {
     func AsyncRemoveListMovies(listID : Int, movieIds : RemoveListMovieReq) async -> Result<RemoveListMovieResp,Error>
     func GetOneMovieFromUserList(req : GetOneMovieFromUserListReq, completion : @escaping (Result<GetOneMovieFromUserListResp,Error>) -> ())
     func GetCollectedMovieCount(userID : Int) async -> Result<GetCollectedMovieResp,Error>
+    
+    func AsyncGetListMovie(listID : Int,CreateTime : Int,limit : Int) async -> Result<GetListMovieResp,Error>
     
     //TODO: POST
     func CreatePost(req : CreatePostReq,completion : @escaping (Result<CreatePostResp,Error>) -> ())
@@ -399,6 +402,7 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     case RemoveListMovies
     case GetOneMovieFromUserList
     case GetCollectedMovieCount
+    case GetListMovies
     
     //MARK:  post API
     case CheckPost
@@ -503,6 +507,9 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
         case .DeleteCustomList: return "/lists" //list/:list_id/movie/:movie_id
         case .GetAllUserLists: return "/lists/" //user_id
         case .GetUserList: return "/list/" //list_id
+        case .GetListMovies : return "/list/movies/"
+        //TODO: GET MORE LSIT MOVIE HERE
+            
         case .GetOneMovieFromUserList: return "/list/movie/" //movie_id
         case .GetCollectedMovieCount: return "/list/movies/count/"
         case .RemoveListMovies : return "/list/movies/" ///list/movies/:list_id

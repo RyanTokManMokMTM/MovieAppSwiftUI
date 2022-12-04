@@ -11,6 +11,11 @@ import SDWebImageSwiftUI
 
 
 struct PostBottomSheet : View{
+    @State var isShowMenu = false
+    @State var selectedCommentInfo : CommentInfo? = nil
+    
+    
+    
     @State var offset: CGFloat = 0.0
     @State var commentMetaData : MetaData?
     @EnvironmentObject var postVM : PostVM
@@ -26,12 +31,14 @@ struct PostBottomSheet : View{
     @State private var isLoadingComment = false
     
     @State private var replyTo : CommentUser? = nil
-    @State private var isLoadingReply : Bool = false
+//    @State private var isLoadingReply : Bool = false
     @State private var replyCommentId : Int = -1
     @State private var rootCommentId : Int = -1
     @State private var placeHolder : String = ""
     @State private var isReply : Bool = false
     @State private var scrollTo : Int = 0
+    
+    @State private var isLoading : Bool = false
 
 //    @Binding var postData : Post?
     var body : some View{
@@ -88,34 +95,38 @@ struct PostBottomSheet : View{
                     }
                     .padding(.vertical,20)
                 }else {
-                    ScrollView(.vertical, showsIndicators: false){
-                        
-                        LazyVStack(alignment:.leading,spacing:8){
-                            ForEach(self.$commentInfos) { comment in
-                                commentCell(postInfo: self.$postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)], comment: comment, isLoadingReply: $isLoadingReply, replyCommentId: $replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo, scrollTo: $scrollTo)
-                                    .id(comment.id)
-                                    .padding(.vertical,3)
-                            }
-                            
-                            if self.commentMetaData?.page ?? 0 < self.commentMetaData?.total_pages ?? 0 {
-                                HStack{
+                    ScrollViewReader{reader in
+                        ScrollView(.vertical, showsIndicators: false){
+                            LazyVStack(alignment:.leading,spacing:8){
+                                ForEach(self.$commentInfos) { comment in
+                                    commentCell(isShowMenu : $isShowMenu, selectedCommentInfo : $selectedCommentInfo,postInfo: self.$postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)], comment: comment, replyCommentId: $replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo, scrollTo: $scrollTo)
+                                        .id(comment.id)
+                                        .task {
+                                            //Last one ???
+                                            if self.isLastMessage(id: comment.id) {
+                                                await LoadMoreCommentInfo(postID: self.postId)
+                                            }
+                                        }
+                                        .padding(.top,8)
+                                }
+                                
+                                if self.isLoading {
+                                    
                                     ActivityIndicatorView()
-                                }
-                                .onAppear(){
-                                    print("loading...")
-                                }
-                                .task{
-                                    await LoadMoreCommentInfo(postID: self.postId)
+                                        .padding(.vertical,15)
+                                    
                                 }
                             }
-                            
-                            
-                            
+                            .onChange(of: self.scrollTo){ to in
+                                if to == 0 {
+                                    return
+                                }
+                                print(to)
+                                ScrollTo(commentID: to, anchor: .bottom, shouldAnima: false, scrollViewReader: reader)                            }
                             
                         }
-                        
-                        
                     }
+              
                 }
                 
                 
@@ -129,13 +140,40 @@ struct PostBottomSheet : View{
         .onAppear{
             GetPostComments()
         }
+        .actionSheet(isPresented: $isShowMenu){
+            var action : [ActionSheet.Button] = []
+            action.append(.default(Text("回覆")){
+                self.placeHolder = "回覆@\(self.replyTo!.name)"
+                self.isFocues = true
+            })
+            
+            action.append(.default(Text("複製")){
+                UIPasteboard.general.setValue(self.selectedCommentInfo!.comment, forPasteboardType: "public.plain-text")
+            })
+            
+            if self.selectedCommentInfo!.user_info.id  == self.userVM.userID!{
+                action.append(.destructive(Text("刪除")){
+                    
+                })
+            }
+            
+            action.append(.cancel())
+            
+            return ActionSheet(title: Text((selectedCommentInfo?.user_info.name
+                                           ?? "UNKNOW") + ":" + (selectedCommentInfo?.comment ?? "UNKNOW")),buttons: action)
+        }
     }
-    func scrollTo(commentID : Int,anchor : UnitPoint? = nil,shouldAnima : Bool,scrollViewReader : ScrollViewProxy){
+    
+    func ScrollTo(commentID : Int,anchor : UnitPoint? = nil,shouldAnima : Bool,scrollViewReader : ScrollViewProxy){
         DispatchQueue.main.async {
             withAnimation(shouldAnima ? .easeIn : nil){
                 scrollViewReader.scrollTo(commentID, anchor: anchor)
             }
         }
+    }
+    
+    func isLastMessage(id : Int) -> Bool {
+        return self.commentInfos.last?.id == id
     }
     
     @ViewBuilder
@@ -255,6 +293,7 @@ struct PostBottomSheet : View{
             return
         }
         
+        self.isLoading = true
         let resp = await APIService.shared.AsyncGetPostComments(postId: postID, page: self.commentMetaData!.page + 1)
         switch resp {
         case .success(let data):
@@ -264,16 +303,21 @@ struct PostBottomSheet : View{
             print(err.localizedDescription)
             BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)
         }
+        
+        self.isLoading = false
     }
 }
 
 
 struct commentCell : View {
+    @Binding var isShowMenu : Bool
+    @Binding var selectedCommentInfo : CommentInfo?
+    
     @EnvironmentObject private var postVM : PostVM
     @EnvironmentObject private var userVM : UserViewModel
     @Binding var postInfo : Post
     @Binding var comment : CommentInfo
-    @Binding var isLoadingReply : Bool
+    @State var isLoadingReply : Bool = false
     @Binding  var replyCommentId : Int
     @Binding  var rootCommentId : Int
     @Binding  var placeHolder : String
@@ -281,7 +325,6 @@ struct commentCell : View {
     @Binding var commentInfos : [CommentInfo]
     @Binding var replyTo : CommentUser?
     @Binding var scrollTo : Int
-    
     @State var replyCommentMetaData : MetaData?
     @State private var isShowLess = false
     var body : some View {
@@ -299,7 +342,7 @@ struct commentCell : View {
                     VStack(alignment:.leading,spacing: 3){
                         HStack{
                             Text(comment.user_info.name)
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(.system(size: 12, weight: .semibold))
                                 .foregroundColor(Color(uiColor: .systemGray))
                             
                             if postInfo.user_info.id == comment.user_info.id {
@@ -317,7 +360,7 @@ struct commentCell : View {
                         HStack{
                             Text(comment.comment)
                                 .multilineTextAlignment(.leading)
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(.system(size: 12, weight: .semibold))
                             
                             Text(comment.comment_time.dateDescriptiveString())
                                 .foregroundColor(.gray)
@@ -370,30 +413,32 @@ struct commentCell : View {
                                 if !self.isShowLess {
                                     ForEach(0..<comment.replys!.count,id:\.self){ i in
                                         replyCommentCell(postInfo: $postInfo, comment: $comment, replyCommentId:$replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo, releatedCommentId: comment.id, replyListIndex: i)
-                                            .id(comment.replys![i].id)
-                                    
+                                            .onLongPressGesture{
+//                                                print("testing long gesture")
+                                                self.selectedCommentInfo = comment.replys![i]
+                                                self.isShowMenu = true
+                                                self.isReply = true
+                                                self.replyCommentId = comment.replys![i].id//reply to this comment id
+                                                self.rootCommentId = comment.id
+                                                self.replyTo = comment.replys![i].user_info
+                                            }
+                                            .padding(.vertical,8)
+                                            
                                     }
                                 }
                             }
                             
                             if comment.replys != nil && comment.reply_comments - comment.replys!.count <= 0 {
                                 HStack{
-//                                    if !self.isShowLess {
-//                                        Text("已經沒有評論了~")
-//                                            .font(.system(size:12,weight: .semibold))
-//test message load more
-//                                    }
                                     if comment.replys != nil {
                                         Button(action:{
-                                            withAnimation{
+//                                            withAnimation{
                                                 self.isShowLess.toggle()
                                                 if self.isShowLess{
                                                     scrollTo = comment.id
-                                                } else {
-                                                    scrollTo = comment.replys!.last?.id ?? 0
                                                 }
                                                 
-                                            }
+//                                            }
                                         }){
                                             Text("顯示\(self.isShowLess ? "更多" : "更少")")
                                                 .font(.system(size:14,weight: .semibold))
@@ -414,6 +459,7 @@ struct commentCell : View {
                                         
                                         Task.init{
                                             await LoadCommentReply(commentId: comment.id)
+                                            
                                         }
                                     }){
                                         HStack{
@@ -453,11 +499,15 @@ struct commentCell : View {
             
             PostViewDivider
         }
+        .onLongPressGesture{
+            self.selectedCommentInfo =  comment
+            self.isShowMenu = true
+            self.isReply = true
+            self.replyCommentId = comment.id
+            self.rootCommentId = comment.id
+            self.replyTo = comment.user_info
+        }
     }
-//
-//    private func getPostInfo() -> Post{
-//        return self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postID)]
-//    }
     
     private func LoadCommentReply(commentId : Int) async {
         let index = commentInfos.firstIndex{$0.id == commentId}
@@ -479,6 +529,7 @@ struct commentCell : View {
             }else {
                 self.commentInfos[index].replys = data.reply
             }
+//            self.scrollTo = data.reply.last?.id ?? 0
             self.replyCommentMetaData = data.meta_data
             self.comment.reply_comments = self.replyCommentMetaData!.total_results //get the updated count
         case .failure(let err):
@@ -570,7 +621,7 @@ struct replyCommentCell : View {
     
     var body : some View {
         VStack{
-            PostViewDivider
+//            PostViewDivider
 //                .padding(.vertical,2)
             
             HStack(alignment:.top){
@@ -578,14 +629,14 @@ struct replyCommentCell : View {
                     WebImage(url:comment.replys![replyListIndex].user_info.UserPhotoURL)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: 30, height: 30)
+                        .frame(width: 25, height: 25)
                         .clipShape(Circle())
                         .padding(.vertical,3)
                     
                     VStack(alignment:.leading,spacing: 3){
                         HStack{
                             Text(comment.replys![replyListIndex].user_info.name)
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(.system(size: 12, weight: .semibold))
                                 .foregroundColor(Color(uiColor: .systemGray))
                             
                             if postInfo.user_info.id == comment.replys![replyListIndex].user_info.id {
@@ -606,7 +657,7 @@ struct replyCommentCell : View {
                                     .imageScale(.small)
 
                                 Text(comment.replys![replyListIndex].reply_to.name) //Testing
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(.system(size: 12, weight: .semibold))
                                     .foregroundColor(Color(uiColor: .systemGray))
                             }
                         }
@@ -616,7 +667,7 @@ struct replyCommentCell : View {
                         HStack{
                             Text(comment.replys![replyListIndex].comment)
                                 .multilineTextAlignment(.leading)
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(.system(size: 12, weight: .semibold))
                             
                             Text(comment.replys![replyListIndex].comment_time.dateDescriptiveString())
                                 .foregroundColor(.gray)

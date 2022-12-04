@@ -11,8 +11,8 @@ import SwiftUI
 import BottomSheet
 
 
-let SERVER_HOST = "http://ec2-18-138-230-148.ap-southeast-1.compute.amazonaws.com:8000"
-let SERVER_WS = "ws://ec2-18-138-230-148.ap-southeast-1.compute.amazonaws.com:8000/ws"
+let SERVER_HOST = "http://ec2-13-214-218-46.ap-southeast-1.compute.amazonaws.com:8000"
+let SERVER_WS = "ws://ec2-13-214-218-46.ap-southeast-1.compute.amazonaws.com:8000/ws"
 
 class MovieStore: MovieService {
     static let shared = MovieStore()
@@ -113,6 +113,19 @@ class MovieStore: MovieService {
             "query": query,
             "page":String(page)
         ], completion: completion)
+    }
+    
+    func AsyncsearchMovieInfo(query: String,page:Int) async -> Result<MovieResponse, MovieError> {
+        guard let url = URL(string: "\(baseAPIURL)/search/movie") else {
+           return .failure(.invalidEndpoint)
+        }
+        
+        return await AsyncloadURLAndDecode(url: url, params: [
+            "language": "zh-TW",
+            "include_adult": "false",
+            "query": query,
+            "page":String(page)
+        ])
     }
     
     func searchPerson(query: String, completion: @escaping (Result<PersonResponse, MovieError>) -> ()) {
@@ -953,6 +966,18 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
     func GetCollectedMovieCount(userID : Int) async -> Result<GetCollectedMovieResp,Error> {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetCollectedMovieCount.apiUri + userID.description) else {
           return .failure(APIError.badUrl)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        return await AsyncFetchAndDecode(request: request)
+    }
+    
+    func AsyncGetListMovie(listID : Int,CreateTime : Int = 0,limit : Int = 10) async -> Result<GetListMovieResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetListMovies.apiUri + listID.description + "?last_created_time=\(CreateTime)&limit=\(limit)") else {
+            return .failure(APIError.badUrl)
         }
         
         var request = URLRequest(url: url)
@@ -1962,14 +1987,14 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         do {
             let (data ,response) = try await Client.data(for: request)
             guard let statusCode = response as? HTTPURLResponse,200..<300 ~= statusCode.statusCode else{
-                let errResp = try self.Decoder.decode(ErrorResp.self, from: data)
-                print(errResp)
-                return .failure(errResp)
+//                let errResp = try self.Decoder.decode(ErrorResp.self, from: data)
+//                print(errResp)
+//                return .failure(errResp)
                 return  .failure(APIError.invalidResponse)
             }
             
             if let decideData = try? self.Decoder.decode(ResponseType.self, from: data){
-                print("???")
+//                print("???")
                return .success(decideData)
             }else{
                 //MARK: this code need to status code block !!!
