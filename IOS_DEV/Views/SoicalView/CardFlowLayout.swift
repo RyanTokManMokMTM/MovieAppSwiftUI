@@ -14,7 +14,7 @@ struct CardFlowLayout: View {
     @StateObject var HubState : BenHubState = BenHubState.shared
 
     var body: some View {
-        FlowLayoutRefershAbleView(isLoading:$postVM.isAllLoadMore,list: self.postVM.postData, columns: 2,HSpacing: 10,VSpacing: 10,onRefersh: self.postVM.refershDiscoverData,content: { info in
+        FlowLayoutRefershAbleView(isLoading:$postVM.isAllLoadMore,list: self.postVM.postData, columns: 2,HSpacing: 5,VSpacing: 5,onRefersh: self.postVM.refershDiscoverData,content: { info in
                 CardPostView(postInfo: self.$postVM.postData[self.postVM.getPostIndexFromDiscoveryList(postId: info.id)]){
                         DispatchQueue.main.async {
                             self.postVM.selectedPostInfo = info

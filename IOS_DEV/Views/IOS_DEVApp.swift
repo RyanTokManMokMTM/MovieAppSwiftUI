@@ -18,7 +18,7 @@ import Combine
 import Refresher
 import SwiftUI_Pull_To_Refresh
 
-
+let feedBack = UIImpactFeedbackGenerator()
 @main
 struct IOS_DEVApp: App {
     @UIApplicationDelegateAdaptor(Appdelegate.self) var delegate
@@ -30,6 +30,7 @@ struct IOS_DEVApp: App {
         }
     }
 }
+
 
 struct ScrollViewTesting : View {
     let colors : [Color] = [.red,.gray,.white,.yellow,.green,.brown]

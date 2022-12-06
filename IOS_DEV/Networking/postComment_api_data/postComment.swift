@@ -35,6 +35,10 @@ struct CountPostCommentReq {
     let post_id : Int
 }
 
+struct DeletePostCommentReq : Encodable{
+    let comment_id : Int
+}
+
 /// RESPONSE
 struct CreateCommentResp : Decodable {
     let id : Int

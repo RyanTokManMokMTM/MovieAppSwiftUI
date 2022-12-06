@@ -14,8 +14,6 @@ struct PostBottomSheet : View{
     @State var isShowMenu = false
     @State var selectedCommentInfo : CommentInfo? = nil
     
-    
-    
     @State var offset: CGFloat = 0.0
     @State var commentMetaData : MetaData?
     @EnvironmentObject var postVM : PostVM
@@ -38,12 +36,15 @@ struct PostBottomSheet : View{
     @State private var isReply : Bool = false
     @State private var scrollTo : Int = 0
     
+    //MARK: if both are same -> is a root comment
+    @State private var commentID : Int = -1
+    
     @State private var isLoading : Bool = false
 
 //    @Binding var postData : Post?
     var body : some View{
         VStack(spacing:3){
-            Text("評論(\(self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)].post_comment_count))")
+            Text("評論\(self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)].post_comment_count > 0 ? "(\(self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)].post_comment_count)" : "" )")
                 .font(.system(size: 16, weight: .bold))
                 .foregroundColor(Color(uiColor: UIColor.lightText))
                 .overlay(
@@ -54,9 +55,6 @@ struct PostBottomSheet : View{
                                 self.isShowMorePostDetail = false
                             }
                             
-//                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
-//                                self.postId = 0
-//                            }
                         }){
                             Image(systemName: "xmark")
                                 .imageScale(.large)
@@ -99,7 +97,7 @@ struct PostBottomSheet : View{
                         ScrollView(.vertical, showsIndicators: false){
                             LazyVStack(alignment:.leading,spacing:8){
                                 ForEach(self.$commentInfos) { comment in
-                                    commentCell(isShowMenu : $isShowMenu, selectedCommentInfo : $selectedCommentInfo,postInfo: self.$postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)], comment: comment, replyCommentId: $replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo, scrollTo: $scrollTo)
+                                    commentCell(isShowMenu : $isShowMenu, selectedCommentInfo : $selectedCommentInfo, commentID: $commentID,postInfo: self.$postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)], comment: comment, replyCommentId: $replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo, scrollTo: $scrollTo)
                                         .id(comment.id)
                                         .task {
                                             //Last one ???
@@ -153,7 +151,10 @@ struct PostBottomSheet : View{
             
             if self.selectedCommentInfo!.user_info.id  == self.userVM.userID!{
                 action.append(.destructive(Text("刪除")){
-                    
+                    Task.init {
+                        await self.DeleteComment(rootCommentID: self.rootCommentId, commentID: self.commentID)
+                        
+                    }
                 })
             }
             
@@ -252,7 +253,6 @@ struct PostBottomSheet : View{
                     self.commentInfos[index].replys = []
                 }
                 self.commentInfos[index].replys!.append(newComment)
-                
                 DispatchQueue.main.async {
                     self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: self.postId)].post_comment_count += 1
                     self.commentInfos[index].reply_comments += 1
@@ -306,12 +306,60 @@ struct PostBottomSheet : View{
         
         self.isLoading = false
     }
+    
+    @MainActor
+    private func DeleteComment(rootCommentID : Int, commentID : Int) async {
+        if commentID == -1 {
+            return
+        }
+        let resp = await APIService.shared.AsyncDeletePostComment(req: DeletePostCommentReq(comment_id: commentID))
+        switch resp {
+        case .success(_):
+            print("comment deleted")
+            if rootCommentID == commentID {
+                self.RemoveRoot(rootCommentID: rootCommentID)
+            }else {
+                self.RemoveChildComment(rootCommentID: rootCommentID, commentID: commentID)
+            }
+        case .failure(let err):
+            print(err.localizedDescription)
+        }
+        
+    }
+    
+    private func RemoveRoot(rootCommentID : Int){
+        guard let index = self.commentInfos.firstIndex(where: { $0.id == rootCommentID}) else {
+            return
+        }
+        
+        DispatchQueue.main.async {
+            self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: self.postId)].post_comment_count  -= self.commentInfos[index].reply_comments + 1
+            self.commentInfos.removeAll(where:{$0.id == rootCommentID})
+        }
+    }
+    
+    private func RemoveChildComment(rootCommentID : Int, commentID : Int) {
+        guard let index = self.commentInfos.firstIndex(where: { $0.id == rootCommentID}) else {
+            return
+        }
+        
+        guard let childIndex = self.commentInfos[index].replys?.firstIndex(where: { $0.id == commentID}) else {
+            return
+        }
+        
+        DispatchQueue.main.async {
+            self.commentInfos[index].replys!.remove(at: childIndex)
+            self.commentInfos[index].reply_comments -= 1
+            self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: self.postId)].post_comment_count  -= 1
+        }
+    }
 }
 
 
 struct commentCell : View {
     @Binding var isShowMenu : Bool
     @Binding var selectedCommentInfo : CommentInfo?
+    @Binding var commentID : Int
     
     @EnvironmentObject private var postVM : PostVM
     @EnvironmentObject private var userVM : UserViewModel
@@ -421,6 +469,7 @@ struct commentCell : View {
                                                 self.replyCommentId = comment.replys![i].id//reply to this comment id
                                                 self.rootCommentId = comment.id
                                                 self.replyTo = comment.replys![i].user_info
+                                                self.commentID = comment.replys![i].id
                                             }
                                             .padding(.vertical,8)
                                             
@@ -506,6 +555,7 @@ struct commentCell : View {
             self.replyCommentId = comment.id
             self.rootCommentId = comment.id
             self.replyTo = comment.user_info
+            self.commentID = comment.id
         }
     }
     
@@ -618,7 +668,6 @@ struct replyCommentCell : View {
     let releatedCommentId : Int
     let replyListIndex : Int
 
-    
     var body : some View {
         VStack{
 //            PostViewDivider

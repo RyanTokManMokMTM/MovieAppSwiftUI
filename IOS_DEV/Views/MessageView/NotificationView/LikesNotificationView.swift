@@ -72,6 +72,7 @@ struct LikesNotificationView: View {
     @Binding var isShowView : Bool
     @EnvironmentObject private var notificationVM : NotificationVM
     @EnvironmentObject private var userVM :UserViewModel
+    @EnvironmentObject private var postVM : PostVM
     
     var body: some View {
         NotificationView(isShowView:$isShowView,topTitle: "點贊"){
@@ -88,16 +89,25 @@ struct LikesNotificationView: View {
                 }else {
 //                    LazyVStack(spacing:0){
                         ForEach(self.notificationVM.likesNotification){ info in
-                            LikesCell(info: info)
-                                .listRowBackground(Color("DarkMode2"))
-                                .padding(.vertical,15)
-                                .task {
-                                    if self.notificationVM.isLastLikesNotification(id: info.id){
-                                        await self.notificationVM.LoadMoreLikesNotification()
+                            NavigationLink(destination: PostDetailWithSpecificCommentView(postID:info.post_info.id)
+                                .environmentObject(userVM)
+                                .environmentObject(postVM)
+                                .navigationBarTitle("")
+                                .navigationBarHidden(true)
+                                .navigationTitle("")
+                            ){
+                                
+                                LikesCell(info: info)
+                                    .listRowBackground(Color("DarkMode2"))
+                                    .padding(.vertical,15)
+                                    .task {
+                                        if self.notificationVM.isLastLikesNotification(id: info.id){
+                                            await self.notificationVM.LoadMoreLikesNotification()
+                                        }
                                     }
-                                }
-                                .listRowBackground(Color("DarkMode2"))
-                        }
+                                   
+                            }
+                            .listRowBackground(Color("DarkMode2"))                        }
                         
                         if self.notificationVM.isLoadingLikes {
                             HStack{

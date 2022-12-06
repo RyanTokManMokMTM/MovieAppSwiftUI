@@ -11,7 +11,7 @@ import CoreAudio
 import Kingfisher
 import Combine
 import Refresher
-private let feedBack = UIImpactFeedbackGenerator()
+
 struct PersonProfileView : View{
     @Binding var isShowMenu : Bool
     @StateObject var HubState : BenHubState = BenHubState.shared

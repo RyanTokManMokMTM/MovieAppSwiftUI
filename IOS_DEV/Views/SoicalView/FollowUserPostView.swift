@@ -8,7 +8,7 @@
 import SwiftUI
 import SDWebImageSwiftUI
 import Refresher
-private let feedBack = UIImpactFeedbackGenerator()
+
 struct FollowUserPostView: View {
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel

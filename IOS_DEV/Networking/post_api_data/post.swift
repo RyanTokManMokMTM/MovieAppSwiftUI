@@ -65,3 +65,7 @@ struct PostInfoReq : Decodable {
 struct CountUserPostResp : Decodable {
     let total_posts : Int
 }
+
+struct PostInfoByIdResp : Decodable {
+    let post_info : Post
+}

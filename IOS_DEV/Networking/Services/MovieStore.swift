@@ -11,8 +11,8 @@ import SwiftUI
 import BottomSheet
 
 
-let SERVER_HOST = "http://ec2-13-214-218-46.ap-southeast-1.compute.amazonaws.com:8000"
-let SERVER_WS = "ws://ec2-13-214-218-46.ap-southeast-1.compute.amazonaws.com:8000/ws"
+let SERVER_HOST = "http://ec2-13-212-107-166.ap-southeast-1.compute.amazonaws.com:8000"
+let SERVER_WS = "ws://ec2-13-212-107-166.ap-southeast-1.compute.amazonaws.com:8000/ws"
 
 class MovieStore: MovieService {
     static let shared = MovieStore()
@@ -1131,6 +1131,17 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         return await AsyncFetchAndDecode(request: request)
     }
     
+    func AsyncGetPostInfoByID(postID : Int) async -> Result<PostInfoByIdResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetPostByID.apiUri + postID.description) else{
+            return .failure(APIError.apiError)
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        return await AsyncFetchAndDecode(request: request)
+    }
+    
     //MARK: POST LIKED----
     func CreatePostLikes(req : CreatePostLikesReq,completion : @escaping (Result<CreatePostLikesResp,Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreatePostLikes.apiUri) else{
@@ -1247,10 +1258,9 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         PostAndDecode(req: request, completion: completion)
     }
     
-    func DeletePostComment(commentId : Int, completion : @escaping (Result<DeletePostCommentResp,Error>) -> ()) {
-        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.DeleteComment.apiUri + commentId.description) else {
-            completion(.failure(APIError.badUrl))
-            return
+    func AsyncDeletePostComment(req : DeletePostCommentReq) async -> Result<DeletePostCommentResp,Error> {
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.DeleteComment.apiUri) else {
+            return .failure(APIError.badUrl)
         }
         
         var request = URLRequest(url: url)
@@ -1258,10 +1268,30 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
+        do {
+            let bodyData = try self.Encoder.encode(req)
+            request.httpBody = bodyData
+        }catch {
+            return .failure(APIError.badEncoding)
+        }
         
-        PostAndDecode(req: request, completion: completion)
+        return await AsyncPostAndDecode(request: request)
     }
-    
+//    func DeletePostComment(commentId : Int, completion : @escaping (Result<DeletePostCommentResp,Error>) -> ()) {
+//        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.DeleteComment.apiUri + commentId.description) else {
+//            completion(.failure(APIError.badUrl))
+//            return
+//        }
+//        
+//        var request = URLRequest(url: url)
+//        request.httpMethod = "DELETE"
+//        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+//        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+//        
+//        
+//        PostAndDecode(req: request, completion: completion)
+//    }
+//    
     func GetPostComments(postId : Int,  page : Int = 1,limit : Int = 10,completion : @escaping (Result<GetPostCommentsResp,Error>) -> ()) {
         guard let url = URL(string: API_SERVER_HOST + APIEndPoint.GetPostComment.apiUri + postId.description + "?page=\(page)") else {
             completion(.failure(APIError.badUrl))
@@ -1311,6 +1341,27 @@ class APIService : ServerAPIServerServiceInterface, ObservableObject{
         }
         
         PostAndDecode(req: request, completion: completion)
+    }
+    
+    func AsyncCreateReplyComment(req : CreateReplyCommentReq) async -> Result<CreateReplyCommentResp,Error>{
+        guard let url = URL(string: API_SERVER_HOST + APIEndPoint.CreateReplyComment.apiUri + "\(req.post_id)/reply/\(req.comment_id)") else {
+           return .failure(APIError.badUrl)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        
+        do{
+            let  bodyData = try Encoder.encode(req.info)
+            request.httpBody =  bodyData
+        } catch {
+            return .failure(APIError.badEncoding)
+        }
+        
+        return await AsyncPostAndDecode(request: request)
     }
     
     func GetReplyComment(req : GetReplyCommentReq,  page : Int = 1,limit : Int = 5,completion : @escaping (Result<GetReplyCommentResp,Error>) -> ()) {

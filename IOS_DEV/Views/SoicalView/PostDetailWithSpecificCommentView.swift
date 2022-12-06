@@ -1,25 +1,17 @@
 //
-//  PostDetailView.swift
+//  PostDetailWithSpecificCommentView.swift
 //  IOS_DEV
 //
-//  Created by Jackson on 10/7/2022.
+//  Created by Jackson on 6/12/2022.
 //
 
 import SwiftUI
 import SDWebImageSwiftUI
-import Refresher
-enum postDataFrom{
-    case AllPost
-    case Profile
-}
 
-struct PostDetailView: View {
+struct PostDetailWithSpecificCommentView: View {
     @State var isShowMenu = false
     @State var selectedCommentInfo : CommentInfo? = nil
-    
-    var postForm : postDataFrom
-    var isFromProfile : Bool
-    
+
     @State private var metaData : MetaData? = nil
     @EnvironmentObject var postVM : PostVM
     @EnvironmentObject var userVM : UserViewModel
@@ -46,30 +38,35 @@ struct PostDetailView: View {
     @State private var placeHolder : String = ""
     @State private var isReply : Bool = false
     @State private var scrollTo : Int = 0
-    @Binding var postInfo : Post
+    @State private var postInfo : Post? = nil
+    let postID : Int
+
     
-    @State var isChecking : Bool = false
-    
+    @State var isFetchingInfo : Bool = false
     @State var isDelete : Bool = false
-    
     @State var isLoading : Bool = false
-    
     @State var commentID : Int = -1
+    var getCommentID : Int = 0
+//    @Environment(\.pres)
+    @Environment(\.dismiss) var dismiss
     var body: some View {
         ZStack(alignment: .top){
             
-            if !isChecking {
+//            if !isChecking {
                 VStack(spacing:0){
                     PostTopBar()
+//                        .redacted(reason: self.isFetchingInfo ? .placeholder : [])
                     
                     //Image tab view
                     ScrollView(.vertical, showsIndicators: false){
                        postBody()
+//                            .redacted(reason: self.isFetchingInfo ? .placeholder : [])
                             
                     }
                     CommentArea()
+                        .redacted(reason: self.postInfo == nil ? .placeholder : [])
                 }
-            }
+//            }
             
             if self.postVM.isSharePost && self.postVM.sharedData != nil{
                 SharingView(postInfo: self.postVM.sharedData!)
@@ -93,17 +90,11 @@ struct PostDetailView: View {
             }
         )
         .onAppear{
-            //Here we need to know post is delete or not...
-            print(postInfo)
-            self.isChecking = true
             Task.init{
-                await self.checkPostIsExist()
-                if !self.isChecking {
-//                    Get
-                    await AsyncGetPostComments()
-                }
+                await self.getPostInfo()
+                await self.AsyncGetPostComments()
+                //getting comment ...
             }
-//            GetPostComments()
         }
         .actionSheet(isPresented: $isShowMenu){
             var action : [ActionSheet.Button] = []
@@ -166,17 +157,17 @@ struct PostDetailView: View {
         }
     
         DispatchQueue.main.async {
-            switch postForm {
-            case .AllPost:
-                let postIndex = self.postVM.getPostIndexFromDiscoveryList(postId: postInfo.id)
-                self.postVM.postData[postIndex].post_comment_count -= self.commentInfos[index].reply_comments + 1
-            case .Profile:
-                let postIndex = self.userVM.GetPostIndex(postId: postInfo.id)
-                self.userVM.profile?.UserCollection?[postIndex].post_comment_count -= self.commentInfos[index].reply_comments + 1
-            }
-            
-            self.postInfo.post_comment_count -= self.commentInfos[index].reply_comments + 1 //including root comment
-            self.commentInfos.removeAll(where:{$0.id == rootCommentID})
+//            switch postForm {
+//            case .AllPost:
+//                let postIndex = self.postVM.getPostIndexFromDiscoveryList(postId: postInfo.id)
+//                self.postVM.postData[postIndex].post_comment_count -= self.commentInfos[index].reply_comments + 1
+//            case .Profile:
+//                let postIndex = self.userVM.GetPostIndex(postId: postInfo.id)
+//                self.userVM.profile?.UserCollection?[postIndex].post_comment_count -= self.commentInfos[index].reply_comments + 1
+//            }
+//
+//            self.postInfo.post_comment_count -= self.commentInfos[index].reply_comments + 1 //including root comment
+//            self.commentInfos.removeAll(where:{$0.id == rootCommentID})
         }
     }
     
@@ -191,35 +182,35 @@ struct PostDetailView: View {
         }
         
         DispatchQueue.main.async {
-            switch postForm {
-            case .AllPost:
-                let postIndex = self.postVM.getPostIndexFromDiscoveryList(postId: postInfo.id)
-                self.postVM.postData[postIndex].post_comment_count -= 1
-            case .Profile:
-                let postIndex = self.userVM.GetPostIndex(postId: postInfo.id)
-                self.userVM.profile?.UserCollection?[postIndex].post_comment_count -= 1
-            }
+//            switch postForm {
+//            case .AllPost:
+//                let postIndex = self.postVM.getPostIndexFromDiscoveryList(postId: postInfo.id)
+//                self.postVM.postData[postIndex].post_comment_count -= 1
+//            case .Profile:
+//                let postIndex = self.userVM.GetPostIndex(postId: postInfo.id)
+//                self.userVM.profile?.UserCollection?[postIndex].post_comment_count -= 1
+//            }
             
             
             self.commentInfos[index].replys!.remove(at: childIndex)
             self.commentInfos[index].reply_comments -= 1
-            self.postInfo.post_comment_count -= 1
+            self.postInfo!.post_comment_count -= 1
         }
     }
     
-    private func checkPostIsExist() async{
-        let resp = await APIService.shared.AsyncCheckPost(postID:postInfo.id)
+    private func getPostInfo() async{
+        self.isFetchingInfo = true
+        let resp = await APIService.shared.AsyncGetPostInfoByID(postID: self.postID)
         switch resp {
         case.success(let data):
-            if data.is_exist {
-                self.isChecking = false
-            }else {
-                BenHubState.shared.AlertMessage(sysImg: "xmark", message: "文章已被移除")
-            }
+            print(data.post_info)
+            self.postInfo = data.post_info
+            self.isFetchingInfo = false
         case .failure(let err):
             print(err)
             BenHubState.shared.AlertMessage(sysImg: "xmark", message: err.localizedDescription)
         }
+//        self.isFetchingInfo =
     }
     
     private func LoadMoreCommentInfo(postID :Int) async {
@@ -277,9 +268,7 @@ struct PostDetailView: View {
     private func PostTopBar() -> some View {
             HStack(alignment:.center){
                 Button(action:{
-                    withAnimation(){
-                        self.postVM.isShowPostDetail = false
-                    }
+                    dismiss()
                 }){
                     Image(systemName: "chevron.left")
                         .imageScale(.large)
@@ -291,36 +280,38 @@ struct PostDetailView: View {
                 
                 
                 Group {
-                    WebImage(url:postInfo.user_info.UserPhotoURL)
+                    WebImage(url:postInfo?.user_info.UserPhotoURL ?? URL(string:""))
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 40, height: 40)
                         .clipShape(Circle())
+                        .redacted(reason: self.isFetchingInfo ? .placeholder : [])
         //                .matchedGeometryEffect(id: postData.user_info.user_avatar, in: namespace)
                     
-                    Text(postInfo.user_info.name)
+                    Text(postInfo?.user_info.name ?? "UNKNOW")
                         .font(.system(size: 14, weight: .semibold))
+                        .redacted(reason: self.isFetchingInfo ? .placeholder : [])
         //                .matchedGeometryEffect(id: postData.user_info.id, in: namespace)
                 }
                 .onTapGesture{
-                    if postForm == .Profile{
-                        self.postVM.isShowPostDetail = false
-                        return
-                    }
+//                    if postForm == .Profile{
+//                        self.postVM.isShowPostDetail = false
+//                        return
+//                    }
                     
-                    if postInfo.user_info.id != userVM.userID {
-                        self.shownUserID = postInfo.user_info.id
-                        withAnimation{
-                            self.isShowUserProfile = true
-                        }
-                    }
+//                    if postInfo!.user_info.id != userVM.userID {
+//                        self.shownUserID = postInfo!.user_info.id
+//                        withAnimation{
+//                            self.isShowUserProfile = true
+//                        }
+//                    }
                 }
                 
                 Spacer()
                 
                 HStack{
                     Menu(content: {
-                        if self.postInfo.user_info.id == userVM.userID {
+                        if self.postInfo?.user_info.id ?? 0 == userVM.userID {
                             Button(action: {
                                 // delete the selected post if user is owner
                             }) {
@@ -347,7 +338,7 @@ struct PostDetailView: View {
                             // share the post
                             DispatchQueue.main.async {
                                 withAnimation{
-                                    self.postVM.sharedData = self.postInfo
+                                    self.postVM.sharedData = self.postInfo!
                                     self.postVM.isSharePost.toggle()
                                 }
                             }
@@ -375,7 +366,7 @@ struct PostDetailView: View {
                           primaryButton: .default(Text("取消")){},
                           secondaryButton: .default(Text("刪除")){
                             Task.init{
-                                await self.DeletePost(postID:self.postInfo.id)
+                                await self.DeletePost(postID:self.postInfo!.id)
                             }
                     })
                 }
@@ -388,13 +379,13 @@ struct PostDetailView: View {
         VStack(spacing:5){
             ZStack(alignment:.topTrailing){
                 //                TabView(selection:$index){
-                WebImage(url: postInfo.post_movie_info.PosterURL)
+                WebImage(url: postInfo?.post_movie_info.PosterURL ?? URL(string: ""))
                     .placeholder(Image(systemName: "photo")) //
                     .resizable()
                     .indicator(.activity)
                     .transition(.fade(duration: 0.5))
                     .aspectRatio(contentMode: .fit)
-//                    .matchedGeometryEffect(id: self.postVM.selectedPost!.id.description, in: namespace)
+                    .redacted(reason: self.isFetchingInfo ? .placeholder : [])
                     .frame(width: UIScreen.main.bounds.width)
                     .onTapGesture(count: 2){
                         feedBack.impactOccurred(intensity: 0.8)
@@ -407,7 +398,7 @@ struct PostDetailView: View {
                             }
                         }
                         
-                        if !postInfo.is_post_liked {
+                        if postInfo?.is_post_liked ?? false {
                             //liked the post
                             LikePost()
                         }
@@ -461,22 +452,25 @@ struct PostDetailView: View {
     func PostContent() -> some View{
    
             //Jump to the detail view
-        NavigationLink(destination: MovieDetailView(movieId: postInfo.post_movie_info.id, isShowDetail: $isShowMoreDetail)
+        NavigationLink(destination: MovieDetailView(movieId: postInfo?.post_movie_info.id ?? 0, isShowDetail: $isShowMoreDetail)
                         .environmentObject(postVM)
                        ,isActive: $isShowMoreDetail){
-            Text("#\(postInfo.post_movie_info.title)")
+            Text("#\(postInfo?.post_movie_info.title ?? "UNKNOW")")
                 .font(.system(size: 15))
                 .foregroundColor(.red)
+                .redacted(reason: self.isFetchingInfo ? .placeholder : [])
         }
 
             
-        Text(postInfo.post_title)
+        Text(postInfo?.post_title ?? "UNKNOW")
+                .redacted(reason: self.isFetchingInfo ? .placeholder : [])
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(.white)
 //                .matchedGeometryEffect(id: postData.post_title, in: namespace)
                 .multilineTextAlignment(.leading)
         
-        Text(postInfo.post_desc)
+        Text(postInfo?.post_desc ?? "UNKNOW")
+            .redacted(reason: self.isFetchingInfo ? .placeholder : [])
             .font(.system(size: 15,weight: .regular))
                 .multilineTextAlignment(.leading)
                 .lineSpacing(8)
@@ -491,7 +485,8 @@ struct PostDetailView: View {
 //            .foregroundColor(.blue)
 //            .font(.system(size: 15,weight: .semibold))
         
-        Text("於\(postInfo.post_at.dateDescriptiveString())發佈")
+        Text("於\(postInfo?.post_at.dateDescriptiveString() ?? "UNKNOW")發佈")
+            .redacted(reason: self.isFetchingInfo ? .placeholder : [])
             .foregroundColor(Color(uiColor: .systemGray2))
                 .font(.caption2)
             
@@ -501,10 +496,11 @@ struct PostDetailView: View {
     
     @ViewBuilder
     func CommentView() -> some View{
-        Text("留言 : \(postInfo.post_comment_count)")
+        Text("留言 : \(postInfo?.post_comment_count ??  0)")
             .foregroundColor(.white)
             .font(.system(size: 14,weight: .medium))
-        
+            .redacted(reason: self.isFetchingInfo ? .placeholder : [])
+
         //All Comment
         if self.isLoadingComment {
 //            Spacer()
@@ -527,14 +523,17 @@ struct PostDetailView: View {
                     Spacer()
                 }
             }else {
-                ForEach(self.$commentInfos,id:\.id){ comment in
-//                    commentCell(comment: info)
-                    commentCell(isShowMenu:$isShowMenu,selectedCommentInfo: $selectedCommentInfo, commentID: $commentID,postInfo: $postInfo, comment: comment, isLoadingReply: isLoadingReply, replyCommentId: $replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo, scrollTo: $scrollTo)
-                        .task{
-                            if self.isLastComment(id: comment.id){
-                                await self.LoadMoreCommentInfo(postID: self.postInfo.id)
+                if let postData = Binding<Post>($postInfo){
+                    ForEach(self.$commentInfos,id:\.id){ comment in
+    //                    commentCell(comment: info)
+                        
+                        commentCell(isShowMenu:$isShowMenu,selectedCommentInfo: $selectedCommentInfo, commentID: $commentID,postInfo: postData, comment: comment, isLoadingReply: isLoadingReply, replyCommentId: $replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo, scrollTo: $scrollTo)
+                            .task{
+                                if self.isLastComment(id: comment.id){
+                                    await self.LoadMoreCommentInfo(postID: self.postInfo!.id)
+                                }
                             }
-                        }
+                    }
                 }
                 if (self.metaData?.page ?? 0) < (self.metaData?.total_pages ?? 0) && self.isLoading {
                     ActivityIndicatorView()
@@ -550,7 +549,7 @@ struct PostDetailView: View {
                     }
                 }
 
-                
+
             }
         }
     }
@@ -576,7 +575,7 @@ struct PostDetailView: View {
     
     private func CreatePostComment(){
         if message.isEmpty { return }
-        let postId =  postInfo.id
+        let postId =  postInfo!.id
         let req = CreateCommentReq(comment: self.message)
 //        print(postId)
         APIService.shared.CreatePostComment(postId: postId, req: req){ result in
@@ -588,15 +587,15 @@ struct PostDetailView: View {
                 
                 self.commentInfos.insert(newComment, at: 0)
                 DispatchQueue.main.async {
-                    switch postForm {
-                    case .AllPost:
-                        let postIndex = self.postVM.getPostIndexFromDiscoveryList(postId: self.postInfo.id)
-                        self.postVM.postData[postIndex].post_comment_count += 1
-                    case .Profile:
-                        let postIndex = self.userVM.GetPostIndex(postId: self.postInfo.id)
-                        self.userVM.profile?.UserCollection![postIndex].post_comment_count += 1
-                    }
-                    postInfo.post_comment_count += 1
+//                    switch postForm {
+//                    case .AllPost:
+//                        let postIndex = self.postVM.getPostIndexFromDiscoveryList(postId: self.postInfo.id)
+//                        self.postVM.postData[postIndex].post_comment_count += 1
+//                    case .Profile:
+//                        let postIndex = self.userVM.GetPostIndex(postId: self.postInfo.id)
+//                        self.userVM.profile?.UserCollection![postIndex].post_comment_count += 1
+//                    }
+                    postInfo!.post_comment_count += 1
                     
                 }
              
@@ -614,17 +613,16 @@ struct PostDetailView: View {
         let index = commentInfos.firstIndex{$0.id == self.rootCommentId}
 
         guard let index = index else { return }
-        var postID : Int = -1
-        switch postForm {
-        case .AllPost:
-            let postIndex = self.postVM.getPostIndexFromDiscoveryList(postId: postInfo.id)
-            postID = self.postVM.postData[postIndex].id
-        case .Profile:
-            let postIndex = self.userVM.GetPostIndex(postId: postInfo.id)
-            postID = self.userVM.profile!.UserCollection![postIndex].id
-        }
-     
-        let req = CreateReplyCommentReq(post_id: postID, comment_id: self.replyCommentId, info: ReplyCommentBody(parent_id: self.rootCommentId, comment: self.message))
+//        switch postForm {
+//        case .AllPost:
+//            let postIndex = self.postVM.getPostIndexFromDiscoveryList(postId: postInfo.id)
+//            postID = self.postVM.postData[postIndex].id
+//        case .Profile:
+//            let postIndex = self.userVM.GetPostIndex(postId: postInfo.id)
+//            postID = self.userVM.profile!.UserCollection![postIndex].id
+//        }
+//
+        let req = CreateReplyCommentReq(post_id: self.postInfo!.id, comment_id: self.replyCommentId, info: ReplyCommentBody(parent_id: self.rootCommentId, comment: self.message))
         APIService.shared.CreateReplyComment(req: req){ result in
             switch result {
             case .success(let data):
@@ -636,17 +634,17 @@ struct PostDetailView: View {
                     if self.commentInfos[index].replys == nil {
                         self.commentInfos[index].replys = []
                     }
-                    
-                    switch postForm {
-                    case .AllPost:
-                        let postIndex = self.postVM.getPostIndexFromDiscoveryList(postId: self.postInfo.id)
-                        self.postVM.postData[postIndex].post_comment_count += 1
-                    case .Profile:
-                        let postIndex = self.userVM.GetPostIndex(postId: self.postInfo.id)
-                        self.userVM.profile?.UserCollection![postIndex].post_comment_count += 1
-                    }
-                    
-                    self.postInfo.post_comment_count += 1
+//
+//                    switch postForm {
+//                    case .AllPost:
+//                        let postIndex = self.postVM.getPostIndexFromDiscoveryList(postId: self.postInfo.id)
+//                        self.postVM.postData[postIndex].post_comment_count += 1
+//                    case .Profile:
+//                        let postIndex = self.userVM.GetPostIndex(postId: self.postInfo.id)
+//                        self.userVM.profile?.UserCollection![postIndex].post_comment_count += 1
+//                    }
+//
+                    self.postInfo!.post_comment_count += 1
                     self.commentInfos[index].replys!.append(newComment)
                     self.commentInfos[index].reply_comments += 1
                     self.replyCommentId = -1
@@ -668,7 +666,7 @@ struct PostDetailView: View {
     
     private func AsyncGetPostComments() async{
         self.isLoadingComment = true
-        let postId = postInfo.id
+        let postId = postInfo!.id
         
         let resp =  await APIService.shared.AsyncGetPostComments(postId: postId)
         self.isLoadingComment = false
@@ -703,16 +701,16 @@ struct PostDetailView: View {
     }
     
     private func LikePost(){
-        postInfo.is_post_liked = true
-        postInfo.post_like_count += 1
-        let req = CreatePostLikesReq(post_id: postInfo.id)
+        postInfo!.is_post_liked = true
+        postInfo!.post_like_count += 1
+        let req = CreatePostLikesReq(post_id: postInfo!.id)
         APIService.shared.CreatePostLikes(req: req){ result in
             switch result {
             case .success(_):
                 print("post likes")
             case .failure(let err):
-                postInfo.is_post_liked = false
-                postInfo.post_like_count += 1
+                postInfo!.is_post_liked = false
+                postInfo!.post_like_count += 1
                 print(err.localizedDescription)
             
             }
@@ -720,29 +718,6 @@ struct PostDetailView: View {
     }
     
 
-    private func getPostInfo() -> Post{
-        //if post from post data -> get post from post data
-        //else get from user profile
-        print(self.postForm)
-        let postId = postInfo.id
-        let index : Int
-        switch postForm {
-        case .AllPost:
-            index = self.postVM.getPostIndexFromDiscoveryList(postId: postId)
-            return self.postVM.postData[index]
-        case .Profile:
-            index = self.userVM.GetPostIndex(postId: postId)
-            print("profile index?\(index)")
-            return self.userVM.profile!.UserCollection![index]
-        }
-    }
-}
-
-var PostViewDivider : some View {
     
-    Divider()
-        .background(Color("DetechingColor"))
-        .padding(.vertical,5)
 }
-
 

@@ -100,6 +100,7 @@ protocol ServerAPIServerServiceInterface {
     func AsyncDeletePost(req : DeletePostReq) async -> Result<DeletePostResp,Error>
     func AsyncCheckPost(postID : Int) async -> Result<CheckPostResp,Error>
     
+    func AsyncGetPostInfoByID(postID : Int) async -> Result<PostInfoByIdResp,Error>
     //TODO: POST LIKED
     func CreatePostLikes(req : CreatePostLikesReq,completion : @escaping (Result<CreatePostLikesResp,Error>) -> ())
     func RemovePostLikes(req : RemovePostLikesReq,completion : @escaping (Result<RemovePostLikesResp,Error>) -> ())
@@ -109,11 +110,14 @@ protocol ServerAPIServerServiceInterface {
     //TODO: POST COMMENT
     func CreatePostComment(postId : Int,req : CreateCommentReq, completion : @escaping (Result<CreateCommentResp,Error>) -> ())
     func UpdatePostComment(commentId : Int, req : UpdateCommentReq, completion : @escaping (Result<UpdateCommentResp,Error>) -> ())
-    func DeletePostComment(commentId : Int, completion : @escaping (Result<DeletePostCommentResp,Error>) -> ())
+    func AsyncDeletePostComment(req : DeletePostCommentReq) async -> Result<DeletePostCommentResp,Error>
     func GetPostComments(postId : Int, page : Int ,limit : Int ,completion : @escaping (Result<GetPostCommentsResp,Error>) -> ())
     func AsyncGetPostComments(postId : Int,  page : Int,limit : Int ) async -> Result<GetPostCommentsResp,Error>
+    
+
     //TODO: REPLY COMMENT
     func CreateReplyComment(req : CreateReplyCommentReq, completion : @escaping (Result<CreateReplyCommentResp,Error>) -> ())
+    func AsyncCreateReplyComment(req : CreateReplyCommentReq) async -> Result<CreateReplyCommentResp,Error>
     func GetReplyComment(req : GetReplyCommentReq,  page : Int,limit : Int ,completion : @escaping (Result<GetReplyCommentResp,Error>) -> ())
 //    func DeletePostComment(commentId : Int, completion : @escaping (Result<DeletePostCommentResp,Error>) -> ())
 //    func GetPostComments(postId : Int, completion : @escaping (Result<GetPostCommentsResp,Error>) -> ())
@@ -413,6 +417,7 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
     case GetFollowingPosts
     case GetUserPosts // Done
     case CountUserPosts //Done
+    case GetPostByID
     
     //MARK: LIKED POST API
     case CreatePostLikes
@@ -525,6 +530,7 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
         case .GetFollowingPosts: return "/posts/follow"
         case .GetUserPosts: return "/posts/" // postID
         case .CountUserPosts: return "/posts/count/" //:user_id
+        case .GetPostByID : return "/post/" //post/:id
             
         case .CreatePostLikes: return "/liked/post"
         case .RemovePostLikes: return "/liked/post"
@@ -533,7 +539,7 @@ enum APIEndPoint : String,CaseIterable, Identifiable{
             
         case .CreateComment: return "/comments/" //postID
         case .UpdateComment: return "/comments/" //postID
-        case .DeleteComment: return "/comments/" //postID
+        case .DeleteComment: return "/comments" 
         case .GetPostComment: return "/comments/" //postID
             
         case .CreateReplyComment: return "/comments/" //comments/:post_id/reply/:comment_id

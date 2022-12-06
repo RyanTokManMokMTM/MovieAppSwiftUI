@@ -49,7 +49,6 @@ struct HomePage: View {
 
                 }
             }
-            
             .navigationTitle("")
             .navigationBarHidden(true)
             .navigationBarTitle("")

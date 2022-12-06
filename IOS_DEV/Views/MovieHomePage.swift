@@ -130,18 +130,10 @@ struct MovieHomePage: View {
                             .accentColor(.white)
                             .background(Color("DarkMode2"))
            
-        
-        
-                        //                if !isHiddenNav { //Show this when lock portrait
-                        //                    NavItemButton(index: self.$index ,GroupSelect: self.$GroupSelect)
-                        //                }
                         
                     }
                     
                     .edgesIgnoringSafeArea(.all)
-//                    .environmentObject(previewModel)
-//                    .environmentObject(StateManager) //here due to bottomSheet need to use to update some state
-//                    .environmentObject(DragAndDropPreview) //here due to bottomSheet need to use to update some state
                     .environmentObject(postVM)
                     .environmentObject(userVM)
                     .background(

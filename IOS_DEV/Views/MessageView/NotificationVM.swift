@@ -118,6 +118,7 @@ class NotificationVM : ObservableObject{
             case .success(let data):
 //                print(data.notifications)
                 self.commentNotification = data.notifications
+                print(data.notifications[0])
                 self.notificationMataData = data.meta_data
             case .failure(let err):
                 print("comment notification err")
@@ -126,6 +127,10 @@ class NotificationVM : ObservableObject{
         }
     }
     
+//    private func ReplyComment() async {
+//        APIService.shared.CreateReplyComment(req: CreateReplyCommentReq(post_id: <#T##Int#>, comment_id: <#T##Int#>, info: ReplyCommentBody(), completion: <#T##(Result<CreateReplyCommentResp, Error>) -> Void#>)
+//    }
+//
     func RefershCommentNotification() async {
 
         

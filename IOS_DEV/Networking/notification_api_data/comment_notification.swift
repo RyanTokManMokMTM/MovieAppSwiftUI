@@ -15,6 +15,7 @@ struct GetCommentNotificationsResq  : Decodable {
 struct CommentNotification : Decodable,Identifiable {
     let id : Int
     let comment_by : SimpleUserInfo
+    let parent_id : Int //This comment notification belong to ?
     let post_info : SimplePostInfo
     let comment_info : SimpleCommentInfo
     let reply_comment_info : SimpleCommentInfo
@@ -24,4 +25,6 @@ struct CommentNotification : Decodable,Identifiable {
     var commentAt : Date {
         return Date(timeIntervalSince1970: TimeInterval(comment_at))
     }
+    
+
 }

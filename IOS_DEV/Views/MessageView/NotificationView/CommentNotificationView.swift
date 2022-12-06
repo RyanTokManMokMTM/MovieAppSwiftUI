@@ -41,13 +41,55 @@ import SDWebImageSwiftUI
 //    NotificationCommentInfo(user_info: TempSimpleUser[5], post_info: TempSimplePost[0], comment_info: TempCommentReplyInfo[0], create_time: Date.now.addingTimeInterval(-86400)),
 //
 //]
+extension UIApplication {
+    func endEditing() {
+        sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+    
+}
+
+class KeyboardHeightHelper: ObservableObject {
+    @Published var keyboardHeight: CGFloat = 0
+    @Published var isAppear : Bool = false
+    init(){
+        self.listenForKeyboardNotifications()
+    }
+    
+    private func listenForKeyboardNotifications() {
+        
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main){ (notification) in
+            withAnimation{
+                self.isAppear = true
+            }
+        }
+
+
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification,
+                                               object: nil,
+                                               queue: .main) { (notification) in
+            withAnimation{
+                self.isAppear = false
+            }
+        }
+    }
+}
 
 struct CommentNotificationView: View {
+    @StateObject private var keyboardHeightHelper = KeyboardHeightHelper()
     @Binding var isShowView : Bool
     @EnvironmentObject private var notificationVM : NotificationVM
     @EnvironmentObject private var userVM : UserViewModel
+    @EnvironmentObject private var postVM : PostVM
+    
+    @FocusState private var isShowKeyborad : Bool
+    @FocusState private var isReply : Bool
+    @State private var replyMessage = ""
+    @State private var placeHodler = ""
+    @State private var replyCommentInfo : CommentNotification? = nil
+    
     var body: some View {
         NotificationView(isShowView:$isShowView,topTitle: "留言"){
+            ZStack{
                 List(){
                     if self.notificationVM.commentNotification.isEmpty {
                         HStack{
@@ -61,14 +103,22 @@ struct CommentNotificationView: View {
                     }else {
 //                        LazyVStack(spacing:0){
                             ForEach(self.notificationVM.commentNotification){ info in
-                                CommentCell(info: info)
-                                    .listRowBackground(Color("DarkMode2"))
-                                    .padding(.vertical,15)
-                                    .task {
-                                        if self.notificationVM.isLastCommentNotification(id: info.id){
-                                            await self.notificationVM.LoadMoreCommentNotification()
+                                NavigationLink(destination: PostDetailWithSpecificCommentView(postID:info.post_info.id)
+                                    .environmentObject(userVM)
+                                    .environmentObject(postVM)
+                                    .navigationBarTitle("")
+                                    .navigationBarHidden(true)
+                                    .navigationTitle("")
+                                ){
+                                    CommentCell(info: info)
+                                        .padding(.vertical,15)
+                                        .task {
+                                            if self.notificationVM.isLastCommentNotification(id: info.id){
+                                                await self.notificationVM.LoadMoreCommentNotification()
+                                            }
                                         }
-                                    }
+                                }
+                                .listRowBackground(Color("DarkMode2"))
                             }
                             
                             if self.notificationVM.isLoadingComment {
@@ -88,6 +138,58 @@ struct CommentNotificationView: View {
                 .refreshable {
                     await self.notificationVM.RefershCommentNotification()
                 }
+                .zIndex(0)
+                
+                Color.black.edgesIgnoringSafeArea(.all)
+                    .opacity(self.keyboardHeightHelper.isAppear ? 0.5 : 0)
+                    .onTapGesture{
+                        withAnimation{
+                            self.replyMessage.removeAll()
+                            self.isReply = false
+                            self.replyCommentInfo = nil
+                        }
+                    }
+                
+                
+                VStack{
+                    TextField("",text:.constant("test"))
+                        .toolbar {
+                            ToolbarItemGroup(placement: .keyboard) {
+                                HStack{
+                                    TextField(placeHodler,text:$replyMessage)
+                                        .font(.system(size:14))
+                                        .padding(.horizontal)
+                                        .frame(width:UIScreen.main.bounds.width - 10,height:35)
+                                        .background(BlurView())
+                                        .clipShape(RoundedRectangle(cornerRadius: 13))
+                                        .focused($isReply)
+                                        .accentColor(.white)
+                                        .submitLabel(.send)
+                                        .onSubmit({
+                                            Task.init{
+                                                await self.createReplyComment()
+                                            }
+                                            
+                                            withAnimation{
+                                                self.isReply = false
+                                                self.keyboardHeightHelper.isAppear = false
+                                                UIApplication.shared.endEditing()
+                                            }
+                                        })
+                                }
+//                                .focused($isReply)
+                                .padding(.horizontal)
+                                .frame(height: 35)
+                            }
+                        }
+                        .frame(height:0)
+                        .focused($isReply)
+                        
+                        .offset(y : -UIScreen.main.bounds.height)
+                }
+                
+            }
+             
             
         }
         .background(Color("DarkMode2"))
@@ -116,6 +218,29 @@ struct CommentNotificationView: View {
         
     }
     
+    private func createReplyComment() async{
+        if self.replyMessage.isEmpty {
+            return
+        }
+        
+        guard let commentInfo = replyCommentInfo else {
+            return
+        }
+        print(commentInfo)
+        let parentID = commentInfo.parent_id == 0 ? commentInfo.comment_info.id : commentInfo.parent_id
+        let req = CreateReplyCommentReq(post_id: commentInfo.post_info.id, comment_id: commentInfo.comment_info.id, info: ReplyCommentBody(parent_id: parentID, comment: self.replyMessage))
+        let resp = await APIService.shared.AsyncCreateReplyComment(req: req)
+
+        switch resp {
+        case .success(let data):
+            print(data.id)
+            replyMessage.removeAll()
+        case .failure(let err):
+            print(err.localizedDescription)
+        }
+//
+
+    }
     
     @ViewBuilder
     private func CommentCell(info : CommentNotification) -> some View {
@@ -176,6 +301,17 @@ struct CommentNotificationView: View {
                 }
                 Button(action:{
                     //TODO: toggle the message view
+                    withAnimation{
+                        self.isReply = true
+                        
+                        self.replyCommentInfo = info
+                        if info.type == 1 {
+                            self.placeHodler = "回覆\(info.comment_by.name):\(info.comment_info.comment)"
+                        }else if info.type == 2 {
+                            self.placeHodler = "回覆\(info.comment_by.name):\(info.reply_comment_info.comment)"
+                        }
+                        
+                    }
                     
                 }){
                     HStack(spacing:5){

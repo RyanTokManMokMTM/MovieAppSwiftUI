@@ -48,13 +48,23 @@ struct CardPostView: View {
 
             
             HStack{
-                WebImage(url: postInfo.user_info.UserPhotoURL)
-                    .resizable()
-                    .indicator(.activity)
-                    .transition(.fade(duration: 0.5))
-                    .aspectRatio(contentMode: .fit)
-                    .frame(minWidth: 20,maxWidth: 20)
+                AsyncImage(url: postInfo.user_info.UserPhotoURL){ image in
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } placeholder: {
+                        ActivityIndicatorView()
+                    }
+                    .frame(width: 20,height:20)
                     .clipShape(Circle())
+                    .clipped()
+//                WebImage(url: postInfo.user_info.UserPhotoURL)
+//                    .resizable()
+//                    .indicator(.activity)
+//                    .transition(.fade(duration: 0.5))
+//                    .aspectRatio(contentMode: .fit)
+//                    .frame(minWidth: 20,maxWidth: 20)
+//                    .clipShape(Circle())
                 
                 Text(postInfo.user_info.name)
                     .font(.system(size: 12, weight: .semibold))
@@ -76,12 +86,12 @@ struct CardPostView: View {
                             //                                self.isLiked.toggle()
                         }
                     }
-                Text(postInfo.post_like_count.description)
+                Text(postInfo.post_like_count > 0 ? postInfo.post_like_count.description : "")
                     .font(.system(size: 14))
                     .foregroundColor(.gray)
             }
-            
             .padding(.horizontal,5)
+            .padding(.vertical,5)
         }
         .padding(.bottom,5)
         .background(Color("appleDark"))

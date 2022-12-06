@@ -163,6 +163,7 @@
 		7A2F7307261E099200C0A2FF /* MovieTrailerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F7306261E099200C0A2FF /* MovieTrailerModel.swift */; };
 		7A2F7310261E124E00C0A2FF /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F730F261E124E00C0A2FF /* Player.swift */; };
 		7A303BAC2877EF29004CCEB3 /* SoicalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A303BAB2877EF29004CCEB3 /* SoicalView.swift */; };
+		7A36748C293F174D00AD4A82 /* PostDetailWithSpecificCommentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A36748B293F174D00AD4A82 /* PostDetailWithSpecificCommentView.swift */; };
 		7A3BE010291CE98300508071 /* metadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3BE00F291CE98300508071 /* metadata.swift */; };
 		7A41C01628815703005FAEBD /* FollowUserPostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A41C01528815703005FAEBD /* FollowUserPostView.swift */; };
 		7A41C0182881633E005FAEBD /* PostBottomSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A41C0172881633E005FAEBD /* PostBottomSheet.swift */; };
@@ -395,6 +396,7 @@
 		7A2F730F261E124E00C0A2FF /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		7A303BAB2877EF29004CCEB3 /* SoicalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoicalView.swift; sourceTree = "<group>"; };
 		7A314880261095C300B6E5FB /* IOS_DEVDebug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = IOS_DEVDebug.entitlements; sourceTree = "<group>"; };
+		7A36748B293F174D00AD4A82 /* PostDetailWithSpecificCommentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailWithSpecificCommentView.swift; sourceTree = "<group>"; };
 		7A3BE00F291CE98300508071 /* metadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = metadata.swift; sourceTree = "<group>"; };
 		7A41C01528815703005FAEBD /* FollowUserPostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUserPostView.swift; sourceTree = "<group>"; };
 		7A41C0172881633E005FAEBD /* PostBottomSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostBottomSheet.swift; sourceTree = "<group>"; };
@@ -1011,6 +1013,7 @@
 				7A41C01528815703005FAEBD /* FollowUserPostView.swift */,
 				7A41C0172881633E005FAEBD /* PostBottomSheet.swift */,
 				7A756B08292F6FDE007334F5 /* postShareView.swift */,
+				7A36748B293F174D00AD4A82 /* PostDetailWithSpecificCommentView.swift */,
 			);
 			path = SoicalView;
 			sourceTree = "<group>";
@@ -1446,6 +1449,7 @@
 				01C0E26526AC0A6F0027B9A9 /* Person.swift in Sources */,
 				0113FBFC270362BB00BECECF /* CameraImagePickerView.swift in Sources */,
 				7A1821DB2906956100E6E9B3 /* message.swift in Sources */,
+				7A36748C293F174D00AD4A82 /* PostDetailWithSpecificCommentView.swift in Sources */,
 				01CCDF3D263E945E005E2424 /* RegisterService.swift in Sources */,
 				6FDC01C2277778AD008F73F0 /* SignIn.swift in Sources */,
 				01222C03271C74040034505E /* CustomImagePicker.swift in Sources */,

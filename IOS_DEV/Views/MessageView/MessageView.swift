@@ -662,6 +662,7 @@ struct chatRow : View{
 struct MessageHeaderTab : View{
     @EnvironmentObject private var notificationVM : NotificationVM
     @EnvironmentObject private var userVM : UserViewModel
+    @EnvironmentObject private var postVM : PostVM
     @Binding var isShowLikesNotification : Bool
     @Binding var isShowFollowingNotification : Bool
     @Binding var isShowCommentNotification : Bool
@@ -676,6 +677,7 @@ struct MessageHeaderTab : View{
                             .navigationBarHidden(true)
                             .environmentObject(notificationVM)
                             .environmentObject(userVM)
+                            .environmentObject(postVM)
                            ,isActive: $isShowLikesNotification){
 //                ZStack(alignment:.topTrailing){
                     tabButton(systemIcon: "heart.circle.fill", iconColor: .red, buttonText: "點讚"){
@@ -709,6 +711,7 @@ struct MessageHeaderTab : View{
                             .navigationBarHidden(true)
                             .environmentObject(notificationVM)
                             .environmentObject(userVM)
+
                            ,isActive: $isShowFollowingNotification){
                     tabButton(systemIcon: "person.fill", iconColor: .blue, buttonText: "好友邀請"){
                         withAnimation{
@@ -739,6 +742,7 @@ struct MessageHeaderTab : View{
                             .navigationBarHidden(true)
                             .environmentObject(notificationVM)
                             .environmentObject(userVM)
+                            .environmentObject(postVM)
                            ,isActive: $isShowCommentNotification){
                     tabButton(systemIcon: "paperplane.fill", iconColor: .orange, buttonText: "評論"){
                         withAnimation{
