@@ -82,6 +82,7 @@ class PostVM : ObservableObject {
         APIService.shared.uploadProgress = 0
         switch resp {
         case .success(let data):
+            print(data.post_info)
             self.followingData = data.post_info
             self.followingMetaData = data.meta_data
         case .failure(let err):
@@ -234,7 +235,9 @@ class PostVM : ObservableObject {
     }
     
     func isFolloingLast(postID : Int) -> Bool {
-        return self.followingData.last?.id == postID
+//        print(postID)
+//        return self.followingData.last?.id == postID
+        return true
     }
 
 

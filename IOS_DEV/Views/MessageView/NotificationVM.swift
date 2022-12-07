@@ -70,6 +70,7 @@ class NotificationVM : ObservableObject{
             switch result{
             case .success(let data):
                 print("likes notification get")
+                print(data.notifications)
                 self.likesNotification = data.notifications
                 self.notificationMataData = data.meta_data
             case .failure(let err):

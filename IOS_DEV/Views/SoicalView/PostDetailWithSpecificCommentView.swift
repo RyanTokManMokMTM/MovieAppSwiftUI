@@ -8,7 +8,15 @@
 import SwiftUI
 import SDWebImageSwiftUI
 
+class PostStatManager : ObservableObject {
+    @Published var isCheck : Bool = true
+    
+    init(){}
+}
+
 struct PostDetailWithSpecificCommentView: View {
+    @StateObject private var statManager = PostStatManager()
+    @StateObject private var HubState = BenHubState.shared
     @State var isShowMenu = false
     @State var selectedCommentInfo : CommentInfo? = nil
 
@@ -46,13 +54,15 @@ struct PostDetailWithSpecificCommentView: View {
     @State var isDelete : Bool = false
     @State var isLoading : Bool = false
     @State var commentID : Int = -1
+//    @State var isChecking : Bool = false
     var getCommentID : Int = 0
 //    @Environment(\.pres)
     @Environment(\.dismiss) var dismiss
     var body: some View {
         ZStack(alignment: .top){
             
-//            if !isChecking {
+            
+            if !statManager.isCheck {
                 VStack(spacing:0){
                     PostTopBar()
 //                        .redacted(reason: self.isFetchingInfo ? .placeholder : [])
@@ -60,13 +70,10 @@ struct PostDetailWithSpecificCommentView: View {
                     //Image tab view
                     ScrollView(.vertical, showsIndicators: false){
                        postBody()
-//                            .redacted(reason: self.isFetchingInfo ? .placeholder : [])
-                            
                     }
                     CommentArea()
-                        .redacted(reason: self.postInfo == nil ? .placeholder : [])
                 }
-//            }
+            }
             
             if self.postVM.isSharePost && self.postVM.sharedData != nil{
                 SharingView(postInfo: self.postVM.sharedData!)
@@ -85,15 +92,32 @@ struct PostDetailWithSpecificCommentView: View {
                             .navigationTitle("")
                             .navigationBarHidden(true)
                             .navigationBarBackButtonHidden(true)
+                            .environmentObject(postVM)
+                            .environmentObject(userVM)
                            ,isActive: $isShowUserProfile){
                 EmptyView()
             }
         )
+      
         .onAppear{
-            Task.init{
-                await self.getPostInfo()
-                await self.AsyncGetPostComments()
-                //getting comment ...
+            if !self.statManager.isCheck {
+                //no to check again
+                return
+            }
+            
+            if postID == 0 {
+                BenHubState.shared.AlertMessage(sysImg: "xmark", message: "文章不存在")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5){
+                    dismiss()
+                }
+            }else {
+                Task.init{
+                    await checkPostIsExist()
+                    if !self.statManager.isCheck {
+                        await self.getPostInfo()
+                        await self.AsyncGetPostComments()
+                    }
+                }
             }
         }
         .actionSheet(isPresented: $isShowMenu){
@@ -126,9 +150,47 @@ struct PostDetailWithSpecificCommentView: View {
             return ActionSheet(title: Text((selectedCommentInfo?.user_info.name
                                            ?? "UNKNOW") + ":" + (selectedCommentInfo?.comment ?? "UNKNOW")),buttons: action)
         }
+        .wait(isLoading: $HubState.isWait){
+            BenHubLoadingView(message: HubState.message)
+        }
+        .alert(isAlert: $HubState.isPresented){
+            switch HubState.type{
+            case .normal,.system_message:
+                BenHubAlertView(message: HubState.message, sysImg: HubState.sysImg)
+            case .notification:
+                BenHubAlertWithUserInfo(user: HubState.senderInfo!, message: HubState.message)
+            case .message:
+                BenHubAlertWithMessage(user: HubState.senderInfo!, message: HubState.message)
+            }
+        }
 
         
     }
+    
+    @MainActor
+    private func checkPostIsExist() async{
+
+        let resp = await APIService.shared.AsyncCheckPost(postID:self.postID)
+        switch resp {
+        case.success(let data):
+            if data.is_exist {
+                self.statManager.isCheck = false
+            }else {
+                BenHubState.shared.AlertMessage(sysImg: "xmark", message: "文章不存在")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5){
+                    dismiss()
+                }
+            }
+        case .failure(let err):
+            print(err)
+            BenHubState.shared.AlertMessage(sysImg: "xmark", message: err.localizedDescription)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5){
+                dismiss()
+            }
+        }
+     
+    }
+    
     
     @MainActor
     private func DeleteComment(rootCommentID : Int, commentID : Int) async {
@@ -294,17 +356,15 @@ struct PostDetailWithSpecificCommentView: View {
         //                .matchedGeometryEffect(id: postData.user_info.id, in: namespace)
                 }
                 .onTapGesture{
-//                    if postForm == .Profile{
-//                        self.postVM.isShowPostDetail = false
-//                        return
-//                    }
-                    
-//                    if postInfo!.user_info.id != userVM.userID {
-//                        self.shownUserID = postInfo!.user_info.id
-//                        withAnimation{
-//                            self.isShowUserProfile = true
-//                        }
-//                    }
+                    guard let info = postInfo else {
+                        return
+                    }
+                    if info.user_info.id != userVM.userID {
+                        self.shownUserID = postInfo!.user_info.id
+                        withAnimation{
+                            self.isShowUserProfile = true
+                        }
+                    }
                 }
                 
                 Spacer()
@@ -454,6 +514,7 @@ struct PostDetailWithSpecificCommentView: View {
             //Jump to the detail view
         NavigationLink(destination: MovieDetailView(movieId: postInfo?.post_movie_info.id ?? 0, isShowDetail: $isShowMoreDetail)
                         .environmentObject(postVM)
+                        .environmentObject(userVM)
                        ,isActive: $isShowMoreDetail){
             Text("#\(postInfo?.post_movie_info.title ?? "UNKNOW")")
                 .font(.system(size: 15))
@@ -564,10 +625,12 @@ struct PostDetailWithSpecificCommentView: View {
         switch resp {
         case .success(_):
             withAnimation(){
+                dismiss()
                 self.postVM.isShowPostDetail = false
             }
             
-            self.userVM.profile!.UserCollection!.removeAll{$0.id == postID}
+            
+            self.userVM.profile!.UserCollection?.removeAll{$0.id == postID}
         case .failure(let err):
             print(err.localizedDescription)
         }

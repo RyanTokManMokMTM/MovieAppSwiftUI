@@ -13,7 +13,7 @@ import SDWebImageSwiftUI
 struct PostBottomSheet : View{
     @State var isShowMenu = false
     @State var selectedCommentInfo : CommentInfo? = nil
-    
+
     @State var offset: CGFloat = 0.0
     @State var commentMetaData : MetaData?
     @EnvironmentObject var postVM : PostVM
@@ -361,6 +361,7 @@ struct commentCell : View {
     @Binding var selectedCommentInfo : CommentInfo?
     @Binding var commentID : Int
     
+    @State private var showedCommected = 0
     @EnvironmentObject private var postVM : PostVM
     @EnvironmentObject private var userVM : UserViewModel
     @Binding var postInfo : Post
@@ -451,97 +452,114 @@ struct commentCell : View {
                 HStack(spacing:0){
                     Spacer()
                         .frame(width: UIScreen.main.bounds.width / 8.5)
-                    
-                    if self.isLoadingReply{
-                        Text("Loading...")
-                            .font(.system(size:12,weight: .semibold))
-                    } else {
-                        VStack{
-                            if comment.replys != nil{
-                                if !self.isShowLess {
-                                    ForEach(0..<comment.replys!.count,id:\.self){ i in
-                                        replyCommentCell(postInfo: $postInfo, comment: $comment, replyCommentId:$replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo, releatedCommentId: comment.id, replyListIndex: i)
-                                            .onLongPressGesture{
+                    VStack{
+                        if comment.replys != nil{
+                            if !self.isShowLess {
+                                ForEach(0..<self.showedCommected,id:\.self){ i in
+                                    replyCommentCell(postInfo: $postInfo, comment: $comment, replyCommentId:$replyCommentId, rootCommentId: $rootCommentId, placeHolder: $placeHolder, isReply: $isReply, commentInfos: $commentInfos, replyTo: $replyTo, releatedCommentId: comment.id, replyListIndex: i)
+                                        .onLongPressGesture{
 //                                                print("testing long gesture")
-                                                self.selectedCommentInfo = comment.replys![i]
-                                                self.isShowMenu = true
-                                                self.isReply = true
-                                                self.replyCommentId = comment.replys![i].id//reply to this comment id
-                                                self.rootCommentId = comment.id
-                                                self.replyTo = comment.replys![i].user_info
-                                                self.commentID = comment.replys![i].id
-                                            }
-                                            .padding(.vertical,8)
-                                            
-                                    }
+                                            self.selectedCommentInfo = comment.replys![i]
+                                            self.isShowMenu = true
+                                            self.isReply = true
+                                            self.replyCommentId = comment.replys![i].id//reply to this comment id
+                                            self.rootCommentId = comment.id
+                                            self.replyTo = comment.replys![i].user_info
+                                            self.commentID = comment.replys![i].id
+                                        }
+                                        .padding(.vertical,8)
+                                        
                                 }
                             }
-                            
-                            if comment.replys != nil && comment.reply_comments - comment.replys!.count <= 0 {
-                                HStack{
-                                    if comment.replys != nil {
-                                        Button(action:{
-//                                            withAnimation{
-                                                self.isShowLess.toggle()
-                                                if self.isShowLess{
-                                                    scrollTo = comment.id
-                                                }
-                                                
-//                                            }
-                                        }){
-                                            Text("顯示\(self.isShowLess ? "更多" : "更少")")
-                                                .font(.system(size:14,weight: .semibold))
-                                            
-                                        }
-                                    }
-                                    
-                                    Spacer()
-                                    
-                                    
-                                }
-                                .padding(.vertical,5)
-                                .foregroundColor(.gray)
-                            } else {
-                                HStack{
+                        }
+                        
+                        if comment.replys != nil && comment.reply_comments - comment.replys!.count <= 0 {
+                            HStack{
+                                if comment.replys != nil {
                                     Button(action:{
-//                                        GetCommentReply(commentId: comment.id)
+//                                            withAnimation{
+                                            self.isShowLess.toggle()
+                                            if self.isShowLess{
+                                                showedCommected = 0
+                                                scrollTo = comment.id
+                                            } else {
+//                                                showedCommected = comment.replys?.count ?? 0
+                                                let showComment = showedCommected + 5
+                                                showedCommected = min(showComment,comment.replys?.count ?? 0)
+                                            }
+                                            
+//                                            }
+                                    }){
+                                        Text("顯示\(self.isShowLess ? "更多" : "更少")")
+                                            .font(.system(size:14,weight: .semibold))
                                         
+                                    }
+                                }
+                                
+                                Spacer()
+                                
+                                
+                            }
+                            .padding(.vertical,5)
+                            .foregroundColor(.gray)
+                        } else {
+                            HStack{
+                                Button(action:{
+//                                        GetCommentReply(commentId: comment.id)
+                                    //how many comment can be showed?
+                                    isShowLess = false
+                                    if showedCommected < comment.replys?.count ?? 0{
+                                        let showComment = showedCommected + 5
+                                        showedCommected = min(showComment,comment.replys?.count ?? 0)
+                                    }else {
                                         Task.init{
                                             await LoadCommentReply(commentId: comment.id)
                                             
                                         }
+                                    }
+                                }){
+                                    HStack{
+                                        Text("顯示\(comment.reply_comments - self.showedCommected)條評論")
+                                            .font(.system(size:14,weight: .semibold))
+                                            
+                                        Spacer()
+                                    }
+                                    .padding(.vertical,5)
+                                    .foregroundColor(.gray)
+                                }
+                                
+                                if comment.replys != nil {
+                                    Button(action:{
+                                        self.isShowLess.toggle()
+                                        if self.isShowLess{
+                                            showedCommected = 0
+                                            scrollTo = comment.id
+                                        } else {
+                                            let showComment = showedCommected + 5
+                                            showedCommected = min(showComment,comment.replys?.count ?? 0)
+                                        }
                                     }){
                                         HStack{
-                                            Text("顯示\(comment.reply_comments - (comment.replys?.count ?? 0))條評論")
+                                            Text("顯示\(self.isShowLess ? "更多" : "更少")")
                                                 .font(.system(size:14,weight: .semibold))
-                                             
+                                                
                                             Spacer()
                                         }
                                         .padding(.vertical,5)
                                         .foregroundColor(.gray)
                                     }
-                                    
-                                    if comment.replys != nil {
-                                        Button(action:{
-                                            self.isShowLess.toggle()
-                                        }){
-                                            HStack{
-                                                Text("顯示\(self.isShowLess ? "更多" : "更少")")
-                                                    .font(.system(size:14,weight: .semibold))
-                                                 
-                                                Spacer()
-                                            }
-                                            .padding(.vertical,5)
-                                            .foregroundColor(.gray)
-                                        }
-                                    }
-                                   
                                 }
-        
+                                
                             }
+    
                         }
-                    
                         
+                        if self.isLoadingReply{
+                            
+                            ActivityIndicatorView()
+                                .padding(.top)
+    //                            .font(.system(size:12,weight: .semibold))
+                        }
                     }
                 }
             }
@@ -568,7 +586,8 @@ struct commentCell : View {
         
         switch resp {
         case .success(let data):
-            
+            print(data.meta_data)
+            self.showedCommected += data.reply.count
             if self.commentInfos[index].replys != nil {
                 for reply in data.reply{
                     let e = self.commentInfos[index].replys!.contains{$0.id == reply.id}
@@ -581,7 +600,7 @@ struct commentCell : View {
             }
 //            self.scrollTo = data.reply.last?.id ?? 0
             self.replyCommentMetaData = data.meta_data
-            self.comment.reply_comments = self.replyCommentMetaData!.total_results //get the updated count
+            self.comment.reply_comments = data.meta_data.total_results //get the updated count
         case .failure(let err):
             print(err.localizedDescription)
             BenHubState.shared.AlertMessage(sysImg: "xmark.circle.fill", message: err.localizedDescription)

@@ -28,6 +28,7 @@ struct User: Decodable{
 
 class UserViewModel : ObservableObject{
 //    @Published var user : Me?//???
+    @Published var isInit = true
     @Published var isAllowToScroll = false
     @Published var isLogIn : Bool = false
     @Published var profile : Profile?
@@ -121,6 +122,7 @@ class UserViewModel : ObservableObject{
         case .success(let data):
 //            userVM.profil
 //            self.postTotalPage = dat
+            print(data)
             self.postCurPage = data.meta_data.page
             self.postTotalPage = data.meta_data.total_pages
             print(data.meta_data)

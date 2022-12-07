@@ -192,7 +192,7 @@ struct FlowLayoutWithLoadMoreView< T : Identifiable,Content : View> : View where
     var VSpacing : CGFloat
     
     @Binding var IsInit : Bool
-    @State private var setUp = false
+//    @State private var setUp = false
     @Binding var isScrollable : Bool
     @Binding var isLoading : Bool
     private func customList() -> [[T]] {
@@ -222,7 +222,7 @@ struct FlowLayoutWithLoadMoreView< T : Identifiable,Content : View> : View where
     
     var body: some View {
         ScrollView(.vertical, showsIndicators: false){
-            if !self.setUp {
+            if !self.IsInit {
                 LazyVStack(spacing:0){
                     if list.isEmpty {
                         VStack{
@@ -264,9 +264,9 @@ struct FlowLayoutWithLoadMoreView< T : Identifiable,Content : View> : View where
             if !self.IsInit {
                 return
             }
-            self.setUp = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25){
-                self.setUp = false
+            print(self.IsInit)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3){
+                self.IsInit = false
             }
         }
     }

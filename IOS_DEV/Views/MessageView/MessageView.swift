@@ -711,6 +711,7 @@ struct MessageHeaderTab : View{
                             .navigationBarHidden(true)
                             .environmentObject(notificationVM)
                             .environmentObject(userVM)
+                            .environmentObject(postVM)
 
                            ,isActive: $isShowFollowingNotification){
                     tabButton(systemIcon: "person.fill", iconColor: .blue, buttonText: "好友邀請"){

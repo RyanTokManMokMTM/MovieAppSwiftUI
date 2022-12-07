@@ -23,7 +23,7 @@ struct ViewMovieList: View {
     
     @State private var listMovies : [ListMovieInfo]?
     @State private var isLoading = false
-
+    @Environment(\.dismiss) var dismiss
     init(index : Int,isViewList : Binding<Bool>){
         self.colums = 2
         self.HSpacing = 5
@@ -50,6 +50,7 @@ struct ViewMovieList: View {
                             }else {
                                 withAnimation{
                                     self.isViewList = false
+                                    dismiss()
                                 }
                             }
                         }){

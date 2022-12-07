@@ -14,6 +14,8 @@ enum postDataFrom{
 }
 
 struct PostDetailView: View {
+    @StateObject var state = PostStatManager()
+    
     @State var isShowMenu = false
     @State var selectedCommentInfo : CommentInfo? = nil
     
@@ -48,7 +50,7 @@ struct PostDetailView: View {
     @State private var scrollTo : Int = 0
     @Binding var postInfo : Post
     
-    @State var isChecking : Bool = false
+//    @State var isChecking : Bool = false
     
     @State var isDelete : Bool = false
     
@@ -58,7 +60,7 @@ struct PostDetailView: View {
     var body: some View {
         ZStack(alignment: .top){
             
-            if !isChecking {
+            if !state.isCheck {
                 VStack(spacing:0){
                     PostTopBar()
                     
@@ -88,17 +90,22 @@ struct PostDetailView: View {
                             .navigationTitle("")
                             .navigationBarHidden(true)
                             .navigationBarBackButtonHidden(true)
+                            .environmentObject(postVM)
+                            .environmentObject(userVM)
                            ,isActive: $isShowUserProfile){
                 EmptyView()
             }
         )
         .onAppear{
             //Here we need to know post is delete or not...
-            print(postInfo)
-            self.isChecking = true
+//            print(postInfo)
+            if !state.isCheck {
+                return
+            }
+            
             Task.init{
                 await self.checkPostIsExist()
-                if !self.isChecking {
+                if !self.state.isCheck {
 //                    Get
                     await AsyncGetPostComments()
                 }
@@ -212,7 +219,7 @@ struct PostDetailView: View {
         switch resp {
         case.success(let data):
             if data.is_exist {
-                self.isChecking = false
+                self.state.isCheck = false
             }else {
                 BenHubState.shared.AlertMessage(sysImg: "xmark", message: "文章已被移除")
             }
@@ -463,6 +470,7 @@ struct PostDetailView: View {
             //Jump to the detail view
         NavigationLink(destination: MovieDetailView(movieId: postInfo.post_movie_info.id, isShowDetail: $isShowMoreDetail)
                         .environmentObject(postVM)
+                        .environmentObject(userVM)
                        ,isActive: $isShowMoreDetail){
             Text("#\(postInfo.post_movie_info.title)")
                 .font(.system(size: 15))

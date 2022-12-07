@@ -13,6 +13,7 @@ import SDWebImageSwiftUI
 struct FollowingNotification: View {
     @EnvironmentObject private var notificationVM : NotificationVM
     @EnvironmentObject private var userVM : UserViewModel
+    @EnvironmentObject private var postVM : PostVM
     @Binding var isShowView : Bool
     var body: some View {
         NotificationView(isShowView:$isShowView,topTitle: "好友邀請"){
@@ -31,17 +32,28 @@ struct FollowingNotification: View {
                     }else {
 //                        LazyVStack(spacing:0){
                             ForEach(self.notificationVM.friendRequest,id: \.request_id){ info in
-                                FollowingCell(info: info)
-                                    .listRowBackground(Color("DarkMode2"))
-                                    .padding(.vertical,15)
-                                    .task {
-                                        if self.notificationVM.isLoadingFriendRequest {
-                                            await self.notificationVM.LoadMoreFriendRequests()
+                                NavigationLink(destination: OtherUserProfile(userID: info.sender.id, owner: userVM.userID!)
+                                    .navigationTitle("")
+                                    .navigationBarHidden(true)
+                                    .environmentObject(postVM)
+                                    .environmentObject(userVM)
+                                    .navigationBarBackButtonHidden(true)
+                                ){
+                                    FollowingCell(info: info)
+                                        .listRowBackground(Color("DarkMode2"))
+                                        .padding(.vertical,15)
+                                        .task {
+                                            if self.notificationVM.isLoadingFriendRequest {
+                                                await self.notificationVM.LoadMoreFriendRequests()
+                                            }
                                         }
-                                    }
-                                    .listRowBackground(Color("DarkMode2"))
+                                        
+                                }
+                                .listRowBackground(Color("DarkMode2"))
+                                
+                                
                             }
-                            
+                        
                             
                             if self.notificationVM.isLoadingFriendRequest {
                                 HStack{

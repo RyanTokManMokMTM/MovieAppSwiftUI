@@ -15,12 +15,14 @@ import Refresher
 struct PersonProfileView : View{
     @Binding var isShowMenu : Bool
     @StateObject var HubState : BenHubState = BenHubState.shared
+    @StateObject var initState = InitManager()
     @EnvironmentObject private var userVM : UserViewModel
     var body: some View{
         
         GeometryReader{proxy in
             let topEdge = proxy.safeAreaInsets.top
             personProfile(isShowMenu: $isShowMenu,topEdge: topEdge)
+                .environmentObject(initState)
                 .ignoresSafeArea(.all, edges: .top)
         }
         .wait(isLoading: $HubState.isWait){
@@ -38,10 +40,15 @@ struct PersonProfileView : View{
         }
         .onAppear{
 //            self.userVM.getUserPosts()
+            if !self.userVM.isInit{ //no need to init again
+                return
+            }
+            
             self.userVM.GetUserGenresSetting()
             
             Task.init{
                 await userVM.AsyncGetPost(userID: userVM.profile!.id)
+                userVM.isInit = false
             }
         }
     }
@@ -656,9 +663,15 @@ struct profileCardCell : View {
     }
 }
 
+class InitManager : ObservableObject {
+    @Published var isInit = true
+    init(){}
+}
+
 struct PersonPostCardGridView : View{
     //    let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
     @StateObject var state = ScrollState()
+    @EnvironmentObject var initState : InitManager
     @EnvironmentObject var userVM  : UserViewModel
     @EnvironmentObject var postVM : PostVM
     var body: some View{
@@ -673,7 +686,7 @@ struct PersonPostCardGridView : View{
                 }
                 
             }else{
-                FlowLayoutWithLoadMoreView(isLoading:$userVM.IsPostLoading,isInit:.constant(true),list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollable: $userVM.isAllowToScroll, content: { info in
+                FlowLayoutWithLoadMoreView(isLoading:$userVM.IsPostLoading,isInit:$initState.isInit,list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollable: $userVM.isAllowToScroll, content: { info in
                     
                     profileCardCell(Id : userVM.GetPostIndex(postId: info.id)){
                         DispatchQueue.main.async {
@@ -718,6 +731,7 @@ struct LikedMovieCard : Identifiable ,Codable{
 struct LikedPostCardGridView : View {
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var postVM : PostVM
+    @EnvironmentObject var state : InitManager
     @State private var isShowMovieDetail : Bool = false
     @State private var movieId : Int = -1
     
@@ -737,34 +751,35 @@ struct LikedPostCardGridView : View {
                         }
                         //                        Spacer()
                     }else {
-                        LazyVStack{
-                            LazyVGrid(columns: gridItem){
-                                ForEach(userVM.profile!.UserLikedMovies!,id:\.id){info in
-                                    LikedCardCell(movieInfo: info)
-                                        .onTapGesture {
-                                            withAnimation{
-                                                self.movieId = info.id
+//                        if !state.isInit{
+                            LazyVStack{
+                                LazyVGrid(columns: gridItem){
+                                    ForEach(userVM.profile!.UserLikedMovies!,id:\.id){info in
+                                        LikedCardCell(movieInfo: info)
+                                            .onTapGesture {
                                                 withAnimation{
-                                                    self.isShowMovieDetail = true
+                                                    self.movieId = info.id
+                                                    withAnimation{
+                                                        self.isShowMovieDetail = true
+                                                    }
                                                 }
                                             }
-                                        }
-                                        .task {
-                                            if self.userVM.isLastLikedMovie(movieID: info.id)  {
-                                                await self.userVM.AsyncGetMoreUserLikedMoive(userID: self.userVM.userID!)
+                                            .task {
+                                                if self.userVM.isLastLikedMovie(movieID: info.id)  {
+                                                    await self.userVM.AsyncGetMoreUserLikedMoive(userID: self.userVM.userID!)
+                                                }
                                             }
-                                        }
+                                    }
+                                    
+                                }
+                                
+                                if self.userVM.IsLikedMovieLoading {
+                                    ActivityIndicatorView()
+                                        .padding(.bottom,15)
                                 }
                                 
                             }
-                            
-                            if self.userVM.IsLikedMovieLoading {
-                                ActivityIndicatorView()
-                                    .padding(.bottom,15)
-                            }
-                            
-                        }
-                 
+//                        }
                     }
                 }
                 .introspectScrollView{ ScrollView in
@@ -1344,6 +1359,7 @@ struct personProfile: View {
     @StateObject var state = ScrollState()
     @EnvironmentObject private var userVM : UserViewModel
     @EnvironmentObject private var postVM : PostVM
+    @EnvironmentObject private var initSate : InitManager
     @State private var isEditProfile : Bool = false
     @State private var isSetting : Bool = false
     @State private var isAddingList : Bool = false
@@ -1583,17 +1599,29 @@ struct personProfile: View {
        
     }
     
+    @MainActor
     private func refersh() async{
+        self.initSate.isInit = true
         switch self.tabIndex {
         case 0 :
             print("refershing post")
+           
             await self.userVM.AsyncGetPost(userID: self.userVM.userID!)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3){
+                self.initSate.isInit = false
+            }
         case 1:
             print("refershing liked")
             await self.userVM.AsyncGetUserLikedMoive(userID: self.userVM.userID!)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3){
+                self.initSate.isInit = false
+            }
         case 2:
             print("refershing list")
             await self.userVM.AsyncGetUserList(userID: self.userVM.userID!)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3){
+                self.initSate.isInit = false
+            }
         default:
             print("empty...")
         }
@@ -1607,6 +1635,7 @@ struct personProfile: View {
                     .padding(.vertical,3)
                     .environmentObject(userVM)
                     .frame(width: UIScreen.main.bounds.width)
+                    .environmentObject(initSate)
 //                    .disabled(!userVM.isAllowToScroll)
                 
                 
@@ -1614,12 +1643,14 @@ struct personProfile: View {
                     .environmentObject(userVM)
                     .padding(.vertical,3)
                     .frame(width: UIScreen.main.bounds.width)
+                    .environmentObject(initSate)
 
                 
                 CustomListView(addList: $isAddingList,isViewMovieList:$isViewMovieList, listIndex:$listIndex)
                     .environmentObject(userVM)
                     .padding(.vertical,3)
                     .frame(width: UIScreen.main.bounds.width)
+                    .environmentObject(initSate)
             }
             .offset(x : CGFloat(self.tabIndex) * -UIScreen.main.bounds.width)
             .onChange(of: self.tabIndex){index in

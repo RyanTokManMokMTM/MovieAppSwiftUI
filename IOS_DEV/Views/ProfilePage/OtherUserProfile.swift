@@ -6,13 +6,47 @@
 //
 
 import SwiftUI
+import Combine
 import SDWebImageSwiftUI
+
+@MainActor
+class UserObjectManager : ObservableObject {
+    @Published var userVM : UserViewModel
+    var anyCancellable : AnyCancellable? = nil
+    
+    init(){
+        userVM = UserViewModel()
+        
+        anyCancellable = userVM.objectWillChange.sink{ [weak self] _ in
+            self?.objectWillChange.send()
+        }
+    }
+}
+
+
+@MainActor
+class PostObjectManager : ObservableObject {
+    @Published var postVM : PostVM
+    var anyCancellable : AnyCancellable? = nil
+    
+    init(){
+        postVM = PostVM()
+        
+        anyCancellable = postVM.objectWillChange.sink{ [weak self] _ in
+            self?.objectWillChange.send()
+        }
+    }
+}
+
+
 
 
 struct OtherUserProfile: View {
     @StateObject var HubState : BenHubState = BenHubState.shared
-    @StateObject var userVM = UserViewModel()
-    @StateObject var postVM = PostVM()
+    @StateObject var userManager = UserObjectManager()
+    @StateObject var postManager = PostObjectManager()
+    @EnvironmentObject var postVM : PostVM
+    @EnvironmentObject var me : UserViewModel
 //    @State private var isUserFollowing = false
     @State private var friends : Int = -1
     @State private var posts : Int = -1
@@ -26,22 +60,25 @@ struct OtherUserProfile: View {
             let topEdge = proxy.safeAreaInsets.top
             UserProfileView(topEdge: topEdge,friends: $friends,posts: $posts,collected: $collected,isFriendInfo: $isFriendInfo,owner:owner,user_id: userID)
                 .edgesIgnoringSafeArea(.all)
+                .environmentObject(me)
                 .environmentObject(postVM)
-                .environmentObject(userVM)
+                .environmentObject(userManager)
+                .environmentObject(postManager)
                 .environmentObject(HubState)
                 
         }
         .onAppear{
             
-            if userVM.profile == nil{
-                userVM.setUserID(userID: self.userID)
+            if userManager.userVM.profile == nil{
+                userManager.userVM.setUserID(userID: self.userID)
                 getPostCount()
                 getFriendCount()
                 getIsFriend()
                 
                 Task.init{
-                    await userVM.AsyncGetProfile(userID: self.userID)
-                    await userVM.AsyncGetPost(userID: self.userID)
+                    await userManager.userVM.AsyncGetProfile(userID: self.userID)
+                    await userManager.userVM.AsyncGetPost(userID: self.userID)
+            
                 }
                 
                 Task.init {
@@ -170,8 +207,15 @@ struct OtherUserProfile: View {
 struct UserProfileView: View {
 //    @Binding var isShowMenu : Bool
 //    @Binding var isShowLikedMovie : Bool
+    @EnvironmentObject var userManager : UserObjectManager
+    @EnvironmentObject var postManager : PostObjectManager
+    
     @EnvironmentObject var HubState : BenHubState
-    @EnvironmentObject private var userVM : UserViewModel
+    
+    @EnvironmentObject var me : UserViewModel
+//    @EnvironmentObject var me : UserViewModel
+    
+//    @EnvironmentObject private var userVM : UserViewModel
     @EnvironmentObject private var postVM : PostVM
     @State private var isEditProfile : Bool = false
     @State private var isSetting : Bool = false
@@ -231,13 +275,13 @@ struct UserProfileView: View {
                     VStack(alignment:.center){
                         Spacer()
                         HStack{
-                            WebImage(url: userVM.profile?.UserPhotoURL  ??  URL(string: ""))
+                            WebImage(url: userManager.userVM.profile?.UserPhotoURL  ??  URL(string: ""))
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: 30, height: 30, alignment: .center)
                                 .clipShape(Circle())
                             
-                            Text(userVM.profile?.name ?? "UNKNOW")
+                            Text(userManager.userVM.profile?.name ?? "UNKNOW")
                                 .font(.footnote)
                                 .foregroundColor(.white)
                         }
@@ -253,7 +297,7 @@ struct UserProfileView: View {
                 }
                 .background(Color("ResultCardBlack").opacity(getOpacity()))
                 .zIndex(1)
-                .redacted(reason: self.userVM.isLoadingProfile ? .placeholder : [])
+                .redacted(reason: self.userManager.userVM.isLoadingProfile ? .placeholder : [])
                 GeometryReader { proxy in
                     ScrollView(showsIndicators: false){
                         LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]){
@@ -274,8 +318,8 @@ struct UserProfileView: View {
                                         
 //                                        print(headerOffset)
                                         let newValue = headerOffset > height
-                                        if userVM.isAllowToScroll != newValue {
-                                            userVM.isAllowToScroll = newValue
+                                        if userManager.userVM.isAllowToScroll != newValue {
+                                            userManager.userVM.isAllowToScroll = newValue
                                         }
                                     }
    
@@ -287,7 +331,7 @@ struct UserProfileView: View {
                                 
                                 GeometryReader{ proxy  in
                                     ZStack(alignment:.top){
-                                        WebImage(url: userVM.profile?.UserBackGroundURL ??  URL(string: ""))
+                                        WebImage(url: userManager.userVM.profile?.UserBackGroundURL ??  URL(string: ""))
                                             .resizable()
                                             .aspectRatio( contentMode: .fill)
                                             .frame(width: UIScreen.main.bounds.width, height: offset > 0 ? offset + max + 20 : getHeaderHigth() + 20, alignment: .bottom)
@@ -360,39 +404,35 @@ struct UserProfileView: View {
 
             }
             .background(
-                NavigationLink(destination:ViewMovieList(index: listIndex, isViewList: $isViewMovieList)
-                                .environmentObject(userVM)
-                                .environmentObject(postVM)
-                                .navigationTitle("")
-                                .navigationBarTitle("")
-                                .navigationBarHidden(true)
-                                .navigationBarBackButtonHidden(true)
+                NavigationLink(destination:OtherViewMovieList(index: listIndex, isViewList: $isViewMovieList)
+                    .environmentObject(userManager)
+                    .environmentObject(me)
+                    .environmentObject(postVM)
+                    .navigationTitle("")
+                    .navigationBarTitle("")
+                    .navigationBarHidden(true)
+                    .navigationBarBackButtonHidden(true)
                                ,isActive:$isViewMovieList){
                                    EmptyView()
                                }
             )
             .background(
                 ZStack{
-            
-                    NavigationLink(destination:   PostDetailView(postForm: postVM.selectedPostFrom, isFromProfile: true,postInfo:
-                                                                    self.$postVM.selectedPostInfo)
+                    
+                    NavigationLink(destination:   PostDetailView(postForm: postManager.postVM.selectedPostFrom, isFromProfile: true,postInfo:
+                                                                    self.$postManager.postVM.selectedPostInfo)
                         .navigationBarTitle("")
                         .navigationTitle("")
                         .navigationBarBackButtonHidden(true)
                         .navigationBarHidden(true)
-                        .environmentObject(userVM)
-                        .environmentObject(postVM), isActive: self.$postVM.isShowPostDetail){
+                        .environmentObject(me)
+                        .environmentObject(postVM), isActive: self.$postManager.postVM.isShowPostDetail){
                             EmptyView()
-                            
-                            
                         }
-                    
-                    
-                    
                 }
             )
             .actionSheet(isPresented: self.$isShowActionSheet){
-                ActionSheet(title: Text(self.userVM.profile?.name ?? "UNKNOW"), buttons: [
+                ActionSheet(title: Text(self.userManager.userVM.profile?.name ?? "UNKNOW"), buttons: [
                     .default(Text("移除好友"),action:{
                         Task.init{
                            await self.removeFriend()
@@ -418,18 +458,19 @@ struct UserProfileView: View {
             HStack(spacing:0){
                 OtherPersonPostCardGridView()
                     .padding(.vertical,3)
-                    .environmentObject(userVM)
-                    .redacted(reason: self.userVM.IsPostLoading ? .placeholder : [])
+                    .environmentObject(userManager)
+                    .environmentObject(postManager)
+                    .redacted(reason: self.userManager.userVM.IsPostLoading ? .placeholder : [])
                     .frame(width: UIScreen.main.bounds.width)
 
                 OtherLikedPostCardGridView()
-                    .environmentObject(userVM)
+                    .environmentObject(userManager)
                     .environmentObject(postVM)
                     .padding(.vertical,3)
                     .frame(width: UIScreen.main.bounds.width)
                 
                 OtherUserCustomListView(isViewMovieList:$isViewMovieList, listIndex:$listIndex)
-                    .environmentObject(userVM)
+                    .environmentObject(userManager)
                     .environmentObject(postVM)
                     .padding(.vertical,3)
                     .frame(width: UIScreen.main.bounds.width)
@@ -439,17 +480,17 @@ struct UserProfileView: View {
             .offset(x : CGFloat(self.tabIndex) * -UIScreen.main.bounds.width)
             .onChange(of: self.tabIndex){ index in
                 if index == 1 {
-                    if userVM.profile?.UserLikedMovies == nil{
+                    if userManager.userVM.profile?.UserLikedMovies == nil{
                         print("get liked movie")
                         Task.init {
-                            await userVM.AsyncGetUserLikedMoive(userID: self.user_id)
+                            await userManager.userVM.AsyncGetUserLikedMoive(userID: self.user_id)
                         }
                     }
                 } else if index == 2{
-                    if userVM.profile?.UserCustomList == nil{
+                    if userManager.userVM.profile?.UserCustomList == nil{
                         print("get collection movie")
                         Task.init {
-                            await userVM.AsyncGetUserList(userID: self.user_id)
+                            await userManager.userVM.AsyncGetUserList(userID: self.user_id)
                         }
                     }
                 }
@@ -493,7 +534,7 @@ struct UserProfileView: View {
             VStack(alignment:.center){
                 HStack(spacing:20){
 
-                    WebImage(url: userVM.profile?.UserPhotoURL ??  URL(string: ""))
+                    WebImage(url: userManager.userVM.profile?.UserPhotoURL ??  URL(string: ""))
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 80, height: 80, alignment: .center)
@@ -506,26 +547,26 @@ struct UserProfileView: View {
                     
                 }
                 VStack(alignment:.center){
-                    Text(userVM.profile?.name ?? "").bold()
+                    Text(userManager.userVM.profile?.name ?? "").bold()
                         .font(.title2)
                     
-                    Text("@\(userVM.profile?.name ??  "")")
+                    Text("@\(userManager.userVM.profile?.name ??  "")")
                         .font(.caption)
                         .foregroundColor(Color.gray)
                     
                 }
                 
                 VStack(alignment:.leading,spacing: 8){
-                    if !userVM.isLoadingProfile && userVM.PostError == nil{
-                        if self.userVM.profile != nil && self.userVM.profile!.UserGenrePrerences != nil{
-                            if self.userVM.profile!.UserGenrePrerences!.isEmpty{
+                    if !userManager.userVM.isLoadingProfile && userManager.userVM.PostError == nil{
+                        if self.userManager.userVM.profile != nil && self.userManager.userVM.profile!.UserGenrePrerences != nil{
+                            if self.userManager.userVM.profile!.UserGenrePrerences!.isEmpty{
                                 Text("使用者沒有特定喜好的電影項目~")
                                     .font(.footnote)
                             }else{
                                 
                                 HStack{
-                                    ForEach(0..<userVM.profile!.UserGenrePrerences!.count,id:\.self){i in
-                                        Text(userVM.profile!.UserGenrePrerences![i].name)
+                                    ForEach(0..<userManager.userVM.profile!.UserGenrePrerences!.count,id:\.self){i in
+                                        Text(userManager.userVM.profile!.UserGenrePrerences![i].name)
                                             .font(.caption)
                                             .padding(8)
                                             .background(BlurView(sytle: .systemThickMaterialDark).clipShape(CustomeConer(width: 25, height: 25, coners: .allCorners)))
@@ -602,7 +643,7 @@ struct UserProfileView: View {
 
                     }
                     else if isFriendInfo!.is_sent_request {
-                        if isFriendInfo!.request!.sender_id == userVM.userID!{
+                        if isFriendInfo!.request!.sender_id == userManager.userVM.userID!{
                             HStack(spacing:8){
                                 Button(action:{
                                     accecpt(id: isFriendInfo!.request!.request_id)
@@ -684,7 +725,7 @@ struct UserProfileView: View {
     
     private func addFriend(){
         
-        let req = AddFriendReq(user_id: self.userVM.userID!)
+        let req = AddFriendReq(user_id: self.userManager.userVM.userID!)
         APIService.shared.AddFriend(req: req){ result in
             switch result{
             case .success(let data):
@@ -1278,11 +1319,12 @@ struct UserProfileView: View {
 
 struct OtherPersonPostCardGridView : View{
 //    let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
-    @EnvironmentObject var userVM :  UserViewModel
+    @EnvironmentObject var userManager : UserObjectManager //for current user
+    @EnvironmentObject var postManager : PostObjectManager
     @EnvironmentObject var postVM : PostVM
     var body: some View{
-        if userVM.profile?.UserCollection != nil{
-            if userVM.profile!.UserCollection!.isEmpty{
+        if userManager.userVM.profile?.UserCollection != nil{
+            if userManager.userVM.profile!.UserCollection!.isEmpty{
                 VStack{
                     Spacer()
                     Text("無文章")
@@ -1292,19 +1334,21 @@ struct OtherPersonPostCardGridView : View{
                 }
                 .frame(height:UIScreen.main.bounds.height / 2)
             }else{
-                FlowLayoutWithLoadMoreView(isLoading: $userVM.IsPostLoading, list: userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollable: $userVM.isAllowToScroll){ info in
-                        profileCardCell(Id : userVM.GetPostIndex(postId: info.id)){
+                FlowLayoutWithLoadMoreView(isLoading: $userManager.userVM.IsPostLoading, list: userManager.userVM.profile!.UserCollection!, columns: 2,HSpacing: 5,VSpacing: 10,isScrollable: $userManager.userVM.isAllowToScroll){ info in
+                        profileCardCell(Id : userManager.userVM.GetPostIndex(postId: info.id)){
                             DispatchQueue.main.async {
-                                self.postVM.selectedPostInfo = info
-                                self.postVM.selectedPostFrom = .Profile
+                                self.postManager.postVM.selectedPostInfo = info
+                                self.postManager.postVM.selectedPostFrom = .Profile
                                 withAnimation{
-                                    self.postVM.isShowPostDetail.toggle()
+                                    self.postManager.postVM.isShowPostDetail.toggle()
                                 }
                             }
                         }
+                        .environmentObject(userManager.userVM)
+                        .environmentObject(postVM)
                         .task {
-                            if self.userVM.isLastPost(postID: info.id){
-                                await self.userVM.AsyncGetMorePost(userID: self.userVM.userID!)
+                            if self.userManager.userVM.isLastPost(postID: info.id){
+                                await self.userManager.userVM.AsyncGetMorePost(userID: self.userManager.userVM.userID!)
                             }
                         }
                 }
@@ -1318,6 +1362,303 @@ struct OtherPersonPostCardGridView : View{
     }
         
 }
+
+
+struct OtherViewMovieList: View {
+    @EnvironmentObject var userManager : UserObjectManager //for current user
+    @EnvironmentObject var me : UserViewModel
+    @EnvironmentObject var postVM : PostVM
+    var listIndex : Int
+    @Binding var isViewList : Bool
+    @State private var isShowMovieDetail : Bool = false
+    @State private var movieID : Int = 0
+    @State private var isManageMode : Bool = false
+    @State private var isEditList : Bool = false
+    @State private var removeMovie : [Int] = []
+    
+    @State private var listMovies : [ListMovieInfo]?
+    @State private var isLoading = false
+    @Environment(\.dismiss) var dismiss
+    init(index : Int,isViewList : Binding<Bool>){
+        self.colums = 2
+        self.HSpacing = 5
+        self.VSpacing = 10
+        self.listIndex = index
+        self._isViewList = isViewList
+        
+    }
+    
+    var colums : Int
+    var HSpacing : CGFloat
+    var VSpacing : CGFloat
+    var body: some View {
+        GeometryReader{ proxy in
+            VStack(spacing:0){
+                VStack{
+                    HStack{
+                        Button(action:{
+                            withAnimation{
+                                self.isViewList = false
+                                dismiss()
+                            }
+                        }){
+                            Image(systemName: "chevron.left")
+                                .imageScale(.medium)
+                                .foregroundColor(.white)
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                }
+                .overlay(alignment:.leading){
+                    
+                    HStack(){
+                        Spacer()
+                        Text("專輯資訊")
+                            .font(.system(size: 14, weight: .semibold))
+                        Spacer()
+                    }
+                    .font(.system(size: 14))
+                    .padding(.horizontal,10)
+                    .padding(.bottom,10)
+                    
+                    
+                }
+                .padding(.vertical,5)
+                .frame(width: UIScreen.main.bounds.width, height: proxy.safeAreaInsets.top + 30,alignment: .bottom)
+                .background(Color("DarkMode2"))
+                Divider()
+                
+                ScrollView(.vertical,showsIndicators: false){
+                    LazyVStack(alignment:.leading,spacing:20){
+                        
+                        VStack(alignment:.leading,spacing:8){
+                            Text(self.userManager.userVM.profile!.UserCustomList![listIndex].title)
+                                .font(.system(size:25,weight: .bold))
+                                .foregroundColor(.white)
+                            
+                            Text(self.userManager.userVM.profile!.UserCustomList![listIndex].introStr )
+                                .font(.system(size:12))
+                                .foregroundColor(.white)
+                        }
+                        
+                        userInfo()
+                            .padding(.top,5)
+                    }
+                    .padding(8)
+                    .frame(maxWidth:.infinity)
+                    .background(Color("DarkMode2"))
+                    
+                    if self.listMovies != nil {
+                        if self.listMovies!.isEmpty {
+                            VStack{
+                                Text("您沒有收藏任何電影喔～")
+                                    .foregroundColor(.gray)
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                            .padding(.vertical)
+                        }else {
+                            
+                            HStack(alignment:.top,spacing:HSpacing){
+                                ForEach(customList(),id:\.self){datas in
+                                    LazyVStack(spacing:VSpacing){
+                                        ForEach(datas) { info in
+                                            MovieListCard(info: info.movie_info, isManageMode: $isManageMode,movieID: $movieID,isShowMovieDetail:$isShowMovieDetail, removeList: $removeMovie)
+                                                .task {
+                                                    let listID = self.userManager.userVM.profile!.UserCustomList![listIndex].id
+                                                    guard let createTime = self.listMovies!.last?.created_time else {
+                                                        return
+                                                    }
+                                                    if self.isLastMovie(movieID: info.id) {
+                                                        await self.getMovies(listID: listID,createTime :createTime)
+                                                    }
+                                                }
+                                        }
+                                    }
+                                }
+                                
+                            }
+                            .padding(.vertical,5)
+                            .padding(.horizontal,3)
+                            
+                            if self.isLoading {
+                                ActivityIndicatorView()
+                                    .padding(.vertical,15)
+                            }
+                        }
+                    }
+                   
+                    
+//                    if self.userVM.profile!.UserCustomList![listIndex].movie_list == nil || (self.userVM.profile!.UserCustomList![listIndex].movie_list != nil && self.userVM.profile!.UserCustomList![listIndex].movie_list!.count == 0 ) {
+//                        VStack{
+//                            Text("您沒有收藏任何電影喔～")
+//                                .foregroundColor(.gray)
+//                                .font(.system(size: 16, weight: .semibold))
+//                        }
+//                        .padding(.vertical)
+//                    }else {
+//                        HStack(alignment:.top,spacing:HSpacing){
+//                            ForEach(customList(),id:\.self){datas in
+//                                LazyVStack(spacing:VSpacing){
+//                                    ForEach(datas) { info in
+//                                        MovieListCard(info: info.movie_info, isManageMode: $isManageMode,movieID: $movieID,isShowMovieDetail:$isShowMovieDetail, removeList: $removeMovie)
+//                                            .task {
+//                                                if self.userVM.isLastListMovie(movieID: info.id, listID: self.listIndex) {
+//                                                    //TODO: Get more list movie!!!!
+//                                                }
+//                                            }
+//                                    }
+//                                }
+//                            }
+//
+//                        }
+//                        .padding(.vertical,5)
+//                        .padding(.horizontal,3)
+//                    }
+                    
+                }
+                .frame(maxWidth:.infinity)
+            }
+            .edgesIgnoringSafeArea(.all)
+        }
+        .background(
+            NavigationLink(destination: MovieDetailView(movieId: self.movieID, isShowDetail: $isShowMovieDetail)
+                            .environmentObject(postVM)
+                            .environmentObject(me)
+                           ,isActive: $isShowMovieDetail){
+                EmptyView()
+            }
+        )
+
+        .task {
+            let listID = self.userManager.userVM.profile!.UserCustomList![listIndex].id
+            await self.getMovies(listID: listID)
+        }
+    }
+    
+    private func isLastMovie(movieID : Int) -> Bool{
+        self.listMovies?.last?.movie_info.id == movieID
+    }
+    
+    
+    private func getMovies(listID : Int,createTime : Int = 0) async {
+        self.isLoading = true
+        let resp = await APIService.shared.AsyncGetListMovie(listID: listID,CreateTime: createTime)
+        switch resp {
+        case .success(let data):
+//            print(data.list_movies)
+            if self.listMovies == nil {
+                self.listMovies = []
+            }
+            
+            self.listMovies!.append(contentsOf: data.list_movies)
+        case .failure(let err):
+            print(err.localizedDescription)
+        }
+        self.isLoading = false
+    }
+    
+    private func removeMovies(movieIds : [Int],listID : Int) async {
+        if movieIds.isEmpty {
+            return
+        }
+        let req = RemoveListMovieReq(movie_ids: movieIds)
+        let resp = await APIService.shared.AsyncRemoveListMovies(listID: listID, movieIds: req)
+        
+        switch resp {
+        case .success(_):
+            if self.userManager.userVM.profile!.UserCustomList != nil{
+                for movieID in movieIds {
+                    self.listMovies!.removeAll{$0.movie_info.id == movieID}
+                    
+                    self.userManager.userVM.profile!.UserCustomList![listIndex].movie_list! =  self.listMovies![0...(self.listMovies!.count > 4 ? 4 : self.listMovies!.count)].compactMap{ info in
+                        return info.movie_info
+                    }
+                    
+                    self.userManager.userVM.profile!.UserCustomList![listIndex].total_movies -= movieIds.count
+                }
+                
+            }
+        case .failure(let err):
+            print(err.localizedDescription)
+            
+        }
+    }
+    
+
+    
+    @ViewBuilder
+    func userInfo() -> some View {
+        HStack(spacing:8){
+            WebImage(url: self.userManager.userVM.profile!.UserPhotoURL)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 25, height: 25, alignment: .center)
+                .clipShape(Circle())
+            Text(self.userManager.userVM.profile!.name)
+                .font(.system(size:14,weight: .semibold))
+                .foregroundColor(Color(UIColor.lightGray))
+            
+            Spacer()
+            
+            Text("收藏電影: \(self.userManager.userVM.profile!.UserCustomList![listIndex].total_movies)")
+                .font(.system(size:14,weight: .semibold))
+               
+        }
+        .foregroundColor(Color(UIColor.darkGray))
+    }
+    
+    @ViewBuilder
+    func MovieCard(info : MovieInfo) -> some View {
+        ZStack(alignment:.topTrailing){
+            WebImage(url: info.posterURL)
+                .placeholder(Image(systemName: "photo"))
+                .resizable()
+                .indicator(.activity)
+                .transition(.fade(duration: 0.5))
+                .aspectRatio(contentMode: .fit)
+                .clipShape(CustomeConer(width: 5, height: 5, coners:.allCorners))
+            
+            if self.isManageMode{
+                BlurView(sytle: .systemThinMaterialLight).frame(width: 25, height: 25).clipShape(Circle())
+                    
+            }
+        }
+
+        .background(Color("appleDark"))
+        .clipShape(CustomeConer(width: 5, height: 5, coners: [.allCorners]))
+    }
+    
+    private func customList() -> [[ListMovieInfo]] {
+//        if self.userVM.profile!.UserCustomList![listIndex].movie_list == nil {
+//            return [[]]
+//        }
+//
+        var curIndx = 0
+        var gridList : [[ListMovieInfo]] = Array(repeating: [], count: self.colums)
+        self.listMovies!.forEach{ data  in
+            //each row have colums data
+            gridList[curIndx].append(data)
+            if curIndx == colums - 1 {
+                curIndx = 0
+            } else {
+                curIndx += 1
+            }
+        }
+        return gridList
+    }
+    
+    private func updateListMovie(){
+        if removeMovie.isEmpty {
+            return
+        }
+        
+        
+        //Send Request!
+    }
+}
+
 
 
 //struct OtherPersonPostCardGridView : View{
@@ -1360,6 +1701,7 @@ struct OtherPersonPostCardGridView : View{
 
 
 struct OtherLikedPostCardGridView : View {
+    @EnvironmentObject var userManager : UserObjectManager
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var postVM : PostVM
     @State private var isShowMovieDetail : Bool = false
@@ -1368,9 +1710,9 @@ struct OtherLikedPostCardGridView : View {
     let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
     var body: some View{
         VStack{
-            if userVM.profile?.UserLikedMovies != nil{
+            if userManager.userVM.profile?.UserLikedMovies != nil{
                 ScrollView(.vertical,showsIndicators: false){
-                    if userVM.profile!.UserLikedMovies!.isEmpty{
+                    if userManager.userVM.profile!.UserLikedMovies!.isEmpty{
                         HStack {
                             Spacer()
                             Text("無喜歡電影")
@@ -1382,7 +1724,7 @@ struct OtherLikedPostCardGridView : View {
                     }else{
                         LazyVStack(spacing:0){
                             LazyVGrid(columns: gridItem){
-                                ForEach(userVM.profile!.UserLikedMovies!,id:\.id){info in
+                                ForEach(userManager.userVM.profile!.UserLikedMovies!,id:\.id){info in
                                     
                                     LikedCardCell(movieInfo: info)
                                         .onTapGesture {
@@ -1392,15 +1734,15 @@ struct OtherLikedPostCardGridView : View {
                                             }
                                         }
                                         .task {
-                                            if self.userVM.isLastLikedMovie(movieID: info.id){
-                                                await self.userVM.AsyncGetMoreUserLikedMoive(userID: self.userVM.userID!)
+                                            if self.userManager.userVM.isLastLikedMovie(movieID: info.id){
+                                                await self.userManager.userVM.AsyncGetMoreUserLikedMoive(userID: self.userVM.userID!)
                                             }
                                         }
                                 }
                                 
                             }
                             
-                            if self.userVM.IsLikedMovieLoading {
+                            if self.userManager.userVM.IsLikedMovieLoading {
                                 ActivityIndicatorView()
                                     .padding(.bottom,15)
                             }
@@ -1428,15 +1770,16 @@ struct OtherLikedPostCardGridView : View {
 }
 
 struct OtherUserCustomListView : View{
+    @EnvironmentObject var userManager : UserObjectManager
     @Binding var isViewMovieList : Bool
     @Binding var listIndex : Int
     @EnvironmentObject var userVM : UserViewModel
 //    let gridItem = Array(repeating: GridItem(.flexible(),spacing: 5), count: 2)
     var body: some View{
         VStack(alignment:.leading){
-            if self.userVM.profile?.UserCustomList != nil{
+            if self.userManager.userVM.profile?.UserCustomList != nil{
                 ScrollView {
-                    if self.userVM.profile!.UserCustomList!.isEmpty {
+                    if self.userManager.userVM.profile!.UserCustomList!.isEmpty {
                         HStack {
                             Spacer()
                             Text("無收藏專輯")
@@ -1449,14 +1792,14 @@ struct OtherUserCustomListView : View{
                     } else {
                         ListInfo()
                         
-                        if self.userVM.IsListLoading {
+                        if self.userManager.userVM.IsListLoading {
                             ActivityIndicatorView()
                                 .padding(.bottom,15)
                         }
                     }
                 }
                 .introspectScrollView{ scroll in
-                    scroll.isScrollEnabled = userVM.isAllowToScroll
+                    scroll.isScrollEnabled = userManager.userVM.isAllowToScroll
                 }
                 
             }
@@ -1466,7 +1809,7 @@ struct OtherUserCustomListView : View{
     
     @ViewBuilder
     func ListInfo() -> some View {
-        ForEach(0..<self.userVM.profile!.UserCustomList!.count, id:\.self){ i in
+        ForEach(0..<self.userManager.userVM.profile!.UserCustomList!.count, id:\.self){ i in
             Button(action:{
 //                //Open the list view
                 withAnimation{
@@ -1477,14 +1820,14 @@ struct OtherUserCustomListView : View{
                 HStack{
                     
                     VStack(alignment:.leading,spacing:5){
-                        Text(self.userVM.profile!.UserCustomList![i].title)
+                        Text(self.userManager.userVM.profile!.UserCustomList![i].title)
                             .font(.system(size:16,weight:.semibold))
                         
-                        Text("收藏電影: \(self.userVM.profile!.UserCustomList![i].total_movies)")
+                        Text("收藏電影: \(self.userManager.userVM.profile!.UserCustomList![i].total_movies)")
                             .font(.system(size:12,weight:.semibold))
                             .foregroundColor(Color(UIColor.darkGray))
                         
-                        if self.userVM.profile!.UserCustomList![i].movie_list == nil{
+                        if self.userManager.userVM.profile!.UserCustomList![i].movie_list == nil{
                             HStack(spacing:5){
                                 ForEach(0..<4){ _ in
                                     PlaceHoldRect(color: Color("DarkMode2"))
@@ -1493,8 +1836,8 @@ struct OtherUserCustomListView : View{
                         }else{
                             HStack(spacing:5){
                                 ForEach(0..<4){ movieIndex in
-                                    if movieIndex <  self.userVM.profile!.UserCustomList![i].movie_list!.count{
-                                        WebImage(url: self.userVM.profile!.UserCustomList![i].movie_list![movieIndex].posterURL)
+                                    if movieIndex <  self.userManager.userVM.profile!.UserCustomList![i].movie_list!.count{
+                                        WebImage(url: self.userManager.userVM.profile!.UserCustomList![i].movie_list![movieIndex].posterURL)
                                             .resizable()
                                             .indicator(.activity)
                                             .aspectRatio(contentMode: .fit)
@@ -1514,8 +1857,8 @@ struct OtherUserCustomListView : View{
                 .background(Color("MoviePostColor"))
                 .cornerRadius(10)
                 .task {
-                    if self.userVM.isLastList(listID: self.userVM.profile!.UserCustomList![i].id){
-                        await self.self.userVM.AsyncGetMoreUserLikedMoive(userID: self.userVM.userID!)
+                    if self.userManager.userVM.isLastList(listID: self.userManager.userVM.profile!.UserCustomList![i].id){
+                        await self.userManager.userVM.AsyncGetMoreUserLikedMoive(userID: self.userVM.userID!)
                     }
                 }
             }

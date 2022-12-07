@@ -81,6 +81,8 @@ struct FollowUserPostView: View {
                             .navigationTitle("")
                             .navigationBarHidden(true)
                             .navigationBarBackButtonHidden(true)
+                            .environmentObject(postVM)
+                            .environmentObject(userVM)
                            ,isActive: $isShowUserProfile){
                 EmptyView()
             }
@@ -89,13 +91,15 @@ struct FollowUserPostView: View {
         )
         .onAppear{
             if postVM.initFollowing {
-                HubState.SetWait(message: "Loading")
-                self.postVM.GetFollowUserPost(onSucceed: {
-                    HubState.isWait = false
-                }, onFailed: {errMsg in
-                    HubState.isWait = false
-                    HubState.AlertMessage(sysImg: "xmark.circle.fill", message: errMsg)
-                })
+                if postVM.followingData.isEmpty {
+                    HubState.SetWait(message: "Loading")
+                    self.postVM.GetFollowUserPost(onSucceed: {
+                        HubState.isWait = false
+                    }, onFailed: {errMsg in
+                        HubState.isWait = false
+                        HubState.AlertMessage(sysImg: "xmark.circle.fill", message: errMsg)
+                    })
+                }
                 postVM.initFollowing = false
             }
         }

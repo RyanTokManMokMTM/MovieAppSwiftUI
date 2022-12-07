@@ -47,7 +47,7 @@
 		<dict>
 			<key>127.0.0.1</key>
 			<string></string>
-			<key>ec2-13-212-107-166.ap-southeast-1.compute.amazonaws.com</key>
+			<key>ec2-13-214-127-255.ap-southeast-1.compute.amazonaws.com</key>
 			<dict>
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>
 				<true/>
