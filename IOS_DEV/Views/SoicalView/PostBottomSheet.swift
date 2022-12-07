@@ -44,7 +44,7 @@ struct PostBottomSheet : View{
 //    @Binding var postData : Post?
     var body : some View{
         VStack(spacing:3){
-            Text("評論\(self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)].post_comment_count > 0 ? "(\(self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)].post_comment_count)" : "" )")
+            Text("評論\(self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)].post_comment_count > 0 ? "(\(self.postVM.followingData[self.postVM.getPostIndexFromFollowList(postId: postId)].post_comment_count))" : "" )")
                 .font(.system(size: 16, weight: .bold))
                 .foregroundColor(Color(uiColor: UIColor.lightText))
                 .overlay(
